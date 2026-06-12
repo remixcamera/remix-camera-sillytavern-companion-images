@@ -29,3 +29,25 @@ npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=
 ## Demo Worthy Evidence
 
 Record the Meta webhook request, the local bridge logs, and the resulting WhatsApp conversation. The adapter uploads local bridge images to WhatsApp media before sending, so the demo should show images as native WhatsApp media rather than localhost URLs.
+
+## Executable Evidence
+
+Create no-spend bridge evidence for the WhatsApp adapter:
+
+```bash
+node scripts/record-messaging-demo.mjs --target=whatsapp --output-dir=tmp/messaging-demo-evidence/whatsapp
+```
+
+Create a real WhatsApp delivery proof:
+
+```bash
+WHATSAPP_ACCESS_TOKEN=... \
+WHATSAPP_PHONE_NUMBER_ID=... \
+WHATSAPP_TO=... \
+node scripts/record-messaging-demo.mjs \
+  --target=whatsapp \
+  --deliver \
+  --output-dir=demos/whatsapp/live-production-$(date +%F)
+```
+
+For a generated-image demo, add `--command="selfie cozy couch with lamp light" --yes --max-generations=1` after reviewing the command.

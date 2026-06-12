@@ -33,3 +33,22 @@ DISCORD_PUBLIC_KEY=... DISCORD_APPLICATION_ID=... node adapters/discord/lily-int
 - Local bridge image URLs are uploaded as files.
 - Couple/private commands require explicit `yes`.
 
+## Executable Evidence
+
+Create no-spend bridge evidence for the Discord adapter:
+
+```bash
+node scripts/record-messaging-demo.mjs --target=discord --output-dir=tmp/messaging-demo-evidence/discord
+```
+
+Create a real Discord-channel delivery proof using an incoming webhook:
+
+```bash
+DISCORD_WEBHOOK_URL=... \
+node scripts/record-messaging-demo.mjs \
+  --target=discord \
+  --deliver \
+  --output-dir=demos/discord/live-production-$(date +%F)
+```
+
+For a generated-image demo, add `--command="selfie cozy couch with lamp light" --yes --max-generations=1` after reviewing the command.

@@ -28,3 +28,25 @@ node adapters/matrix/lily-sync-bot.mjs
 5. Send `!lily snap yes warm bedroom mirror snap`. Confirm Matrix receives the image plus the private-media retention warning.
 
 Record the real Matrix room, `/sync` processing, media upload, bridge logs, and resulting `m.image` event. Do not record a local harness as if it were a real Matrix conversation.
+
+## Executable Evidence
+
+Create no-spend bridge evidence for the Matrix adapter:
+
+```bash
+node scripts/record-messaging-demo.mjs --target=matrix --output-dir=tmp/messaging-demo-evidence/matrix
+```
+
+Create a real Matrix room delivery proof:
+
+```bash
+MATRIX_HOMESERVER_URL=... \
+MATRIX_ACCESS_TOKEN=... \
+MATRIX_ROOM_ID=... \
+node scripts/record-messaging-demo.mjs \
+  --target=matrix \
+  --deliver \
+  --output-dir=demos/matrix/live-production-$(date +%F)
+```
+
+For a generated-image demo, add `--command="!lily selfie cozy couch with lamp light" --yes --max-generations=1` after reviewing the command.

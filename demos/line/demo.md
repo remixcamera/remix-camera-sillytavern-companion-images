@@ -29,3 +29,24 @@ node adapters/line/lily-webhook-server.mjs
 5. Send `snap yes warm bedroom mirror snap`. Confirm LINE replies with the image plus the private-media retention warning.
 
 Record the LINE chat, the webhook signature verification log, the local bridge dry-run/generate calls, and the resulting LINE image message. Do not record a local harness as if it were a real LINE chat.
+
+## Executable Evidence
+
+Create no-spend bridge evidence for the LINE adapter:
+
+```bash
+node scripts/record-messaging-demo.mjs --target=line --output-dir=tmp/messaging-demo-evidence/line
+```
+
+Create a real LINE delivery proof:
+
+```bash
+LINE_CHANNEL_ACCESS_TOKEN=... \
+LINE_TO=... \
+node scripts/record-messaging-demo.mjs \
+  --target=line \
+  --deliver \
+  --output-dir=demos/line/live-production-$(date +%F)
+```
+
+For a generated-image demo, add `--command="selfie cozy couch with lamp light" --yes --max-generations=1` after reviewing the command.
