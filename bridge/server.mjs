@@ -356,7 +356,7 @@ function promptTemplateSearchQuery(input) {
     .map((part) => cleanString(part))
     .filter(Boolean)
     .join(" ");
-  return clipText(`${situation} ${commandQuery}`, PROMPT_TEMPLATE_QUERY_MAX_LENGTH);
+  return clipText(`${commandQuery} ${situation}`, PROMPT_TEMPLATE_QUERY_MAX_LENGTH);
 }
 
 function normalizeTemplatePrompt(entry) {
@@ -1160,12 +1160,18 @@ async function generate(input) {
       imageUrl: proxied.imageUrl,
     };
   });
-  const firstImage = displayResults.find((result) => result.ok && result.imageUrl);
+  const successfulImages = displayResults.filter((result) => result.ok && result.imageUrl);
+  const markdown = successfulImages
+    .map((result, index) => {
+      const suffix = successfulImages.length > 1 ? ` ${index + 1} of ${successfulImages.length}` : "";
+      return `![${input.characterName} ${input.command}${suffix}](${result.imageUrl})`;
+    })
+    .join("\n\n");
   return {
     ok: displayResults.some((result) => result.ok),
     ...plan,
     results: displayResults,
-    markdown: firstImage ? `![${input.characterName} ${input.command}](${firstImage.imageUrl})` : "",
+    markdown,
   };
 }
 
