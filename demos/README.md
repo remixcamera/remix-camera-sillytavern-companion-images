@@ -20,3 +20,26 @@ Targets:
 
 Do not publish generated demo recordings until the runbook has been executed against production Remix.Camera and the inserted images are real Remix.Camera outputs.
 
+## Executable Verification
+
+Run a static adapter/demo preflight:
+
+```bash
+npm run demo:verify
+```
+
+This writes:
+
+```text
+tmp/adapter-demo-verification/adapter-demo-evidence.json
+tmp/adapter-demo-verification/adapter-demo-evidence.md
+tmp/adapter-demo-verification/adapter-demo-evidence.html
+```
+
+Run against a paired local bridge to verify real Remix.Camera dry-run previews without spending credits:
+
+```bash
+REMIX_BRIDGE_URL=http://127.0.0.1:8787 npm run demo:verify
+```
+
+The verifier does not fabricate generated image outputs. Real video demos should be recorded from the target host after the dry-run evidence is clean, then generation should be triggered only with explicit user intent.

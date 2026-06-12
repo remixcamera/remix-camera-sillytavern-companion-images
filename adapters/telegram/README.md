@@ -36,4 +36,3 @@ await remix.handleUpdate(update);
 ```
 
 The adapter uploads local bridge images to Telegram as files. It does not pass `127.0.0.1` URLs to Telegram's servers.
-
