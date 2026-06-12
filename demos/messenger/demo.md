@@ -30,3 +30,24 @@ node adapters/messenger/lily-webhook-server.mjs
 5. Send `snap yes warm bedroom mirror snap`. Confirm Messenger replies with the image plus the private-media retention warning.
 
 Record the real Messenger conversation, webhook signature verification, bridge logs, and image attachment response. Do not record a local harness as if it were a real Messenger chat.
+
+## Executable Evidence
+
+Create no-spend bridge evidence for the Messenger adapter:
+
+```bash
+node scripts/record-messaging-demo.mjs --target=messenger --output-dir=tmp/messaging-demo-evidence/messenger
+```
+
+Create a real Messenger delivery proof:
+
+```bash
+MESSENGER_PAGE_ACCESS_TOKEN=... \
+MESSENGER_RECIPIENT_ID=... \
+node scripts/record-messaging-demo.mjs \
+  --target=messenger \
+  --deliver \
+  --output-dir=demos/messenger/live-production-$(date +%F)
+```
+
+For a generated-image demo, add `--command="selfie cozy couch with lamp light" --yes --max-generations=1` after reviewing the command.

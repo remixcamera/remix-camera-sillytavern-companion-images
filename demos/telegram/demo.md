@@ -34,7 +34,8 @@ Run a no-spend production bridge proof without Telegram credentials:
 
 ```bash
 npm run demo:verify
-node scripts/verify-telegram-live-demo.mjs \
+node scripts/record-messaging-demo.mjs \
+  --target=telegram \
   --command="/preview selfie cozy couch with lamp light" \
   --output-dir=demos/telegram/evidence-production-2026-06-12
 ```
@@ -52,12 +53,12 @@ Run a real Telegram Bot API proof after setting bot credentials. This spends exa
 ```bash
 TELEGRAM_BOT_TOKEN=... \
 TELEGRAM_CHAT_ID=... \
-node scripts/verify-telegram-live-demo.mjs \
+node scripts/record-messaging-demo.mjs \
+  --target=telegram \
   --command="/selfie cozy couch with lamp light" \
   --yes \
   --max-generations=1 \
-  --send-telegram \
-  --require-telegram \
+  --deliver \
   --output-dir=demos/telegram/live-production-$(date +%F)
 ```
 

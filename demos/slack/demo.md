@@ -40,3 +40,24 @@ node adapters/slack/lily-slash-command-server.mjs
 - For local bridge image URLs, show Slack receiving uploaded files rather than a `127.0.0.1` URL.
 
 For cloud-hosted Slack servers, expose the local bridge through a private authenticated tunnel or run the bridge next to the Slack bot server. Do not expose an unauthenticated bridge to the public internet.
+
+## Executable Evidence
+
+Create no-spend bridge evidence for the Slack adapter:
+
+```bash
+node scripts/record-messaging-demo.mjs --target=slack --output-dir=tmp/messaging-demo-evidence/slack
+```
+
+Create a real Slack delivery proof:
+
+```bash
+SLACK_BOT_TOKEN=... \
+SLACK_CHANNEL_ID=... \
+node scripts/record-messaging-demo.mjs \
+  --target=slack \
+  --deliver \
+  --output-dir=demos/slack/live-production-$(date +%F)
+```
+
+For a generated-image demo, add `--command="selfie cozy couch with lamp light" --yes --max-generations=1` after reviewing the command.
