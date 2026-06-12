@@ -90,6 +90,13 @@ const mockPromptPacks = {
 
 function chooseMockPromptPack(query) {
   const text = String(query || "").toLowerCase();
+  if (text.startsWith("couple vacation")) return mockPromptPacks.vacation;
+  if (text.startsWith("date night")) return mockPromptPacks.date;
+  if (text.startsWith("daily life")) return mockPromptPacks.daily;
+  if (text.startsWith("adult private")) return mockPromptPacks.private;
+  if (text.startsWith("fashion outfit")) return mockPromptPacks.outfit;
+  if (text.startsWith("realistic couple selfie")) return mockPromptPacks.couple;
+  if (text.startsWith("realistic companion selfie") || text.startsWith("realistic candid companion selfie")) return mockPromptPacks.selfie;
   if (text.includes("vacation") || text.includes("amalfi") || text.includes("travel")) return mockPromptPacks.vacation;
   if (text.includes("outfit") || text.includes("fashion") || text.includes("clothing")) return mockPromptPacks.outfit;
   if (text.includes("couple") || text.includes("two adults") || text.includes("partner")) return mockPromptPacks.couple;
@@ -272,6 +279,9 @@ async function startBridge(env) {
   const child = spawn(process.execPath, [bridgePath.pathname], {
     env: {
       ...process.env,
+      REMIX_CONFIG_FILE: "__remix_camera_sillytavern_test_missing_config__.json",
+      REMIX_SESSION_TOKEN: "",
+      REMIX_PROFILE_ID: "",
       ...env,
       REMIX_BRIDGE_HOST: "127.0.0.1",
       REMIX_BRIDGE_PORT: String(port),
@@ -891,6 +901,62 @@ test("couples-vacation dry-run plans a three-photo multi-reference set", async (
         "/api/v1/design/packs/pack_vacation",
       ],
     );
+  } finally {
+    await bridge.close();
+    await mockApi.close();
+  }
+});
+
+test("couples-vacation generate returns a three-image chat set", async () => {
+  const mockApi = await startMockRemixApi();
+  const bridge = await startBridge({
+    REMIX_API_KEY: "rc_live_test.secret",
+    REMIX_PROFILE_ID: "profile_seraphina",
+    REMIX_API_BASE_URL: mockApi.baseUrl,
+  });
+
+  try {
+    const response = await fetch(`${bridge.url}/v1/commands/generate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        yes: true,
+        command: "couples-vacation",
+        characterName: "Seraphina",
+        profileId: "profile_seraphina",
+        referenceImageKey: "camera/training/seraphina/reference.jpg",
+        userConsent: "yes",
+        userReferenceImageKey: "uploads/test-user/reference-images/user-man.jpg",
+        theme: "cohesive Amalfi coast weekend",
+        visualIdentity: "long pastel-pink hair, amber eyes, black sundress, emerald vine magic",
+      }),
+    });
+    const payload = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.equal(payload.ok, true);
+    assert.equal(payload.command, "couples-vacation");
+    assert.equal(payload.results.length, 3);
+    assert.equal(payload.results.filter((result) => result.ok && result.imageUrl).length, 3);
+    assert.equal((payload.markdown.match(/!\[Seraphina couples-vacation/g) || []).length, 3);
+    assert.match(payload.markdown, /1 of 3/);
+    assert.match(payload.markdown, /2 of 3/);
+    assert.match(payload.markdown, /3 of 3/);
+
+    const generationCalls = mockApi.calls.filter((call) => call.pathname === "/api/v1/design/generations");
+    assert.equal(generationCalls.length, 3);
+    assert.match(generationCalls[0].body.prompt, /Photo 1 of 3/);
+    assert.match(generationCalls[1].body.prompt, /Photo 2 of 3/);
+    assert.match(generationCalls[2].body.prompt, /Photo 3 of 3/);
+    for (const call of generationCalls) {
+      assert.equal(call.body.modelId, "nano-banana");
+      assert.deepEqual(call.body.referenceImage, {
+        s3Key: "uploads/test-user/reference-images/user-man.jpg",
+      });
+      assert.deepEqual(call.body.selectedReferenceImages, {
+        profile_seraphina: "camera/training/seraphina/reference.jpg",
+      });
+    }
   } finally {
     await bridge.close();
     await mockApi.close();

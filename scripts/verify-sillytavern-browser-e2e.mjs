@@ -674,8 +674,9 @@ async function recordDemo() {
     ];
     const dialogHandler = (dialog) => dialog.accept(dialogReplies.shift() || "");
     page.on("dialog", dialogHandler);
-    expectedCount += 1;
-    await clickAndWaitForImage(page, "vacation", "#remix-camera-vacation-button", expectedCount);
+    const vacationGenerationCount = generationCountForKind("vacation");
+    expectedCount += vacationGenerationCount;
+    await clickAndWaitForImage(page, "vacation", "#remix-camera-vacation-button", expectedCount, vacationGenerationCount);
     page.off("dialog", dialogHandler);
     await sleep(2200);
   }
@@ -1041,25 +1042,27 @@ async function addExchange(page, userText, characterText) {
   await sleep(850);
 }
 
-async function clickAndWaitForImage(page, kind, selector, expectedCount) {
+async function clickAndWaitForImage(page, kind, selector, expectedCount, expectedNewImages = 1) {
   const beforeCount = await page.evaluate((imageSelector) => {
     return document.querySelectorAll(imageSelector).length;
   }, imageSelector);
   await page.click(selector);
   try {
     await page.waitForFunction(
-      ({ selector, count, beforeCount }) => {
-        return document.querySelectorAll(selector).length >= Math.max(count, beforeCount + 1);
+      ({ selector, count, beforeCount, expectedNewImages }) => {
+        return document.querySelectorAll(selector).length >= Math.max(count, beforeCount + expectedNewImages);
       },
-      { selector: imageSelector, count: expectedCount, beforeCount },
+      { selector: imageSelector, count: expectedCount, beforeCount, expectedNewImages },
       { timeout: imageWaitTimeoutMs },
     );
     await page.waitForFunction(
-      (selector) => {
-        const image = [...document.querySelectorAll(selector)].at(-1);
-        return Boolean(image && image.complete && image.naturalWidth > 0 && image.naturalHeight > 0);
+      ({ selector, beforeCount, expectedNewImages }) => {
+        const images = [...document.querySelectorAll(selector)].slice(beforeCount);
+        return images.length >= expectedNewImages && images
+          .slice(0, expectedNewImages)
+          .every((image) => image.complete && image.naturalWidth > 0 && image.naturalHeight > 0);
       },
-      imageSelector,
+      { selector: imageSelector, beforeCount, expectedNewImages },
       { timeout: imageWaitTimeoutMs },
     );
     await page.waitForFunction(
@@ -1076,18 +1079,27 @@ async function clickAndWaitForImage(page, kind, selector, expectedCount) {
       ].join("\n"),
     );
   }
-  const imageData = await page.evaluate((selector) => {
+  const imageData = await page.evaluate(({ selector, beforeCount, expectedNewImages }) => {
     const images = [...document.querySelectorAll(selector)];
     const context = window.SillyTavern?.getContext?.();
     const message = Array.isArray(context?.chat) ? context.chat.at(-1) : null;
-    return {
-      imageUrl: images.at(-1)?.src || "",
-      productionImageUrl: message?.extra?.productionImageUrl || null,
+    const newImageUrls = images.slice(beforeCount, beforeCount + expectedNewImages).map((image) => image.src || "");
+    const productionImageUrls = Array.isArray(message?.extra?.productionImageUrls)
+      ? message.extra.productionImageUrls
+      : message?.extra?.productionImageUrl
+        ? [message.extra.productionImageUrl]
+        : [];
+    return newImageUrls.map((imageUrl, index) => ({
+      imageUrl,
+      productionImageUrl: productionImageUrls[index] || null,
       modelId: message?.extra?.modelId || null,
       generationType: message?.extra?.generationType || null,
-    };
-  }, imageSelector);
-  generatedImages.push({ kind, ...imageData });
+      ordinal: index + 1,
+    }));
+  }, { selector: imageSelector, beforeCount, expectedNewImages });
+  for (const item of imageData) {
+    generatedImages.push({ kind, ...item });
+  }
   await page.evaluate(() => {
     const chatNode = document.querySelector("#chat");
     if (chatNode) {
@@ -1126,10 +1138,13 @@ async function setBadge(page, text) {
 }
 
 function assertDemoRequests() {
-  const recordedKinds = new Set((realApiMode ? generatedImages : apiRequests).map((request) => request.kind));
+  const requestSource = realApiMode ? generatedImages : apiRequests;
+  const recordedKinds = new Set(requestSource.map((request) => request.kind));
   for (const required of requestedKinds) {
     if (!recordedKinds.has(required)) {
-      throw new Error(`Demo did not exercise expected Remix flow: ${required}`);
+      throw new Error(
+        `Demo did not exercise expected Remix flow: ${required}. Recorded sequence: ${requestSource.map((request) => request.kind).join(", ") || "none"}.`,
+      );
     }
   }
 }
@@ -1168,6 +1183,69 @@ async function writeResult() {
   await fs.writeFile(resultOut, `${JSON.stringify(result, null, 2)}\n`);
 }
 
+const mockPromptPacks = {
+  selfie: {
+    id: "pack_selfie",
+    slug: "proven-companion-selfie",
+    title: "Proven Companion Selfie Pack",
+    prompt: "A realistic phone-camera mirror selfie in a cozy cafe corner, warm natural light, candid expression, detailed outfit styling, believable social photo composition, no text overlay.",
+  },
+  outfit: {
+    id: "pack_outfit",
+    slug: "proven-outfit-try-on",
+    title: "Proven Outfit Try-On Pack",
+    prompt: "A full-body fashion mirror photo showing the complete outfit clearly, editorial styling, natural posture, flattering indoor lighting, detailed fabric and accessories, realistic phone photo.",
+  },
+  couple: {
+    id: "pack_couple",
+    slug: "proven-couple-selfie",
+    title: "Proven Couple Selfie Pack",
+    prompt: "A realistic couple selfie with exactly two adults close together, affectionate natural body language, date-night warmth, phone-camera framing, believable shared moment, no extra people.",
+  },
+  vacation: {
+    id: "pack_vacation",
+    slug: "proven-couples-vacation",
+    title: "Proven Couples Vacation Pack",
+    prompt: "A cohesive romantic vacation travel photo set of a couple at a beach resort, bright natural light, scenic destination visible, candid keepsake mood, consistent wardrobe palette.",
+  },
+  date: {
+    id: "pack_date",
+    slug: "proven-date-night",
+    title: "Proven Date Night Pack",
+    prompt: "A warm date-night phone photo at a restaurant booth, soft practical lighting, polished outfit, intimate expression, visible table setting, cinematic but believable social snapshot.",
+  },
+  daily: {
+    id: "pack_daily",
+    slug: "proven-daily-life-snap",
+    title: "Proven Daily Life Snap Pack",
+    prompt: "A casual candid daily-life phone photo at home with coffee and morning light, natural expression, relaxed wardrobe, lived-in background details, realistic companion update.",
+  },
+  private: {
+    id: "pack_private",
+    slug: "proven-private-snap",
+    title: "Proven Private Adult Snap Pack",
+    prompt: "An adult private bedroom mirror snap, tasteful lingerie styling, intimate phone-camera framing, confident clearly adult subject, warm low light, consensual mature mood, no text overlay.",
+  },
+};
+
+function chooseMockPromptPack(query) {
+  const text = String(query || "").toLowerCase();
+  if (text.startsWith("couple vacation")) return mockPromptPacks.vacation;
+  if (text.startsWith("date night")) return mockPromptPacks.date;
+  if (text.startsWith("daily life")) return mockPromptPacks.daily;
+  if (text.startsWith("adult private")) return mockPromptPacks.private;
+  if (text.startsWith("fashion outfit")) return mockPromptPacks.outfit;
+  if (text.startsWith("realistic couple selfie")) return mockPromptPacks.couple;
+  if (text.startsWith("realistic companion selfie") || text.startsWith("realistic candid companion selfie")) return mockPromptPacks.selfie;
+  if (text.includes("vacation") || text.includes("travel") || text.includes("beach")) return mockPromptPacks.vacation;
+  if (text.includes("outfit") || text.includes("fashion") || text.includes("clothing")) return mockPromptPacks.outfit;
+  if (text.includes("couple") || text.includes("two adults") || text.includes("partner")) return mockPromptPacks.couple;
+  if (/\bdate\b/.test(text) || text.includes("restaurant")) return mockPromptPacks.date;
+  if (text.includes("daily") || text.includes("coffee") || text.includes("morning")) return mockPromptPacks.daily;
+  if (text.includes("private") || text.includes("lingerie") || text.includes("adult")) return mockPromptPacks.private;
+  return mockPromptPacks.selfie;
+}
+
 function startMockRemixApi() {
   const generations = new Map();
   let counter = 0;
@@ -1185,6 +1263,47 @@ function startMockRemixApi() {
               fluxReady: true,
             },
           ],
+        });
+      }
+      if (req.method === "POST" && url.pathname === "/api/v1/design/packs/search") {
+        const body = await readJson(req);
+        const selected = chooseMockPromptPack(body.query);
+        return sendJson(res, 200, {
+          ok: true,
+          packs: [
+            {
+              id: selected.id,
+              slug: selected.slug,
+              title: selected.title,
+              promptCount: 1,
+              matchedText: selected.prompt,
+            },
+          ],
+        });
+      }
+      if (req.method === "GET" && url.pathname.startsWith("/api/v1/design/packs/")) {
+        const packId = decodeURIComponent(url.pathname.slice("/api/v1/design/packs/".length));
+        const selected =
+          Object.values(mockPromptPacks).find((pack) => pack.id === packId || pack.slug === packId) ||
+          mockPromptPacks.selfie;
+        return sendJson(res, 200, {
+          ok: true,
+          pack: {
+            id: selected.id,
+            slug: selected.slug,
+            title: selected.title,
+            description: "Mock proven Remix.Camera prompt pack.",
+            prompts: [
+              {
+                index: 0,
+                text: selected.prompt,
+                aspectRatio: "1:1",
+                cropStyle: "square",
+                poseType: "selfie",
+                modelType: "nano-banana",
+              },
+            ],
+          },
         });
       }
       if (req.method === "POST" && url.pathname === "/api/v1/design/generations") {
@@ -1312,7 +1431,7 @@ function classifyPrompt(prompt) {
   if (text.includes("couples vacation photo set")) {
     return "vacation";
   }
-  if (text.includes("create a high-quality date-night image")) {
+  if (text.includes("date-night image") || text.includes("date setting:")) {
     return "date";
   }
   if (text.includes("daily-life snap")) {

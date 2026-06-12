@@ -371,26 +371,47 @@ import { saveSettingsDebounced } from "../../../../script.js";
     return String(value || "").replaceAll("\\", "\\\\").replaceAll('"', '\\"');
   }
 
-  function generatedImageMessageHtml(markdown, imageUrl, command) {
-    const url = cleanString(imageUrl);
-    if (!url) {
+  function successfulGeneratedImages(payload) {
+    if (!Array.isArray(payload?.results)) {
+      return [];
+    }
+    return payload.results
+      .filter((result) => result?.ok && cleanString(result.imageUrl))
+      .map((result) => ({
+        id: cleanString(result.id),
+        imageUrl: cleanString(result.imageUrl),
+        productionImageUrl: cleanString(result.productionImageUrl),
+        bridgeImageId: cleanString(result.bridgeImageId),
+      }));
+  }
+
+  function generatedImageMessageHtml(markdown, images, command) {
+    const urls = (Array.isArray(images) ? images : [{ imageUrl: images }])
+      .map((image) => cleanString(typeof image === "string" ? image : image?.imageUrl))
+      .filter(Boolean);
+    if (!urls.length) {
       return markdown;
     }
     const label = `${settings().characterName || "Remix.Camera"} ${command || "image"}`.trim();
-    const imageHtml = [
-      `<a class="remix-camera-chat-image-link" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">`,
-      `<img class="remix-camera-chat-image" src="${escapeHtml(url)}" alt="${escapeHtml(label)}" loading="eager" decoding="sync">`,
-      "</a>",
-    ].join("");
-    if (command !== "private-snap") {
-      return imageHtml;
-    }
-    return [
-      `<div class="remix-camera-snap" data-remix-camera-image-url="${escapeHtml(url)}">`,
-      imageHtml,
-      `<span class="remix-camera-snap-badge">Snap</span>`,
-      "</div>",
-    ].join("");
+    return urls
+      .map((url, index) => {
+        const imageLabel = urls.length > 1 ? `${label} ${index + 1}` : label;
+        const imageHtml = [
+          `<a class="remix-camera-chat-image-link" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">`,
+          `<img class="remix-camera-chat-image" src="${escapeHtml(url)}" alt="${escapeHtml(imageLabel)}" loading="eager" decoding="sync">`,
+          "</a>",
+        ].join("");
+        if (command !== "private-snap") {
+          return imageHtml;
+        }
+        return [
+          `<div class="remix-camera-snap" data-remix-camera-image-url="${escapeHtml(url)}">`,
+          imageHtml,
+          `<span class="remix-camera-snap-badge">Snap</span>`,
+          "</div>",
+        ].join("");
+      })
+      .join("");
   }
 
   function expiredSnapMessageHtml() {
@@ -403,7 +424,11 @@ import { saveSettingsDebounced } from "../../../../script.js";
       message.mes = expiredSnapMessageHtml();
       if (message.extra && typeof message.extra === "object") {
         delete message.extra.image;
+        delete message.extra.images;
         delete message.extra.productionImageUrl;
+        delete message.extra.productionImageUrls;
+        delete message.extra.bridgeImageIds;
+        delete message.extra.generationIds;
         message.extra.snapExpired = true;
       }
       const selector = `.remix-camera-snap[data-remix-camera-image-url="${cssEscape(imageUrl)}"]`;
@@ -527,15 +552,21 @@ import { saveSettingsDebounced } from "../../../../script.js";
   }
 
   async function insertGeneratedResult(payload) {
-    const markdown = payload?.markdown || "";
-    const imageUrl = Array.isArray(payload?.results)
-      ? payload.results.find((result) => result?.ok && result?.imageUrl)?.imageUrl || ""
-      : "";
-    const productionImageUrl = Array.isArray(payload?.results)
-      ? payload.results.find((result) => result?.ok && result?.productionImageUrl)?.productionImageUrl || ""
-      : "";
+    const generatedImages = successfulGeneratedImages(payload);
+    const imageUrls = generatedImages.map((image) => image.imageUrl).filter(Boolean);
+    const productionImageUrls = generatedImages.map((image) => image.productionImageUrl).filter(Boolean);
+    const bridgeImageIds = generatedImages.map((image) => image.bridgeImageId).filter(Boolean);
+    const generationIds = generatedImages.map((image) => image.id).filter(Boolean);
+    const markdown = payload?.markdown || imageUrls
+      .map((url, index) => {
+        const suffix = imageUrls.length > 1 ? ` ${index + 1} of ${imageUrls.length}` : "";
+        return `![${settings().characterName || "Remix.Camera"} ${payload?.command || "image"}${suffix}](${url})`;
+      })
+      .join("\n\n");
+    const imageUrl = imageUrls[0] || "";
+    const productionImageUrl = productionImageUrls[0] || "";
 
-    if (!markdown) {
+    if (!markdown && !imageUrls.length) {
       return "none";
     }
 
@@ -545,12 +576,16 @@ import { saveSettingsDebounced } from "../../../../script.js";
         name: settings().characterName || "Remix.Camera",
         is_user: false,
         is_system: false,
-        mes: generatedImageMessageHtml(markdown, imageUrl, payload?.command),
+        mes: generatedImageMessageHtml(markdown, generatedImages, payload?.command),
         send_date: new Date().toISOString(),
         extra: {
           type: "remix_camera_image",
           image: imageUrl || undefined,
+          images: imageUrls.length ? imageUrls : undefined,
           productionImageUrl: productionImageUrl || undefined,
+          productionImageUrls: productionImageUrls.length ? productionImageUrls : undefined,
+          bridgeImageIds: bridgeImageIds.length ? bridgeImageIds : undefined,
+          generationIds: generationIds.length ? generationIds : undefined,
           markdown,
           modelId: payload?.modelId || undefined,
           matureContent: payload?.matureContent === true || undefined,
@@ -562,9 +597,13 @@ import { saveSettingsDebounced } from "../../../../script.js";
         context.chat.push(message);
       }
       context.addOneMessage(message);
-      hydrateGeneratedImage(imageUrl, payload?.command);
-      if (payload?.command === "private-snap" && imageUrl) {
-        scheduleSnapExpiry(message, imageUrl, payload?.snapTtlSeconds || settings().snapTtlSeconds);
+      for (const url of imageUrls) {
+        hydrateGeneratedImage(url, payload?.command);
+      }
+      if (payload?.command === "private-snap") {
+        for (const url of imageUrls) {
+          scheduleSnapExpiry(message, url, payload?.snapTtlSeconds || settings().snapTtlSeconds);
+        }
       }
       if (typeof context.saveChat === "function") {
         context.saveChat();
@@ -817,7 +856,6 @@ import { saveSettingsDebounced } from "../../../../script.js";
           <label class="remix-camera-check"><input id="remix-camera-allow-tool-calls" type="checkbox" ${current.allowToolCalls ? "checked" : ""}> Allow character tool calls</label>
           <label class="remix-camera-check"><input id="remix-camera-auto-insert" type="checkbox" ${current.autoInsertResult ? "checked" : ""}> Insert generated image in chat</label>
           <label class="remix-camera-check"><input id="remix-camera-proactive-snaps" type="checkbox" ${current.proactiveSnapsEnabled ? "checked" : ""}> Proactive private snaps</label>
-        </details>
         <pre id="remix-camera-log" data-type="info">Bridge not checked yet.</pre>
       </div>
     `;
