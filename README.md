@@ -9,7 +9,7 @@ The integration has two parts:
 - `bridge/`: a local Node.js bridge that stores `REMIX_SESSION_TOKEN` server-side and calls the Remix.Camera API.
 - `extension/`: a SillyTavern extension that adds image buttons and optional function tools for a character.
 - `characters/`: importable Character Card V2 examples with Remix.Camera visual metadata.
-- `adapters/`: wrappers for RisuAI, Open WebUI, LibreChat, LobeChat, Agnai, Telegram, and Discord.
+- `adapters/`: wrappers for RisuAI, Open WebUI, LibreChat, LobeChat, Agnai, Telegram, Discord, WhatsApp, Slack, Dify, Flowise, and Botpress.
 
 ## What It Enables
 
@@ -67,6 +67,7 @@ npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=telegram
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=discord
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=whatsapp
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=slack
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=dify
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=flowise
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=botpress
@@ -85,10 +86,11 @@ Adapter files:
 - Discord Lily proof of concept: `adapters/discord/lily-interactions-server.mjs`
 - WhatsApp reusable tool: `adapters/whatsapp/remix-whatsapp-tool.mjs`
 - WhatsApp Lily proof of concept: `adapters/whatsapp/lily-webhook-server.mjs`
+- Slack reusable tool: `adapters/slack/remix-slack-tool.mjs`
+- Slack Lily proof of concept: `adapters/slack/lily-slash-command-server.mjs`
 - Dify: `http://127.0.0.1:8787/openapi.json`
 - Flowise: `adapters/flowise/remix-camera-flowise-tool.js`
 - Botpress: `adapters/botpress/remix-camera-botpress-action.js`
-- Discord Lily proof of concept: `adapters/discord/lily-interactions-server.mjs`
 
 See `adapters/README.md` and `demos/README.md` for target-specific demo runbooks.
 

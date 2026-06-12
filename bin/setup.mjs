@@ -25,6 +25,7 @@ const SUPPORTED_TARGETS = new Set([
   "telegram",
   "discord",
   "whatsapp",
+  "slack",
   "dify",
   "flowise",
   "botpress",
@@ -41,7 +42,7 @@ Usage:
   npx @remix-camera/sillytavern-setup [options]
 
 Options:
-  --target=sillytavern|risu|openwebui|librechat|lobechat|agnai|telegram|discord|whatsapp|dify|flowise|botpress
+  --target=sillytavern|risu|openwebui|librechat|lobechat|agnai|telegram|discord|whatsapp|slack|dify|flowise|botpress
   --sillytavern-dir=/path/to/SillyTavern  Use a specific local SillyTavern checkout
   --profile-id=profile_id                 Use a specific Remix.Camera character profile
   --character-name="Name"                 Override the Character Card name
@@ -407,6 +408,14 @@ function printTargetInstructions(target, { healthUrl, port, configPath }) {
       `  WHATSAPP_ACCESS_TOKEN=... WHATSAPP_PHONE_NUMBER_ID=... WHATSAPP_VERIFY_TOKEN=... REMIX_CONFIG_FILE=${configPath} node ${path.join(adapterRoot, "whatsapp", "lily-webhook-server.mjs")}`,
       "Expose the webhook over HTTPS and set that URL in the Meta app webhook settings.",
       "The adapter uploads local bridge images to WhatsApp media before sending.",
+    ],
+    slack: [
+      "Reusable Slack slash-command tool module:",
+      `  ${path.join(adapterRoot, "slack", "remix-slack-tool.mjs")}`,
+      "Lily proof-of-concept Slack slash-command server:",
+      `  SLACK_SIGNING_SECRET=... SLACK_BOT_TOKEN=... REMIX_CONFIG_FILE=${configPath} node ${path.join(adapterRoot, "slack", "lily-slash-command-server.mjs")}`,
+      "Expose the server over HTTPS and set the Slack slash-command Request URL to your hosted endpoint.",
+      "The adapter uploads local bridge images to Slack files before sending, so 127.0.0.1 image URLs are not posted as broken Slack image blocks.",
     ],
     dify: [
       "Add a Dify custom OpenAPI tool from this schema URL:",
