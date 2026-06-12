@@ -66,6 +66,10 @@ npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=agnai
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=telegram
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=discord
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=whatsapp
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=dify
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=flowise
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=botpress
 ```
 
 Adapter files:
@@ -78,6 +82,12 @@ Adapter files:
 - Telegram reusable tool: `adapters/telegram/remix-telegram-tool.mjs`
 - Telegram Lily proof of concept: `adapters/telegram/lily-bot.mjs`
 - Discord reusable tool: `adapters/discord/remix-discord-tool.mjs`
+- Discord Lily proof of concept: `adapters/discord/lily-interactions-server.mjs`
+- WhatsApp reusable tool: `adapters/whatsapp/remix-whatsapp-tool.mjs`
+- WhatsApp Lily proof of concept: `adapters/whatsapp/lily-webhook-server.mjs`
+- Dify: `http://127.0.0.1:8787/openapi.json`
+- Flowise: `adapters/flowise/remix-camera-flowise-tool.js`
+- Botpress: `adapters/botpress/remix-camera-botpress-action.js`
 - Discord Lily proof of concept: `adapters/discord/lily-interactions-server.mjs`
 
 See `adapters/README.md` and `demos/README.md` for target-specific demo runbooks.

@@ -17,6 +17,10 @@ Targets:
 - `agnai/`: Agnai userscript demo.
 - `telegram/`: reusable Telegram bot tool plus Lily proof-of-concept demo.
 - `discord/`: Discord slash-command tool plus Lily proof-of-concept demo.
+- `whatsapp/`: WhatsApp Cloud API tool plus Lily proof-of-concept webhook demo.
+- `dify/`: Dify OpenAPI custom tool demo.
+- `flowise/`: Flowise Custom Tool demo.
+- `botpress/`: Botpress Execute Code card or Action demo.
 
 Do not publish generated demo recordings until the runbook has been executed against production Remix.Camera and the inserted images are real Remix.Camera outputs.
 

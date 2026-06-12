@@ -1,6 +1,6 @@
 # Remix.Camera Adapter Demo Verification
 
-Generated at: 2026-06-12T09:31:08.685Z
+Generated at: 2026-06-12T09:50:44.435Z
 Mode: bridge-dry-run
 Bridge URL: http://127.0.0.1:8796
 
@@ -72,6 +72,41 @@ Bridge URL: http://127.0.0.1:8796
 - [x] marker present: sendDiscordWebhookResult
 - [x] marker present: yes:true
 
+### WhatsApp
+- [x] adapter exists: adapters/whatsapp/remix-whatsapp-tool.mjs
+- [x] adapter exists: adapters/whatsapp/lily-webhook-server.mjs
+- [x] demo runbook exists: demos/whatsapp/demo.md
+- [x] demo includes setup target
+- [x] marker present: createRemixWhatsAppTool
+- [x] marker present: WHATSAPP_PHONE_NUMBER_ID
+- [x] marker present: uploads local bridge images
+
+### Dify
+- [x] adapter exists: adapters/dify/README.md
+- [x] demo runbook exists: demos/dify/demo.md
+- [x] demo includes setup target
+- [x] marker present: custom OpenAPI tool
+- [x] marker present: /openapi.json
+- [x] marker present: /dry-run
+
+### Flowise
+- [x] adapter exists: adapters/flowise/remix-camera-flowise-tool.js
+- [x] adapter exists: adapters/flowise/README.md
+- [x] demo runbook exists: demos/flowise/demo.md
+- [x] demo includes setup target
+- [x] marker present: remixCameraFlowiseTool
+- [x] marker present: Custom Tool
+- [x] marker present: preview=true
+
+### Botpress
+- [x] adapter exists: adapters/botpress/remix-camera-botpress-action.js
+- [x] adapter exists: adapters/botpress/README.md
+- [x] demo runbook exists: demos/botpress/demo.md
+- [x] demo includes setup target
+- [x] marker present: remixCameraBotpressAction
+- [x] marker present: Execute Code
+- [x] marker present: yes=true
+
 ## Bridge Contracts
 
 - [x] bridge health (status 200; auth design_api_session)
@@ -90,3 +125,4 @@ Bridge URL: http://127.0.0.1:8796
 
 - [x] Telegram adapter real dry-run (command: send-selfie)
 - [x] Discord adapter real dry-run (command: send-selfie)
+- [x] WhatsApp adapter real dry-run (command: send-selfie)

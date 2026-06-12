@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "generatedAt": "2026-06-12T09:31:08.685Z",
+  "generatedAt": "2026-06-12T09:50:44.435Z",
   "mode": "bridge-dry-run",
   "bridgeUrl": "http://127.0.0.1:8796",
   "targets": [
@@ -301,6 +301,165 @@
           "marker": "yes:true"
         }
       ]
+    },
+    {
+      "id": "whatsapp",
+      "title": "WhatsApp",
+      "checks": [
+        {
+          "name": "adapter exists: adapters/whatsapp/remix-whatsapp-tool.mjs",
+          "ok": true,
+          "path": "adapters/whatsapp/remix-whatsapp-tool.mjs"
+        },
+        {
+          "name": "adapter exists: adapters/whatsapp/lily-webhook-server.mjs",
+          "ok": true,
+          "path": "adapters/whatsapp/lily-webhook-server.mjs"
+        },
+        {
+          "name": "demo runbook exists: demos/whatsapp/demo.md",
+          "ok": true,
+          "path": "demos/whatsapp/demo.md"
+        },
+        {
+          "name": "demo includes setup target",
+          "ok": true,
+          "expected": "--target=whatsapp"
+        },
+        {
+          "name": "marker present: createRemixWhatsAppTool",
+          "ok": true,
+          "marker": "createRemixWhatsAppTool"
+        },
+        {
+          "name": "marker present: WHATSAPP_PHONE_NUMBER_ID",
+          "ok": true,
+          "marker": "WHATSAPP_PHONE_NUMBER_ID"
+        },
+        {
+          "name": "marker present: uploads local bridge images",
+          "ok": true,
+          "marker": "uploads local bridge images"
+        }
+      ]
+    },
+    {
+      "id": "dify",
+      "title": "Dify",
+      "checks": [
+        {
+          "name": "adapter exists: adapters/dify/README.md",
+          "ok": true,
+          "path": "adapters/dify/README.md"
+        },
+        {
+          "name": "demo runbook exists: demos/dify/demo.md",
+          "ok": true,
+          "path": "demos/dify/demo.md"
+        },
+        {
+          "name": "demo includes setup target",
+          "ok": true,
+          "expected": "--target=dify"
+        },
+        {
+          "name": "marker present: custom OpenAPI tool",
+          "ok": true,
+          "marker": "custom OpenAPI tool"
+        },
+        {
+          "name": "marker present: /openapi.json",
+          "ok": true,
+          "marker": "/openapi.json"
+        },
+        {
+          "name": "marker present: /dry-run",
+          "ok": true,
+          "marker": "/dry-run"
+        }
+      ]
+    },
+    {
+      "id": "flowise",
+      "title": "Flowise",
+      "checks": [
+        {
+          "name": "adapter exists: adapters/flowise/remix-camera-flowise-tool.js",
+          "ok": true,
+          "path": "adapters/flowise/remix-camera-flowise-tool.js"
+        },
+        {
+          "name": "adapter exists: adapters/flowise/README.md",
+          "ok": true,
+          "path": "adapters/flowise/README.md"
+        },
+        {
+          "name": "demo runbook exists: demos/flowise/demo.md",
+          "ok": true,
+          "path": "demos/flowise/demo.md"
+        },
+        {
+          "name": "demo includes setup target",
+          "ok": true,
+          "expected": "--target=flowise"
+        },
+        {
+          "name": "marker present: remixCameraFlowiseTool",
+          "ok": true,
+          "marker": "remixCameraFlowiseTool"
+        },
+        {
+          "name": "marker present: Custom Tool",
+          "ok": true,
+          "marker": "Custom Tool"
+        },
+        {
+          "name": "marker present: preview=true",
+          "ok": true,
+          "marker": "preview=true"
+        }
+      ]
+    },
+    {
+      "id": "botpress",
+      "title": "Botpress",
+      "checks": [
+        {
+          "name": "adapter exists: adapters/botpress/remix-camera-botpress-action.js",
+          "ok": true,
+          "path": "adapters/botpress/remix-camera-botpress-action.js"
+        },
+        {
+          "name": "adapter exists: adapters/botpress/README.md",
+          "ok": true,
+          "path": "adapters/botpress/README.md"
+        },
+        {
+          "name": "demo runbook exists: demos/botpress/demo.md",
+          "ok": true,
+          "path": "demos/botpress/demo.md"
+        },
+        {
+          "name": "demo includes setup target",
+          "ok": true,
+          "expected": "--target=botpress"
+        },
+        {
+          "name": "marker present: remixCameraBotpressAction",
+          "ok": true,
+          "marker": "remixCameraBotpressAction"
+        },
+        {
+          "name": "marker present: Execute Code",
+          "ok": true,
+          "marker": "Execute Code"
+        },
+        {
+          "name": "marker present: yes=true",
+          "ok": true,
+          "marker": "yes=true"
+        }
+      ]
     }
   ],
   "bridgeChecks": [
@@ -377,6 +536,11 @@
     },
     {
       "name": "Discord adapter real dry-run",
+      "ok": true,
+      "command": "send-selfie"
+    },
+    {
+      "name": "WhatsApp adapter real dry-run",
       "ok": true,
       "command": "send-selfie"
     }

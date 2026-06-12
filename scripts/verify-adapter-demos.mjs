@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import { COMPANION_COMMANDS } from "../lib/companion-tools.mjs";
 import { runDiscordRemixInteraction } from "../adapters/discord/remix-discord-tool.mjs";
 import { parseTelegramCommand, runTelegramRemixCommand } from "../adapters/telegram/remix-telegram-tool.mjs";
+import { parseWhatsAppCommand, runWhatsAppRemixCommand } from "../adapters/whatsapp/remix-whatsapp-tool.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const packageRoot = path.resolve(__dirname, "..");
@@ -85,6 +86,38 @@ const targets = [
     demoFile: "demos/discord/demo.md",
     setupCommand: "--target=discord",
     markers: ["verifyDiscordSignature", "sendDiscordWebhookResult", "yes:true"],
+  },
+  {
+    id: "whatsapp",
+    title: "WhatsApp",
+    adapterFiles: ["adapters/whatsapp/remix-whatsapp-tool.mjs", "adapters/whatsapp/lily-webhook-server.mjs"],
+    demoFile: "demos/whatsapp/demo.md",
+    setupCommand: "--target=whatsapp",
+    markers: ["createRemixWhatsAppTool", "WHATSAPP_PHONE_NUMBER_ID", "uploads local bridge images"],
+  },
+  {
+    id: "dify",
+    title: "Dify",
+    adapterFiles: ["adapters/dify/README.md"],
+    demoFile: "demos/dify/demo.md",
+    setupCommand: "--target=dify",
+    markers: ["custom OpenAPI tool", "/openapi.json", "/dry-run"],
+  },
+  {
+    id: "flowise",
+    title: "Flowise",
+    adapterFiles: ["adapters/flowise/remix-camera-flowise-tool.js", "adapters/flowise/README.md"],
+    demoFile: "demos/flowise/demo.md",
+    setupCommand: "--target=flowise",
+    markers: ["remixCameraFlowiseTool", "Custom Tool", "preview=true"],
+  },
+  {
+    id: "botpress",
+    title: "Botpress",
+    adapterFiles: ["adapters/botpress/remix-camera-botpress-action.js", "adapters/botpress/README.md"],
+    demoFile: "demos/botpress/demo.md",
+    setupCommand: "--target=botpress",
+    markers: ["remixCameraBotpressAction", "Execute Code", "yes=true"],
   },
 ];
 
@@ -271,6 +304,12 @@ async function verifyHostAdapterDryRuns() {
         reason: "No bridge URL provided.",
       }),
     );
+    checks.push(
+      okCheck("WhatsApp adapter real dry-run", false, {
+        skipped: true,
+        reason: "No bridge URL provided.",
+      }),
+    );
     return checks;
   }
 
@@ -304,6 +343,17 @@ async function verifyHostAdapterDryRuns() {
   checks.push(
     okCheck("Discord adapter real dry-run", discord?.payload?.dryRun === true && /Preview ready/i.test(discord.text), {
       command: discord?.command,
+    }),
+  );
+
+  const whatsapp = await runWhatsAppRemixCommand(parseWhatsAppCommand("preview selfie cozy couch with lamp light"), {
+    bridgeUrl,
+    profileId: process.env.REMIX_PROFILE_ID || "",
+    characterName: "Lily",
+  });
+  checks.push(
+    okCheck("WhatsApp adapter real dry-run", whatsapp?.payload?.dryRun === true && /Preview ready/i.test(whatsapp.text), {
+      command: whatsapp?.command,
     }),
   );
 

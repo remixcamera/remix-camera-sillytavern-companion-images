@@ -13,6 +13,10 @@ npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=agnai
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=telegram
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=discord
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=whatsapp
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=dify
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=flowise
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=botpress
 ```
 
 ## Adapter Matrix
@@ -29,6 +33,11 @@ npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=
 | Telegram Lily | `adapters/telegram/lily-bot.mjs` | Proof-of-concept Telegram bot |
 | Discord | `adapters/discord/remix-discord-tool.mjs` | Reusable Discord interactions module |
 | Discord Lily | `adapters/discord/lily-interactions-server.mjs` | Proof-of-concept Discord interactions server |
+| WhatsApp | `adapters/whatsapp/remix-whatsapp-tool.mjs` | Reusable WhatsApp Cloud API module |
+| WhatsApp Lily | `adapters/whatsapp/lily-webhook-server.mjs` | Proof-of-concept WhatsApp webhook server |
+| Dify | `http://127.0.0.1:8787/openapi.json` | Dify custom OpenAPI tool |
+| Flowise | `adapters/flowise/remix-camera-flowise-tool.js` | Flowise Custom Tool helper |
+| Botpress | `adapters/botpress/remix-camera-botpress-action.js` | Botpress Execute Code card or Action helper |
 
 ## Shared Bridge URLs
 
@@ -47,4 +56,3 @@ POST /v1/tools/:command/generate
 ```
 
 Generation endpoints require `yes=true`; dry-run endpoints never spend credits.
-
