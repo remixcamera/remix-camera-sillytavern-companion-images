@@ -43,3 +43,19 @@ REMIX_BRIDGE_URL=http://127.0.0.1:8787 npm run demo:verify
 ```
 
 The verifier does not fabricate generated image outputs. Real video demos should be recorded from the target host after the dry-run evidence is clean, then generation should be triggered only with explicit user intent.
+
+## Current Production Dry-Run Evidence
+
+The committed production dry-run snapshot lives here:
+
+```text
+demos/evidence/adapter-demo-evidence.md
+demos/evidence/adapter-demo-evidence.json
+demos/evidence/adapter-demo-evidence.html
+```
+
+Refresh it from a paired bridge without spending credits:
+
+```bash
+REMIX_BRIDGE_URL=http://127.0.0.1:8787 npm run demo:verify -- --output-dir=demos/evidence
+```
