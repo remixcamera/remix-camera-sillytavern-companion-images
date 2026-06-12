@@ -1,0 +1,41 @@
+{
+  "name": "@remix-camera/sillytavern-setup",
+  "version": "0.4.0",
+  "private": false,
+  "type": "module",
+  "description": "Local SillyTavern bridge and extension for Remix.Camera AI companion images.",
+  "keywords": [
+    "sillytavern",
+    "remix-camera",
+    "ai-companion",
+    "character-card",
+    "image-generation"
+  ],
+  "homepage": "https://github.com/remixcamera/remix-camera-sillytavern-companion-images#readme",
+  "bugs": {
+    "url": "https://github.com/remixcamera/remix-camera-sillytavern-companion-images/issues"
+  },
+  "license": "UNLICENSED",
+  "publishConfig": {
+    "access": "public"
+  },
+  "bin": {
+    "remix-camera-sillytavern-setup": "bin/setup.mjs"
+  },
+  "scripts": {
+    "build:card": "node scripts/embed-character-card-png.mjs",
+    "start": "node bridge/server.mjs",
+    "check": "node --check bridge/server.mjs && node --check bridge/live-e2e.mjs && node --check bridge/server.node-test.mjs && node --check tests/extension-settings.node-test.mjs && node --check index.js && node --check extension/remix-camera-companion-images/index.js && node -e \"const fs=require('fs'); if (fs.readFileSync('index.js','utf8') !== fs.readFileSync('extension/remix-camera-companion-images/index.js','utf8')) throw new Error('Root and nested extension entrypoints differ');\" && node --check bin/setup.mjs && node --check scripts/embed-character-card-png.mjs && node --check scripts/verify-character-card.mjs && node --check scripts/verify-sillytavern-browser-e2e.mjs && node scripts/verify-character-card.mjs",
+    "test": "node --test bridge/server.node-test.mjs tests/extension-settings.node-test.mjs",
+    "test:browser": "npx --yes --package=playwright -- bash -lc 'PLAYWRIGHT_BIN=\"$(command -v playwright)\"; PLAYWRIGHT_MODULE_PATH=\"$(cd \"$(dirname \"$PLAYWRIGHT_BIN\")/../playwright\" && pwd)/index.js\"; export PLAYWRIGHT_MODULE_PATH; node scripts/verify-sillytavern-browser-e2e.mjs \"$@\"' --",
+    "test:browser:live": "npx --yes --package=playwright -- bash -lc 'PLAYWRIGHT_BIN=\"$(command -v playwright)\"; PLAYWRIGHT_MODULE_PATH=\"$(cd \"$(dirname \"$PLAYWRIGHT_BIN\")/../playwright\" && pwd)/index.js\"; export PLAYWRIGHT_MODULE_PATH; node scripts/verify-sillytavern-browser-e2e.mjs --real-api \"$@\"' --",
+    "test:live": "node bridge/live-e2e.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/remixcamera/remix-camera-sillytavern-companion-images.git"
+  }
+}

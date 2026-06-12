@@ -1,0 +1,1163 @@
+import { extension_settings, getContext as getSillyTavernContext } from "../../../extensions.js";
+import { saveSettingsDebounced } from "../../../../script.js";
+
+(function remixCameraCompanionImages() {
+  const EXTENSION_NAME = "remix-camera-companion-images";
+  const SETTINGS_KEY = "remixCameraCompanionImages";
+  const TOOL_NAMES = [
+    "remix_send_selfie",
+    "remix_auto_selfie_from_chat",
+    "remix_outfit_try_on",
+    "remix_couple_photo",
+    "remix_couples_vacation",
+    "remix_date_night",
+    "remix_daily_life_snap",
+    "remix_private_snap",
+  ];
+  const DEFAULT_SETTINGS = {
+    bridgeUrl: "http://127.0.0.1:8787",
+    profileId: "",
+    referenceImageKey: "",
+    characterName: "",
+    gender: "",
+    bio: "",
+    mood: "warm, attentive, in-character",
+    outfit: "",
+    location: "",
+    style: "character-consistent portrait image, natural composition, polished detail",
+    visualIdentity: "",
+    negativePrompt: "text overlays, UI, watermark, distorted hands, duplicated face, unrelated people",
+    maxGenerations: 1,
+    matureContent: false,
+    allowToolCalls: false,
+    autoInsertResult: true,
+    snapTtlSeconds: 45,
+    proactiveSnapsEnabled: false,
+    proactiveSnapIntervalMinutes: 240,
+    proactiveSnapDailyLimit: 1,
+    proactiveSnapDate: "",
+    proactiveSnapCount: 0,
+    proactiveSnapLastSentAt: 0,
+  };
+  const CHARACTER_SETTINGS_KEYS = [
+    "profileId",
+    "referenceImageKey",
+    "characterName",
+    "gender",
+    "bio",
+    "mood",
+    "outfit",
+    "location",
+    "style",
+    "visualIdentity",
+    "negativePrompt",
+    "matureContent",
+  ];
+  const REFERENCE_UPLOAD_TARGET_BYTES = Math.floor(3.6 * 1024 * 1024);
+  const REFERENCE_UPLOAD_MAX_DIMENSION = 2048;
+  let functionToolsRegistered = false;
+  let lifecycleEventsBound = false;
+  let coupleReferenceFile = null;
+  let proactiveSnapTimer = null;
+
+  function getContext() {
+    try {
+      const context = getSillyTavernContext();
+      if (context) {
+        return context;
+      }
+    } catch {
+      // Fall through to globals for older SillyTavern builds.
+    }
+    if (window.SillyTavern && typeof window.SillyTavern.getContext === "function") {
+      return window.SillyTavern.getContext();
+    }
+    if (typeof window.getContext === "function") {
+      return window.getContext();
+    }
+    return null;
+  }
+
+  function getSettingsRoot() {
+    const context = getContext();
+    if (context?.extensionSettings) {
+      return context.extensionSettings;
+    }
+
+    if (extension_settings) {
+      return extension_settings;
+    }
+
+    if (!window.extension_settings) {
+      window.extension_settings = {};
+    }
+    return window.extension_settings;
+  }
+
+  function getRootSettings() {
+    const root = getSettingsRoot();
+    if (!root[SETTINGS_KEY]) {
+      root[SETTINGS_KEY] = {};
+    }
+    return root[SETTINGS_KEY];
+  }
+
+  function currentCharacterData() {
+    const context = getContext();
+    const character = context?.characters?.[context?.characterId];
+    if (!character) {
+      return null;
+    }
+    if (character.data && typeof character.data === "object") {
+      return character.data;
+    }
+    if (typeof character.json_data === "string") {
+      try {
+        const parsed = JSON.parse(character.json_data);
+        return parsed?.data || parsed;
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  }
+
+  function characterCardSettings() {
+    const data = currentCharacterData();
+    const remix = data?.extensions?.remix_camera;
+    if (!remix || typeof remix !== "object") {
+      return {};
+    }
+
+    return {
+      bridgeUrl: cleanString(remix.bridgeUrl),
+      profileId: cleanProfileId(remix.profileId),
+      referenceImageKey: cleanString(remix.referenceImageKey || remix.primaryReferenceImageKey || remix.uploadedReferenceImageKey),
+      characterName: cleanString(remix.characterName || data?.name),
+      gender: cleanString(remix.gender),
+      bio: cleanString(remix.bio || data?.personality || data?.description),
+      mood: cleanString(remix.defaultMood || remix.mood),
+      outfit: cleanString(remix.defaultOutfit || remix.outfit),
+      location: cleanString(remix.defaultLocation || remix.location),
+      style: cleanString(remix.defaultStyle || remix.style),
+      visualIdentity: cleanString(remix.visualIdentity || remix.characterVisualIdentity),
+      negativePrompt: cleanString(remix.negativePrompt),
+      matureContent: typeof remix.matureContent === "boolean" ? remix.matureContent : undefined,
+      allowToolCalls: typeof remix.allowToolCalls === "boolean" ? remix.allowToolCalls : undefined,
+    };
+  }
+
+  function activeCharacterKey(card = characterCardSettings()) {
+    const context = getContext();
+    const character = context?.characters?.[context?.characterId];
+    const profileId = cleanProfileId(card.profileId);
+    return (
+      cleanString(character?.avatar) ||
+      cleanString(character?.name) ||
+      cleanString(card.characterName) ||
+      profileId ||
+      "__global__"
+    );
+  }
+
+  function hasCardSettings(card) {
+    return Object.values(card).some((value) => value !== undefined && cleanString(value));
+  }
+
+  function characterOverrides(root, card) {
+    const key = activeCharacterKey(card);
+    const characters = root.characters && typeof root.characters === "object" ? root.characters : {};
+    const scoped = characters[key];
+    return scoped && typeof scoped === "object" ? scoped : {};
+  }
+
+  function cleanString(value) {
+    return typeof value === "string" ? value.trim() : "";
+  }
+
+  function cleanProfileId(value) {
+    const profileId = cleanString(value);
+    return profileId === "profile_replace_me" ? "" : profileId;
+  }
+
+  function dataUrlByteLength(dataUrl) {
+    const base64 = String(dataUrl || "").split(",")[1] || "";
+    return Math.floor((base64.length * 3) / 4);
+  }
+
+  function readFileAsDataUrl(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ""));
+      reader.onerror = () => reject(reader.error || new Error("Could not read the selected photo."));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function loadImage(dataUrl) {
+    return new Promise((resolve, reject) => {
+      const image = new Image();
+      image.onload = () => resolve(image);
+      image.onerror = () => reject(new Error("Could not decode the selected photo."));
+      image.src = dataUrl;
+    });
+  }
+
+  async function compressReferencePhoto(file) {
+    const originalDataUrl = await readFileAsDataUrl(file);
+    if (file.size <= REFERENCE_UPLOAD_TARGET_BYTES && /^image\/(jpeg|jpg|png|webp|gif)$/i.test(file.type || "")) {
+      return originalDataUrl;
+    }
+
+    const image = await loadImage(originalDataUrl);
+    const scale = Math.min(1, REFERENCE_UPLOAD_MAX_DIMENSION / Math.max(image.naturalWidth || image.width, image.naturalHeight || image.height));
+    const width = Math.max(1, Math.round((image.naturalWidth || image.width) * scale));
+    const height = Math.max(1, Math.round((image.naturalHeight || image.height) * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext("2d");
+    if (!context) {
+      throw new Error("Could not prepare the selected photo.");
+    }
+    context.drawImage(image, 0, 0, width, height);
+
+    for (const quality of [0.88, 0.82, 0.76, 0.7, 0.64]) {
+      const compressed = canvas.toDataURL("image/jpeg", quality);
+      if (dataUrlByteLength(compressed) <= REFERENCE_UPLOAD_TARGET_BYTES) {
+        return compressed;
+      }
+    }
+
+    throw new Error("The selected photo is too large. Crop or compress it under 4MB and try again.");
+  }
+
+  function stringSetting(saved, card, key, scoped = {}, cardHasSettings = false) {
+    const legacy = cardHasSettings ? "" : cleanString(saved[key]);
+    return cleanString(scoped[key]) || cleanString(card[key]) || legacy || cleanString(DEFAULT_SETTINGS[key]);
+  }
+
+  function settings() {
+    const saved = getRootSettings();
+    const card = characterCardSettings();
+    const scoped = characterOverrides(saved, card);
+    const cardHasSettings = hasCardSettings(card);
+    return {
+      bridgeUrl: cleanString(scoped.bridgeUrl) || cleanString(saved.bridgeUrl) || cleanString(card.bridgeUrl) || DEFAULT_SETTINGS.bridgeUrl,
+      profileId: stringSetting(saved, card, "profileId", scoped, cardHasSettings),
+      referenceImageKey: stringSetting(saved, card, "referenceImageKey", scoped, cardHasSettings),
+      characterName: stringSetting(saved, card, "characterName", scoped, cardHasSettings),
+      gender: stringSetting(saved, card, "gender", scoped, cardHasSettings),
+      bio: stringSetting(saved, card, "bio", scoped, cardHasSettings),
+      mood: stringSetting(saved, card, "mood", scoped, cardHasSettings),
+      outfit: stringSetting(saved, card, "outfit", scoped, cardHasSettings),
+      location: stringSetting(saved, card, "location", scoped, cardHasSettings),
+      style: stringSetting(saved, card, "style", scoped, cardHasSettings),
+      visualIdentity: stringSetting(saved, card, "visualIdentity", scoped, cardHasSettings),
+      negativePrompt: stringSetting(saved, card, "negativePrompt", scoped, cardHasSettings),
+      maxGenerations: Math.max(1, Math.min(4, Number(saved.maxGenerations || DEFAULT_SETTINGS.maxGenerations))),
+      matureContent:
+        typeof scoped.matureContent === "boolean"
+          ? scoped.matureContent
+          : typeof saved.matureContent === "boolean"
+            ? saved.matureContent
+            : typeof card.matureContent === "boolean"
+              ? card.matureContent
+              : DEFAULT_SETTINGS.matureContent,
+      allowToolCalls:
+        typeof saved.allowToolCalls === "boolean"
+          ? saved.allowToolCalls
+          : typeof card.allowToolCalls === "boolean"
+            ? card.allowToolCalls
+            : DEFAULT_SETTINGS.allowToolCalls,
+      autoInsertResult:
+        typeof saved.autoInsertResult === "boolean"
+          ? saved.autoInsertResult
+          : DEFAULT_SETTINGS.autoInsertResult,
+      snapTtlSeconds: Math.max(5, Math.min(600, Number(saved.snapTtlSeconds || DEFAULT_SETTINGS.snapTtlSeconds))),
+      proactiveSnapsEnabled:
+        typeof saved.proactiveSnapsEnabled === "boolean"
+          ? saved.proactiveSnapsEnabled
+          : DEFAULT_SETTINGS.proactiveSnapsEnabled,
+      proactiveSnapIntervalMinutes: Math.max(30, Math.min(1440, Number(saved.proactiveSnapIntervalMinutes || DEFAULT_SETTINGS.proactiveSnapIntervalMinutes))),
+      proactiveSnapDailyLimit: Math.max(0, Math.min(6, Number(saved.proactiveSnapDailyLimit || DEFAULT_SETTINGS.proactiveSnapDailyLimit))),
+      proactiveSnapDate: cleanString(saved.proactiveSnapDate),
+      proactiveSnapCount: Math.max(0, Number(saved.proactiveSnapCount || 0)),
+      proactiveSnapLastSentAt: Math.max(0, Number(saved.proactiveSnapLastSentAt || 0)),
+    };
+  }
+
+  function updateSettings(patch) {
+    const root = getSettingsRoot();
+    const currentRoot = root[SETTINGS_KEY] && typeof root[SETTINGS_KEY] === "object" ? root[SETTINGS_KEY] : {};
+    const card = characterCardSettings();
+    const key = activeCharacterKey(card);
+    const globalPatch = {};
+    const scopedPatch = {};
+    Object.entries(patch).forEach(([patchKey, value]) => {
+      if (CHARACTER_SETTINGS_KEYS.includes(patchKey)) {
+        scopedPatch[patchKey] = value;
+      } else {
+        globalPatch[patchKey] = value;
+      }
+    });
+    root[SETTINGS_KEY] = {
+      ...currentRoot,
+      ...globalPatch,
+      characters: {
+        ...(currentRoot.characters && typeof currentRoot.characters === "object" ? currentRoot.characters : {}),
+        [key]: {
+          ...characterOverrides(currentRoot, card),
+          ...scopedPatch,
+        },
+      },
+    };
+    const context = getContext();
+    if (typeof saveSettingsDebounced === "function") {
+      saveSettingsDebounced();
+    } else if (typeof context?.saveSettingsDebounced === "function") {
+      context.saveSettingsDebounced();
+    } else if (typeof window.saveSettingsDebounced === "function") {
+      window.saveSettingsDebounced();
+    }
+  }
+
+  function inputValue(id) {
+    const node = document.getElementById(id);
+    return node ? node.value.trim() : "";
+  }
+
+  function inputChecked(id) {
+    const node = document.getElementById(id);
+    return node ? Boolean(node.checked) : false;
+  }
+
+  function setInputValue(id, value) {
+    const node = document.getElementById(id);
+    if (node) {
+      node.value = value || "";
+    }
+  }
+
+  function setInputChecked(id, checked) {
+    const node = document.getElementById(id);
+    if (node) {
+      node.checked = Boolean(checked);
+    }
+  }
+
+  function setLog(message, type = "info") {
+    const log = document.getElementById("remix-camera-log");
+    if (!log) {
+      return;
+    }
+    log.textContent = message;
+    log.dataset.type = type;
+  }
+
+  function escapeHtml(value) {
+    return String(value || "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#39;");
+  }
+
+  function cssEscape(value) {
+    if (window.CSS && typeof window.CSS.escape === "function") {
+      return window.CSS.escape(value);
+    }
+    return String(value || "").replaceAll("\\", "\\\\").replaceAll('"', '\\"');
+  }
+
+  function generatedImageMessageHtml(markdown, imageUrl, command) {
+    const url = cleanString(imageUrl);
+    if (!url) {
+      return markdown;
+    }
+    const label = `${settings().characterName || "Remix.Camera"} ${command || "image"}`.trim();
+    const imageHtml = [
+      `<a class="remix-camera-chat-image-link" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">`,
+      `<img class="remix-camera-chat-image" src="${escapeHtml(url)}" alt="${escapeHtml(label)}" loading="eager" decoding="sync">`,
+      "</a>",
+    ].join("");
+    if (command !== "private-snap") {
+      return imageHtml;
+    }
+    return [
+      `<div class="remix-camera-snap" data-remix-camera-image-url="${escapeHtml(url)}">`,
+      imageHtml,
+      `<span class="remix-camera-snap-badge">Snap</span>`,
+      "</div>",
+    ].join("");
+  }
+
+  function expiredSnapMessageHtml() {
+    return `<em class="remix-camera-snap-expired">Snap expired.</em>`;
+  }
+
+  function scheduleSnapExpiry(message, imageUrl, ttlSeconds) {
+    const ttl = Math.max(5, Math.min(600, Number(ttlSeconds || settings().snapTtlSeconds || DEFAULT_SETTINGS.snapTtlSeconds)));
+    window.setTimeout(() => {
+      message.mes = expiredSnapMessageHtml();
+      if (message.extra && typeof message.extra === "object") {
+        delete message.extra.image;
+        delete message.extra.productionImageUrl;
+        message.extra.snapExpired = true;
+      }
+      const selector = `.remix-camera-snap[data-remix-camera-image-url="${cssEscape(imageUrl)}"]`;
+      document.querySelectorAll(selector).forEach((node) => {
+        node.outerHTML = expiredSnapMessageHtml();
+      });
+      const context = getContext();
+      if (typeof context?.saveChat === "function") {
+        context.saveChat();
+      }
+    }, ttl * 1000);
+  }
+
+  function hydrateGeneratedImage(imageUrl, command) {
+    const url = cleanString(imageUrl);
+    if (!url) {
+      return;
+    }
+    window.setTimeout(async () => {
+      const messages = [...document.querySelectorAll("#chat .mes")];
+      const message = messages.at(-1);
+      const body = message?.querySelector(".mes_text") || message?.querySelector(".mes_block") || message;
+      if (
+        !body ||
+        [...body.querySelectorAll("img[src]")].some((image) => image.getAttribute("src") === url || image.src === url)
+      ) {
+        return;
+      }
+
+      const label = `${settings().characterName || "Remix.Camera"} ${command || "image"}`.trim();
+      let link = [...body.querySelectorAll("a[href]")].find((item) => item.getAttribute("href") === url || item.href === url);
+      if (!link) {
+        link = document.createElement("a");
+        link.href = url;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        body.appendChild(link);
+      }
+      link.classList.add("remix-camera-chat-image-link");
+      const image = document.createElement("img");
+      image.className = "remix-camera-chat-image";
+      image.alt = label;
+      image.loading = "eager";
+      image.decoding = "sync";
+      link.appendChild(image);
+      image.src = url;
+    }, 0);
+  }
+
+  function recentChatText() {
+    const context = getContext();
+    const chat = Array.isArray(context?.chat) ? context.chat : [];
+    return chat
+      .slice(-12)
+      .map((message) => {
+        const name = message.is_user ? "User" : message.name || settings().characterName || "Character";
+        const text = String(message.mes || "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+        return text ? `${name}: ${text}` : "";
+      })
+      .filter(Boolean)
+      .join("\n");
+  }
+
+  function requestBody(command, args = {}) {
+    const current = settings();
+    return {
+      yes: true,
+      command,
+      profileId: args.profileId || current.profileId,
+      referenceImageKey: args.referenceImageKey || current.referenceImageKey,
+      characterName: args.characterName || current.characterName || getContext()?.name2 || "Companion",
+      gender: args.gender || current.gender,
+      bio: args.bio || current.bio,
+      mood: args.mood || current.mood,
+      outfit: args.outfit || current.outfit,
+      location: args.location || current.location,
+      pose: args.pose || "",
+      style: args.style || current.style,
+      visualIdentity: args.visualIdentity || current.visualIdentity,
+      negativePrompt: args.negativePrompt || current.negativePrompt,
+      sourceImageUrl: args.sourceImageUrl || "",
+      referenceImageUrl: args.referenceImageUrl || "",
+      userDescription: args.userDescription || "",
+      userConsent: args.userConsent || "",
+      userReferenceImageKey: args.userReferenceImageKey || "",
+      userReferenceImageUrl: args.userReferenceImageUrl || "",
+      userReferenceImageDataUrl: args.userReferenceImageDataUrl || "",
+      userReferenceImageName: args.userReferenceImageName || "",
+      userReferenceImageMimeType: args.userReferenceImageMimeType || "",
+      theme: args.theme || "",
+      snapTtlSeconds: Number(args.snapTtlSeconds || current.snapTtlSeconds || DEFAULT_SETTINGS.snapTtlSeconds),
+      matureContent: typeof args.matureContent === "boolean" ? args.matureContent : current.matureContent,
+      chatText: args.chatText || recentChatText(),
+      memory: args.memory || "",
+      maxGenerations: Number(args.maxGenerations || current.maxGenerations || 1),
+    };
+  }
+
+  async function bridgeFetch(pathname, body) {
+    const current = settings();
+    const response = await fetch(`${current.bridgeUrl.replace(/\/+$/, "")}${pathname}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const payload = await response.json().catch(() => null);
+    if (!response.ok) {
+      throw new Error(payload?.error || `Bridge request failed with ${response.status}`);
+    }
+    return payload;
+  }
+
+  async function checkHealth() {
+    const current = settings();
+    const response = await fetch(`${current.bridgeUrl.replace(/\/+$/, "")}/health`);
+    const payload = await response.json().catch(() => null);
+    if (!response.ok) {
+      throw new Error(payload?.error || `Health check failed with ${response.status}`);
+    }
+    return payload;
+  }
+
+  async function insertGeneratedResult(payload) {
+    const markdown = payload?.markdown || "";
+    const imageUrl = Array.isArray(payload?.results)
+      ? payload.results.find((result) => result?.ok && result?.imageUrl)?.imageUrl || ""
+      : "";
+    const productionImageUrl = Array.isArray(payload?.results)
+      ? payload.results.find((result) => result?.ok && result?.productionImageUrl)?.productionImageUrl || ""
+      : "";
+
+    if (!markdown) {
+      return "none";
+    }
+
+    const context = getContext();
+    if (settings().autoInsertResult && context && typeof context.addOneMessage === "function") {
+      const message = {
+        name: settings().characterName || "Remix.Camera",
+        is_user: false,
+        is_system: false,
+        mes: generatedImageMessageHtml(markdown, imageUrl, payload?.command),
+        send_date: new Date().toISOString(),
+        extra: {
+          type: "remix_camera_image",
+          image: imageUrl || undefined,
+          productionImageUrl: productionImageUrl || undefined,
+          markdown,
+          modelId: payload?.modelId || undefined,
+          matureContent: payload?.matureContent === true || undefined,
+          title: payload?.prompt || markdown,
+          generationType: payload?.command || "remix-camera",
+        },
+      };
+      if (Array.isArray(context.chat)) {
+        context.chat.push(message);
+      }
+      context.addOneMessage(message);
+      hydrateGeneratedImage(imageUrl, payload?.command);
+      if (payload?.command === "private-snap" && imageUrl) {
+        scheduleSnapExpiry(message, imageUrl, payload?.snapTtlSeconds || settings().snapTtlSeconds);
+      }
+      if (typeof context.saveChat === "function") {
+        context.saveChat();
+      }
+      return "inserted";
+    }
+
+    if (settings().autoInsertResult && context && typeof context.sendSystemMessage === "function") {
+      context.sendSystemMessage("generic", markdown);
+      return "inserted";
+    }
+
+    if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+      await navigator.clipboard.writeText(markdown);
+      return "copied";
+    }
+
+    return "none";
+  }
+
+  async function generate(command, args = {}) {
+    setLog(`Generating ${command}...`);
+    const payload = await bridgeFetch("/v1/commands/generate", requestBody(command, args));
+    const insertion = await insertGeneratedResult(payload);
+    if (insertion === "inserted") {
+      setLog("Image generated and inserted into chat.", "success");
+    } else if (insertion === "copied") {
+      setLog("Image generated. Markdown copied to clipboard.", "success");
+    } else {
+      setLog(payload.markdown || "Image generated, but no markdown was returned.", "success");
+    }
+    return payload.markdown || JSON.stringify(payload);
+  }
+
+  async function dryRun(command, args = {}) {
+    setLog(`Previewing ${command}...`);
+    const body = requestBody(command, args);
+    body.yes = false;
+    const payload = await bridgeFetch("/v1/commands/dry-run", body);
+    const warnings = Array.isArray(payload.warnings) && payload.warnings.length
+      ? `\n\nWarnings:\n- ${payload.warnings.join("\n- ")}`
+      : "";
+    setLog(`Dry run OK. Planned generations: ${payload.maxGenerations || 1}\n\n${payload.prompt}${warnings}`, "success");
+    return JSON.stringify(payload, null, 2);
+  }
+
+  function updateCoupleReferenceUi() {
+    const status = document.getElementById("remix-camera-couple-photo-status");
+    const clearButton = document.getElementById("remix-camera-couple-photo-clear");
+    if (status) {
+      status.textContent = coupleReferenceFile
+        ? `Selected: ${coupleReferenceFile.name || "user reference photo"}`
+        : "No user photo selected.";
+    }
+    if (clearButton) {
+      clearButton.disabled = !coupleReferenceFile;
+    }
+  }
+
+  async function coupleReferenceArgs() {
+    if (!coupleReferenceFile) {
+      return {};
+    }
+    setLog("Preparing uploaded user photo...");
+    const dataUrl = await compressReferencePhoto(coupleReferenceFile);
+    return {
+      userReferenceImageDataUrl: dataUrl,
+      userReferenceImageName: coupleReferenceFile.name || "user-reference.jpg",
+      userReferenceImageMimeType: dataUrl.startsWith("data:image/jpeg") ? "image/jpeg" : coupleReferenceFile.type || "image/jpeg",
+    };
+  }
+
+  async function userIncludedArgs(commandLabel) {
+    const userConsent = window.prompt(`Type "yes" if the user clearly asked to be included in this ${commandLabel}:`);
+    if (String(userConsent || "").trim().toLowerCase() !== "yes") {
+      setLog(`${commandLabel} canceled. Type "yes" only when the user explicitly asked to appear.`, "warn");
+      return null;
+    }
+    const userDescription = window.prompt(
+      coupleReferenceFile
+        ? "Optional detail about the uploaded user's appearance, pose, or relationship context:"
+        : "Optional user appearance or relationship context:",
+    ) || "";
+    return {
+      userConsent,
+      userDescription,
+      ...(await coupleReferenceArgs()),
+    };
+  }
+
+  function todayKey() {
+    return new Date().toISOString().slice(0, 10);
+  }
+
+  function proactiveSnapCountForToday(current = settings()) {
+    return current.proactiveSnapDate === todayKey() ? Number(current.proactiveSnapCount || 0) : 0;
+  }
+
+  function recordProactiveSnapSent() {
+    const current = settings();
+    updateSettings({
+      proactiveSnapDate: todayKey(),
+      proactiveSnapCount: proactiveSnapCountForToday(current) + 1,
+      proactiveSnapLastSentAt: Date.now(),
+    });
+  }
+
+  async function maybeSendProactiveSnap() {
+    const current = settings();
+    if (!current.proactiveSnapsEnabled || Number(current.proactiveSnapDailyLimit || 0) <= 0) {
+      return;
+    }
+    if (proactiveSnapCountForToday(current) >= Number(current.proactiveSnapDailyLimit || 0)) {
+      return;
+    }
+    if (!current.profileId && !current.referenceImageKey) {
+      setLog("Proactive snap skipped. Set this character's Remix.Camera profile first.", "warn");
+      return;
+    }
+    try {
+      await generate("private-snap", {
+        mood: "spontaneous private snap, intimate, in-character, camera-aware",
+        location: current.location || "private setting that fits the recent chat",
+        maxGenerations: 1,
+        matureContent: true,
+        snapTtlSeconds: current.snapTtlSeconds,
+      });
+      recordProactiveSnapSent();
+    } catch (error) {
+      setLog(error.message, "error");
+    }
+  }
+
+  function scheduleProactiveSnaps() {
+    if (proactiveSnapTimer) {
+      window.clearInterval(proactiveSnapTimer);
+      proactiveSnapTimer = null;
+    }
+    const current = settings();
+    if (!current.proactiveSnapsEnabled) {
+      return;
+    }
+    const intervalMs = Math.max(30, Number(current.proactiveSnapIntervalMinutes || DEFAULT_SETTINGS.proactiveSnapIntervalMinutes)) * 60 * 1000;
+    proactiveSnapTimer = window.setInterval(maybeSendProactiveSnap, intervalMs);
+  }
+
+  function saveFromUi() {
+    updateSettings({
+      bridgeUrl: inputValue("remix-camera-bridge-url") || DEFAULT_SETTINGS.bridgeUrl,
+      profileId: cleanProfileId(inputValue("remix-camera-profile-id")),
+      referenceImageKey: inputValue("remix-camera-reference-image-key"),
+      characterName: inputValue("remix-camera-character-name"),
+      gender: inputValue("remix-camera-gender"),
+      bio: inputValue("remix-camera-bio"),
+      mood: inputValue("remix-camera-mood"),
+      outfit: inputValue("remix-camera-outfit"),
+      location: inputValue("remix-camera-location"),
+      style: inputValue("remix-camera-style"),
+      visualIdentity: inputValue("remix-camera-visual-identity"),
+      negativePrompt: inputValue("remix-camera-negative-prompt"),
+      maxGenerations: Math.max(1, Math.min(4, Number(inputValue("remix-camera-max-generations") || 1))),
+      matureContent: inputChecked("remix-camera-mature-content"),
+      allowToolCalls: inputChecked("remix-camera-allow-tool-calls"),
+      autoInsertResult: inputChecked("remix-camera-auto-insert"),
+      snapTtlSeconds: Math.max(5, Math.min(600, Number(inputValue("remix-camera-snap-ttl") || DEFAULT_SETTINGS.snapTtlSeconds))),
+      proactiveSnapsEnabled: inputChecked("remix-camera-proactive-snaps"),
+      proactiveSnapIntervalMinutes: Math.max(30, Math.min(1440, Number(inputValue("remix-camera-proactive-interval") || DEFAULT_SETTINGS.proactiveSnapIntervalMinutes))),
+      proactiveSnapDailyLimit: Math.max(0, Math.min(6, Number(inputValue("remix-camera-proactive-daily-limit") || DEFAULT_SETTINGS.proactiveSnapDailyLimit))),
+    });
+    if (settings().allowToolCalls) {
+      registerFunctionTools();
+    } else {
+      unregisterFunctionTools();
+    }
+    scheduleProactiveSnaps();
+  }
+
+  function refreshUiFromSettings() {
+    const current = settings();
+    setInputValue("remix-camera-bridge-url", current.bridgeUrl);
+    setInputValue("remix-camera-character-name", current.characterName);
+    setInputValue("remix-camera-gender", current.gender);
+    setInputValue("remix-camera-bio", current.bio);
+    setInputValue("remix-camera-profile-id", current.profileId);
+    setInputValue("remix-camera-reference-image-key", current.referenceImageKey);
+    setInputValue("remix-camera-max-generations", Number(current.maxGenerations || 1));
+    setInputValue("remix-camera-mood", current.mood);
+    setInputValue("remix-camera-outfit", current.outfit);
+    setInputValue("remix-camera-location", current.location);
+    setInputValue("remix-camera-style", current.style);
+    setInputValue("remix-camera-visual-identity", current.visualIdentity);
+    setInputValue("remix-camera-negative-prompt", current.negativePrompt);
+    setInputChecked("remix-camera-mature-content", current.matureContent);
+    setInputChecked("remix-camera-allow-tool-calls", current.allowToolCalls);
+    setInputChecked("remix-camera-auto-insert", current.autoInsertResult);
+    setInputValue("remix-camera-snap-ttl", Number(current.snapTtlSeconds || DEFAULT_SETTINGS.snapTtlSeconds));
+    setInputChecked("remix-camera-proactive-snaps", current.proactiveSnapsEnabled);
+    setInputValue("remix-camera-proactive-interval", Number(current.proactiveSnapIntervalMinutes || DEFAULT_SETTINGS.proactiveSnapIntervalMinutes));
+    setInputValue("remix-camera-proactive-daily-limit", Number(current.proactiveSnapDailyLimit || DEFAULT_SETTINGS.proactiveSnapDailyLimit));
+  }
+
+  function settingsHtml() {
+    const current = settings();
+    return `
+      <div id="remix-camera-companion-images" class="remix-camera-panel">
+        <div class="remix-camera-profile">
+          <label>Name<input id="remix-camera-character-name" type="text" value="${escapeHtml(current.characterName)}" placeholder="Character"></label>
+          <label>Gender<input id="remix-camera-gender" type="text" value="${escapeHtml(current.gender)}" placeholder="female, male, nonbinary"></label>
+          <label class="remix-camera-wide">Bio<textarea id="remix-camera-bio" rows="3">${escapeHtml(current.bio)}</textarea></label>
+          <label class="remix-camera-wide">Photos / Remix profile<input id="remix-camera-profile-id" type="text" value="${escapeHtml(current.profileId)}" placeholder="profile_..."></label>
+          <label class="remix-camera-check remix-camera-mature"><input id="remix-camera-mature-content" type="checkbox" ${current.matureContent ? "checked" : ""}> Mature mode</label>
+        </div>
+        <div class="remix-camera-utility-actions">
+          <button id="remix-camera-health" type="button">Health Check</button>
+          <button id="remix-camera-dry-run" type="button">Preview Prompt</button>
+        </div>
+        <div class="remix-camera-actions">
+          <button id="remix-camera-selfie" class="remix-camera-quick remix-camera-quick--selfie" type="button"><span>Selfie</span></button>
+          <button id="remix-camera-auto-selfie" class="remix-camera-quick remix-camera-quick--auto" type="button"><span>Scene</span></button>
+          <button id="remix-camera-outfit-button" class="remix-camera-quick remix-camera-quick--outfit" type="button"><span>Outfit</span></button>
+          <button id="remix-camera-couple-button" class="remix-camera-quick remix-camera-quick--couple" type="button"><span>Couple</span></button>
+          <button id="remix-camera-vacation-button" class="remix-camera-quick remix-camera-quick--vacation" type="button"><span>Vacation</span></button>
+          <button id="remix-camera-date-button" class="remix-camera-quick remix-camera-quick--date" type="button"><span>Date</span></button>
+          <button id="remix-camera-daily-snap-button" class="remix-camera-quick remix-camera-quick--daily" type="button"><span>Day Snap</span></button>
+          <button id="remix-camera-private-snap-button" class="remix-camera-quick remix-camera-quick--snap" type="button"><span>Private Snap</span></button>
+        </div>
+        <div class="remix-camera-couple-reference">
+          <label class="remix-camera-wide">Your photo for Couple/Vacation<input id="remix-camera-couple-photo" type="file" accept="image/png,image/jpeg,image/webp,image/gif"></label>
+          <div class="remix-camera-couple-reference-row">
+            <span id="remix-camera-couple-photo-status">No user photo selected.</span>
+            <button id="remix-camera-couple-photo-clear" type="button" disabled>Clear</button>
+          </div>
+        </div>
+        <details class="remix-camera-advanced">
+          <summary>Advanced</summary>
+          <div class="remix-camera-grid">
+            <label>Bridge URL<input id="remix-camera-bridge-url" type="text" value="${escapeHtml(current.bridgeUrl)}"></label>
+            <label>Max generations<input id="remix-camera-max-generations" type="number" min="1" max="4" value="${Number(current.maxGenerations || 1)}"></label>
+            <label>Reference key<input id="remix-camera-reference-image-key" type="text" value="${escapeHtml(current.referenceImageKey)}"></label>
+            <label>Mood<input id="remix-camera-mood" type="text" value="${escapeHtml(current.mood)}"></label>
+            <label>Outfit<input id="remix-camera-outfit" type="text" value="${escapeHtml(current.outfit)}"></label>
+            <label>Location<input id="remix-camera-location" type="text" value="${escapeHtml(current.location)}"></label>
+            <label>Style<input id="remix-camera-style" type="text" value="${escapeHtml(current.style)}"></label>
+            <label>Snap seconds<input id="remix-camera-snap-ttl" type="number" min="5" max="600" value="${Number(current.snapTtlSeconds || DEFAULT_SETTINGS.snapTtlSeconds)}"></label>
+            <label>Proactive interval<input id="remix-camera-proactive-interval" type="number" min="30" max="1440" value="${Number(current.proactiveSnapIntervalMinutes || DEFAULT_SETTINGS.proactiveSnapIntervalMinutes)}"></label>
+            <label>Proactive daily cap<input id="remix-camera-proactive-daily-limit" type="number" min="0" max="6" value="${Number(current.proactiveSnapDailyLimit || DEFAULT_SETTINGS.proactiveSnapDailyLimit)}"></label>
+          </div>
+          <label class="remix-camera-wide">Visual identity<textarea id="remix-camera-visual-identity" rows="3">${escapeHtml(current.visualIdentity)}</textarea></label>
+          <label class="remix-camera-wide">Avoid<textarea id="remix-camera-negative-prompt" rows="2">${escapeHtml(current.negativePrompt)}</textarea></label>
+          <label class="remix-camera-check"><input id="remix-camera-allow-tool-calls" type="checkbox" ${current.allowToolCalls ? "checked" : ""}> Allow character tool calls</label>
+          <label class="remix-camera-check"><input id="remix-camera-auto-insert" type="checkbox" ${current.autoInsertResult ? "checked" : ""}> Insert generated image in chat</label>
+          <label class="remix-camera-check"><input id="remix-camera-proactive-snaps" type="checkbox" ${current.proactiveSnapsEnabled ? "checked" : ""}> Proactive private snaps</label>
+        </details>
+        <pre id="remix-camera-log" data-type="info">Bridge not checked yet.</pre>
+      </div>
+    `;
+  }
+
+  function escapeHtml(value) {
+    return String(value || "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function bindUi() {
+    const panel = document.getElementById("remix-camera-companion-images");
+    if (!panel) {
+      return;
+    }
+
+    panel.querySelectorAll("input, textarea, select").forEach((input) => {
+      input.addEventListener("change", saveFromUi);
+      input.addEventListener("blur", saveFromUi);
+    });
+
+    document.getElementById("remix-camera-health")?.addEventListener("click", async () => {
+      saveFromUi();
+      try {
+        const health = await checkHealth();
+        const authMode = health.authMode === "design_api_session"
+          ? "paired session"
+          : health.authMode === "api_key"
+            ? "API key"
+            : "missing";
+        setLog(
+          `Bridge OK. Auth: ${authMode}. Default profile: ${health.defaultProfileId || "none"}.`,
+          health.hasSessionToken || health.hasApiKey ? "success" : "warn",
+        );
+      } catch (error) {
+        setLog(error.message, "error");
+      }
+    });
+
+    document.getElementById("remix-camera-dry-run")?.addEventListener("click", async () => {
+      saveFromUi();
+      try {
+        await dryRun("auto-selfie-from-chat");
+      } catch (error) {
+        setLog(error.message, "error");
+      }
+    });
+
+    document.getElementById("remix-camera-couple-photo")?.addEventListener("change", (event) => {
+      const file = event.currentTarget?.files?.[0] || null;
+      if (file && !String(file.type || "").toLowerCase().startsWith("image/")) {
+        coupleReferenceFile = null;
+        event.currentTarget.value = "";
+        updateCoupleReferenceUi();
+        setLog("Choose an image file for the couple reference photo.", "error");
+        return;
+      }
+      coupleReferenceFile = file;
+      updateCoupleReferenceUi();
+    });
+
+    document.getElementById("remix-camera-couple-photo-clear")?.addEventListener("click", () => {
+      coupleReferenceFile = null;
+      const input = document.getElementById("remix-camera-couple-photo");
+      if (input) {
+        input.value = "";
+      }
+      updateCoupleReferenceUi();
+    });
+
+    document.getElementById("remix-camera-selfie")?.addEventListener("click", async () => {
+      saveFromUi();
+      try {
+        await generate("send-selfie");
+      } catch (error) {
+        setLog(error.message, "error");
+      }
+    });
+
+    document.getElementById("remix-camera-auto-selfie")?.addEventListener("click", async () => {
+      saveFromUi();
+      try {
+        await generate("auto-selfie-from-chat");
+      } catch (error) {
+        setLog(error.message, "error");
+      }
+    });
+
+    document.getElementById("remix-camera-outfit-button")?.addEventListener("click", async () => {
+      saveFromUi();
+      const sourceImageUrl = window.prompt("Source image URL for outfit or styling reference:");
+      if (!sourceImageUrl) {
+        return;
+      }
+      try {
+        await generate("outfit-try-on", { sourceImageUrl });
+      } catch (error) {
+        setLog(error.message, "error");
+      }
+    });
+
+    document.getElementById("remix-camera-couple-button")?.addEventListener("click", async () => {
+      saveFromUi();
+      const args = await userIncludedArgs("couple photo");
+      if (!args) {
+        return;
+      }
+      try {
+        await generate("couple-photo", args);
+      } catch (error) {
+        setLog(error.message, "error");
+      }
+    });
+
+    document.getElementById("remix-camera-vacation-button")?.addEventListener("click", async () => {
+      saveFromUi();
+      const args = await userIncludedArgs("couples vacation set");
+      if (!args) {
+        return;
+      }
+      const theme = window.prompt("Vacation theme or destination:", settings().location || "cohesive beach weekend getaway") || "";
+      try {
+        await generate("couples-vacation", {
+          ...args,
+          theme,
+          location: theme || settings().location,
+          maxGenerations: 3,
+        });
+      } catch (error) {
+        setLog(error.message, "error");
+      }
+    });
+
+    document.getElementById("remix-camera-date-button")?.addEventListener("click", async () => {
+      saveFromUi();
+      const location = window.prompt("Date-night setting:", settings().location || "cozy restaurant booth with warm light") || "";
+      try {
+        await generate("date-night", { location });
+      } catch (error) {
+        setLog(error.message, "error");
+      }
+    });
+
+    document.getElementById("remix-camera-daily-snap-button")?.addEventListener("click", async () => {
+      saveFromUi();
+      try {
+        await generate("daily-life-snap");
+      } catch (error) {
+        setLog(error.message, "error");
+      }
+    });
+
+    document.getElementById("remix-camera-private-snap-button")?.addEventListener("click", async () => {
+      saveFromUi();
+      if (!window.confirm("Generate a mature private snap and hide it from the chat view after the snap timer?")) {
+        setLog("Private snap canceled.", "warn");
+        return;
+      }
+      try {
+        await generate("private-snap", {
+          matureContent: true,
+          snapTtlSeconds: settings().snapTtlSeconds,
+        });
+      } catch (error) {
+        setLog(error.message, "error");
+      }
+    });
+
+    updateCoupleReferenceUi();
+    scheduleProactiveSnaps();
+  }
+
+  function addSettingsPanel() {
+    if (document.getElementById("remix-camera-companion-images")) {
+      return;
+    }
+
+    const container =
+      document.getElementById("extensions_settings2") ||
+      document.getElementById("extensions_settings") ||
+      document.querySelector("#extensions_settings") ||
+      document.body;
+
+    const wrapper = document.createElement("details");
+    wrapper.className = "remix-camera-settings-wrapper";
+    wrapper.open = false;
+    wrapper.innerHTML = `
+      <summary>Remix.Camera Companion Images</summary>
+      ${settingsHtml()}
+    `;
+    container.appendChild(wrapper);
+    bindUi();
+  }
+
+  function canRegisterTools() {
+    const context = getContext();
+    const supported =
+      typeof context?.isToolCallingSupported !== "function" ||
+      context.isToolCallingSupported();
+    const canPerform =
+      typeof context?.canPerformToolCalls !== "function" ||
+      context.canPerformToolCalls("normal");
+    return Boolean(settings().allowToolCalls && supported && canPerform);
+  }
+
+  function toolDefinition(name, command, displayName, description, parameterProperties = {}) {
+    return {
+      name,
+      displayName,
+      description,
+      parameters: {
+        $schema: "http://json-schema.org/draft-04/schema#",
+        type: "object",
+        properties: {
+          mood: { type: "string", description: "Desired emotional tone for the image." },
+          outfit: { type: "string", description: "Wardrobe or outfit direction." },
+          location: { type: "string", description: "Scene or room." },
+          visualIdentity: { type: "string", description: "Character visual anchors to preserve in the image." },
+          sourceImageUrl: { type: "string", description: "Optional source image URL." },
+          userDescription: { type: "string", description: "Optional user appearance for couple photos." },
+          userConsent: { type: "string", enum: ["yes"], description: "Use yes only when the user clearly asked to appear." },
+          userReferenceImageKey: { type: "string", description: "Optional Remix.Camera reference image s3Key for the user in couple photos." },
+          userReferenceImageUrl: { type: "string", description: "Optional image URL to upload and use as the user reference in couple photos." },
+          theme: { type: "string", description: "Theme or destination for a cohesive photo set." },
+          snapTtlSeconds: { type: "number", description: "Seconds before a private snap is hidden from the chat view." },
+          ...parameterProperties,
+        },
+      },
+      shouldRegister: canRegisterTools,
+      action: async (args) => generate(command, args || {}),
+      formatMessage: () => `Generating ${displayName} with Remix.Camera...`,
+      stealth: false,
+    };
+  }
+
+  function registerFunctionTools() {
+    if (functionToolsRegistered) {
+      return true;
+    }
+
+    const context = getContext();
+    const register =
+      window.registerFunctionTool ||
+      context?.registerFunctionTool ||
+      window.SillyTavern?.registerFunctionTool;
+
+    if (typeof register !== "function") {
+      return false;
+    }
+
+    let registeredCount = 0;
+    [
+      toolDefinition(TOOL_NAMES[0], "send-selfie", "Send selfie", "Generate an in-character selfie with Remix.Camera."),
+      toolDefinition(
+        TOOL_NAMES[1],
+        "auto-selfie-from-chat",
+        "Auto selfie from chat",
+        "Generate an in-character selfie based on recent SillyTavern chat context.",
+      ),
+      toolDefinition(TOOL_NAMES[2], "outfit-try-on", "Outfit try-on", "Create an outfit try-on image from a source image URL."),
+      toolDefinition(TOOL_NAMES[3], "couple-photo", "Couple photo", "Create a tasteful couple image after explicit user consent."),
+      toolDefinition(TOOL_NAMES[4], "couples-vacation", "Couples vacation", "Create a cohesive three-photo couples vacation set after explicit user consent.", {
+        maxGenerations: { type: "number", description: "Use 3 for the default vacation photo set." },
+      }),
+      toolDefinition(TOOL_NAMES[5], "date-night", "Date night", "Create an in-character date-night image that matches the conversation."),
+      toolDefinition(TOOL_NAMES[6], "daily-life-snap", "Daily life snap", "Create a casual in-the-moment snap from recent chat context."),
+      toolDefinition(TOOL_NAMES[7], "private-snap", "Private snap", "Create an opted-in mature private snap with ephemeral display metadata."),
+    ].forEach((definition) => {
+      try {
+        register(definition);
+        registeredCount += 1;
+      } catch (error) {
+        console.warn(`[${EXTENSION_NAME}] Failed to register ${definition.name}`, error);
+      }
+    });
+
+    functionToolsRegistered = registeredCount > 0;
+    return functionToolsRegistered;
+  }
+
+  function unregisterFunctionTools() {
+    const context = getContext();
+    const unregister =
+      window.unregisterFunctionTool ||
+      context?.unregisterFunctionTool ||
+      window.SillyTavern?.unregisterFunctionTool;
+
+    if (typeof unregister !== "function") {
+      functionToolsRegistered = false;
+      return false;
+    }
+
+    TOOL_NAMES.forEach((name) => {
+      try {
+        unregister(name);
+      } catch (error) {
+        console.warn(`[${EXTENSION_NAME}] Failed to unregister ${name}`, error);
+      }
+    });
+    functionToolsRegistered = false;
+    return true;
+  }
+
+  function bindLifecycleEvents() {
+    if (lifecycleEventsBound) {
+      return;
+    }
+
+    const context = getContext();
+    const eventSource = context?.eventSource;
+    const eventTypes = context?.eventTypes || context?.event_types;
+    if (!eventSource || typeof eventSource.on !== "function" || !eventTypes) {
+      return;
+    }
+
+    [eventTypes.CHAT_CHANGED, eventTypes.CHARACTER_EDITED].filter(Boolean).forEach((eventName) => {
+      eventSource.on(eventName, () => {
+        window.setTimeout(refreshUiFromSettings, 0);
+      });
+    });
+    lifecycleEventsBound = true;
+  }
+
+  function init() {
+    getRootSettings();
+    addSettingsPanel();
+    refreshUiFromSettings();
+    bindLifecycleEvents();
+    if (!registerFunctionTools()) {
+      window.setTimeout(registerFunctionTools, 1000);
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+})();
