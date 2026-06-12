@@ -1,0 +1,56 @@
+import assert from "node:assert/strict";
+import { test } from "node:test";
+import {
+  COMPANION_COMMANDS,
+  createBridgeOpenApiDocument,
+  createCommandInputSchema,
+  createLobeManifest,
+} from "../lib/companion-tools.mjs";
+
+test("companion tool schemas require consent for user-included image commands", () => {
+  const coupleSchema = createCommandInputSchema("couple-photo", {
+    includeSpendGuard: true,
+    requireSpendGuard: true,
+  });
+  const vacationSchema = createCommandInputSchema("couples-vacation", {
+    includeSpendGuard: true,
+    requireSpendGuard: true,
+  });
+
+  assert.deepEqual(coupleSchema.required, ["yes", "userConsent"]);
+  assert.deepEqual(vacationSchema.required, ["yes", "userConsent"]);
+  assert.equal(coupleSchema.properties.userReferenceImageDataUrl.type, "string");
+  assert.equal(vacationSchema.properties.maxGenerations.maximum, 3);
+});
+
+test("OpenAPI document exposes dry-run and guarded generate endpoints for every command", () => {
+  const document = createBridgeOpenApiDocument("http://127.0.0.1:8787");
+
+  assert.equal(document.openapi, "3.1.0");
+  for (const command of COMPANION_COMMANDS) {
+    const dryRun = document.paths[`/v1/tools/${command.name}/dry-run`]?.post;
+    const generate = document.paths[`/v1/tools/${command.name}/generate`]?.post;
+    assert.ok(dryRun, `${command.name} dry-run path exists`);
+    assert.ok(generate, `${command.name} generate path exists`);
+    assert.equal(dryRun.operationId, `${command.toolName}DryRun`);
+    assert.equal(generate.operationId, command.toolName);
+    assert.ok(generate.description.includes("yes=true"));
+    assert.ok(generate.requestBody.content["application/json"].schema.required.includes("yes"));
+  }
+});
+
+test("Lobe manifest exposes one API tool per companion command", () => {
+  const manifest = createLobeManifest("http://127.0.0.1:8787");
+
+  assert.equal(manifest.identifier, "remix-camera-companion-images");
+  assert.equal(manifest.api.length, COMPANION_COMMANDS.length);
+  assert.equal(manifest.api[0].url, "http://127.0.0.1:8787/v1/tools/send-selfie/generate");
+  assert.deepEqual(
+    manifest.api.map((item) => item.name),
+    COMPANION_COMMANDS.map((command) => command.toolName),
+  );
+  for (const api of manifest.api) {
+    assert.ok(api.parameters.required.includes("yes"));
+  }
+});
+

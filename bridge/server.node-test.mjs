@@ -398,6 +398,50 @@ test("bridge dry-run includes a Remix prompt template and does not spend generat
   }
 });
 
+test("bridge serves OpenAPI, Lobe manifest, and per-command dry-run tool routes", async () => {
+  const mockApi = await startMockRemixApi();
+  const bridge = await startBridge({
+    REMIX_API_KEY: "rc_live_test.secret",
+    REMIX_PROFILE_ID: "profile_seraphina",
+    REMIX_API_BASE_URL: mockApi.baseUrl,
+  });
+
+  try {
+    const openApiResponse = await fetch(`${bridge.url}/openapi.json`);
+    const openApi = await openApiResponse.json();
+    assert.equal(openApiResponse.status, 200);
+    assert.equal(openApi.openapi, "3.1.0");
+    assert.equal(openApi.servers[0].url, bridge.url);
+    assert.ok(openApi.paths["/v1/tools/send-selfie/generate"].post.description.includes("yes=true"));
+    assert.ok(openApi.paths["/v1/tools/couple-photo/generate"].post.requestBody.content["application/json"].schema.required.includes("userConsent"));
+
+    const lobeResponse = await fetch(`${bridge.url}/lobe/manifest.json`);
+    const lobe = await lobeResponse.json();
+    assert.equal(lobeResponse.status, 200);
+    assert.equal(lobe.identifier, "remix-camera-companion-images");
+    assert.ok(lobe.api.some((tool) => tool.name === "sendSelfie" && tool.url === `${bridge.url}/v1/tools/send-selfie/generate`));
+
+    const dryRunResponse = await fetch(`${bridge.url}/v1/tools/send-selfie/dry-run`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        characterName: "Seraphina",
+        visualIdentity: "long pastel-pink hair, amber eyes, black sundress, emerald vine magic",
+        mood: "warm",
+      }),
+    });
+    const dryRun = await dryRunResponse.json();
+    assert.equal(dryRunResponse.status, 200);
+    assert.equal(dryRun.ok, true);
+    assert.equal(dryRun.dryRun, true);
+    assert.equal(dryRun.command, "send-selfie");
+    assert.equal(dryRun.promptTemplate.packId, "pack_selfie");
+  } finally {
+    await bridge.close();
+    await mockApi.close();
+  }
+});
+
 test("bridge prefers excellent selfie templates over weaker generic selfie matches", async () => {
   const mockApi = await startMockRemixApi();
   const bridge = await startBridge({
