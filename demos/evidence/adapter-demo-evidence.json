@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "generatedAt": "2026-06-12T16:50:16.469Z",
+  "generatedAt": "2026-06-12T17:28:05.087Z",
   "mode": "bridge-dry-run",
   "bridgeUrl": "http://127.0.0.1:8796",
   "targets": [
@@ -415,6 +415,129 @@
       ]
     },
     {
+      "id": "line",
+      "title": "LINE",
+      "checks": [
+        {
+          "name": "adapter exists: adapters/line/remix-line-tool.mjs",
+          "ok": true,
+          "path": "adapters/line/remix-line-tool.mjs"
+        },
+        {
+          "name": "adapter exists: adapters/line/lily-webhook-server.mjs",
+          "ok": true,
+          "path": "adapters/line/lily-webhook-server.mjs"
+        },
+        {
+          "name": "demo runbook exists: demos/line/demo.md",
+          "ok": true,
+          "path": "demos/line/demo.md"
+        },
+        {
+          "name": "demo includes setup target",
+          "ok": true,
+          "expected": "--target=line"
+        },
+        {
+          "name": "marker present: createRemixLineTool",
+          "ok": true,
+          "marker": "createRemixLineTool"
+        },
+        {
+          "name": "marker present: LINE_CHANNEL_SECRET",
+          "ok": true,
+          "marker": "LINE_CHANNEL_SECRET"
+        },
+        {
+          "name": "marker present: productionImageUrl",
+          "ok": true,
+          "marker": "productionImageUrl"
+        }
+      ]
+    },
+    {
+      "id": "messenger",
+      "title": "Messenger",
+      "checks": [
+        {
+          "name": "adapter exists: adapters/messenger/remix-messenger-tool.mjs",
+          "ok": true,
+          "path": "adapters/messenger/remix-messenger-tool.mjs"
+        },
+        {
+          "name": "adapter exists: adapters/messenger/lily-webhook-server.mjs",
+          "ok": true,
+          "path": "adapters/messenger/lily-webhook-server.mjs"
+        },
+        {
+          "name": "demo runbook exists: demos/messenger/demo.md",
+          "ok": true,
+          "path": "demos/messenger/demo.md"
+        },
+        {
+          "name": "demo includes setup target",
+          "ok": true,
+          "expected": "--target=messenger"
+        },
+        {
+          "name": "marker present: createRemixMessengerTool",
+          "ok": true,
+          "marker": "createRemixMessengerTool"
+        },
+        {
+          "name": "marker present: MESSENGER_APP_SECRET",
+          "ok": true,
+          "marker": "MESSENGER_APP_SECRET"
+        },
+        {
+          "name": "marker present: productionImageUrl",
+          "ok": true,
+          "marker": "productionImageUrl"
+        }
+      ]
+    },
+    {
+      "id": "matrix",
+      "title": "Matrix",
+      "checks": [
+        {
+          "name": "adapter exists: adapters/matrix/remix-matrix-tool.mjs",
+          "ok": true,
+          "path": "adapters/matrix/remix-matrix-tool.mjs"
+        },
+        {
+          "name": "adapter exists: adapters/matrix/lily-sync-bot.mjs",
+          "ok": true,
+          "path": "adapters/matrix/lily-sync-bot.mjs"
+        },
+        {
+          "name": "demo runbook exists: demos/matrix/demo.md",
+          "ok": true,
+          "path": "demos/matrix/demo.md"
+        },
+        {
+          "name": "demo includes setup target",
+          "ok": true,
+          "expected": "--target=matrix"
+        },
+        {
+          "name": "marker present: createRemixMatrixTool",
+          "ok": true,
+          "marker": "createRemixMatrixTool"
+        },
+        {
+          "name": "marker present: MATRIX_ACCESS_TOKEN",
+          "ok": true,
+          "marker": "MATRIX_ACCESS_TOKEN"
+        },
+        {
+          "name": "marker present: m.image",
+          "ok": true,
+          "marker": "m.image"
+        }
+      ]
+    },
+    {
       "id": "dify",
       "title": "Dify",
       "checks": [
@@ -617,6 +740,21 @@
     },
     {
       "name": "Slack adapter real dry-run",
+      "ok": true,
+      "command": "send-selfie"
+    },
+    {
+      "name": "LINE adapter real dry-run",
+      "ok": true,
+      "command": "send-selfie"
+    },
+    {
+      "name": "Messenger adapter real dry-run",
+      "ok": true,
+      "command": "send-selfie"
+    },
+    {
+      "name": "Matrix adapter real dry-run",
       "ok": true,
       "command": "send-selfie"
     }

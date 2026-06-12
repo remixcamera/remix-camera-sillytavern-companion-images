@@ -9,7 +9,7 @@ The integration has two parts:
 - `bridge/`: a local Node.js bridge that stores `REMIX_SESSION_TOKEN` server-side and calls the Remix.Camera API.
 - `extension/`: a SillyTavern extension that adds image buttons and optional function tools for a character.
 - `characters/`: importable Character Card V2 examples with Remix.Camera visual metadata.
-- `adapters/`: wrappers for RisuAI, Open WebUI, LibreChat, LobeChat, Agnai, Telegram, Discord, WhatsApp, Slack, Dify, Flowise, and Botpress.
+- `adapters/`: wrappers for RisuAI, Open WebUI, LibreChat, LobeChat, Agnai, Telegram, Discord, WhatsApp, Slack, LINE, Messenger, Matrix, Dify, Flowise, and Botpress.
 
 ## What It Enables
 
@@ -68,6 +68,9 @@ npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=discord
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=whatsapp
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=slack
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=line
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=messenger
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=matrix
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=dify
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=flowise
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=botpress
@@ -88,6 +91,12 @@ Adapter files:
 - WhatsApp Lily proof of concept: `adapters/whatsapp/lily-webhook-server.mjs`
 - Slack reusable tool: `adapters/slack/remix-slack-tool.mjs`
 - Slack Lily proof of concept: `adapters/slack/lily-slash-command-server.mjs`
+- LINE reusable tool: `adapters/line/remix-line-tool.mjs`
+- LINE Lily proof of concept: `adapters/line/lily-webhook-server.mjs`
+- Messenger reusable tool: `adapters/messenger/remix-messenger-tool.mjs`
+- Messenger Lily proof of concept: `adapters/messenger/lily-webhook-server.mjs`
+- Matrix reusable tool: `adapters/matrix/remix-matrix-tool.mjs`
+- Matrix Lily proof of concept: `adapters/matrix/lily-sync-bot.mjs`
 - Dify: `http://127.0.0.1:8787/openapi.json`
 - Flowise: `adapters/flowise/remix-camera-flowise-tool.js`
 - Botpress: `adapters/botpress/remix-camera-botpress-action.js`

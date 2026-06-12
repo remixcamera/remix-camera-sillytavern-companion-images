@@ -1,6 +1,6 @@
 # Remix.Camera Adapter Demo Verification
 
-Generated at: 2026-06-12T16:50:16.469Z
+Generated at: 2026-06-12T17:28:05.087Z
 Mode: bridge-dry-run
 Bridge URL: http://127.0.0.1:8796
 
@@ -96,6 +96,33 @@ Bridge URL: http://127.0.0.1:8796
 - [x] marker present: SLACK_SIGNING_SECRET
 - [x] marker present: uploaded files
 
+### LINE
+- [x] adapter exists: adapters/line/remix-line-tool.mjs
+- [x] adapter exists: adapters/line/lily-webhook-server.mjs
+- [x] demo runbook exists: demos/line/demo.md
+- [x] demo includes setup target
+- [x] marker present: createRemixLineTool
+- [x] marker present: LINE_CHANNEL_SECRET
+- [x] marker present: productionImageUrl
+
+### Messenger
+- [x] adapter exists: adapters/messenger/remix-messenger-tool.mjs
+- [x] adapter exists: adapters/messenger/lily-webhook-server.mjs
+- [x] demo runbook exists: demos/messenger/demo.md
+- [x] demo includes setup target
+- [x] marker present: createRemixMessengerTool
+- [x] marker present: MESSENGER_APP_SECRET
+- [x] marker present: productionImageUrl
+
+### Matrix
+- [x] adapter exists: adapters/matrix/remix-matrix-tool.mjs
+- [x] adapter exists: adapters/matrix/lily-sync-bot.mjs
+- [x] demo runbook exists: demos/matrix/demo.md
+- [x] demo includes setup target
+- [x] marker present: createRemixMatrixTool
+- [x] marker present: MATRIX_ACCESS_TOKEN
+- [x] marker present: m.image
+
 ### Dify
 - [x] adapter exists: adapters/dify/README.md
 - [x] demo runbook exists: demos/dify/demo.md
@@ -142,3 +169,6 @@ Bridge URL: http://127.0.0.1:8796
 - [x] Discord adapter real dry-run (command: send-selfie)
 - [x] WhatsApp adapter real dry-run (command: send-selfie)
 - [x] Slack adapter real dry-run (command: send-selfie)
+- [x] LINE adapter real dry-run (command: send-selfie)
+- [x] Messenger adapter real dry-run (command: send-selfie)
+- [x] Matrix adapter real dry-run (command: send-selfie)

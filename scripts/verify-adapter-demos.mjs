@@ -5,6 +5,9 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { COMPANION_COMMANDS } from "../lib/companion-tools.mjs";
 import { runDiscordRemixInteraction } from "../adapters/discord/remix-discord-tool.mjs";
+import { parseLineCommand, runLineRemixCommand } from "../adapters/line/remix-line-tool.mjs";
+import { parseMessengerCommand, runMessengerRemixCommand } from "../adapters/messenger/remix-messenger-tool.mjs";
+import { parseMatrixCommand, runMatrixRemixCommand } from "../adapters/matrix/remix-matrix-tool.mjs";
 import { parseSlackCommand, runSlackRemixCommand } from "../adapters/slack/remix-slack-tool.mjs";
 import { parseTelegramCommand, runTelegramRemixCommand } from "../adapters/telegram/remix-telegram-tool.mjs";
 import { parseWhatsAppCommand, runWhatsAppRemixCommand } from "../adapters/whatsapp/remix-whatsapp-tool.mjs";
@@ -113,6 +116,30 @@ const targets = [
     demoFile: "demos/slack/demo.md",
     setupCommand: "--target=slack",
     markers: ["createRemixSlackTool", "SLACK_SIGNING_SECRET", "uploaded files"],
+  },
+  {
+    id: "line",
+    title: "LINE",
+    adapterFiles: ["adapters/line/remix-line-tool.mjs", "adapters/line/lily-webhook-server.mjs"],
+    demoFile: "demos/line/demo.md",
+    setupCommand: "--target=line",
+    markers: ["createRemixLineTool", "LINE_CHANNEL_SECRET", "productionImageUrl"],
+  },
+  {
+    id: "messenger",
+    title: "Messenger",
+    adapterFiles: ["adapters/messenger/remix-messenger-tool.mjs", "adapters/messenger/lily-webhook-server.mjs"],
+    demoFile: "demos/messenger/demo.md",
+    setupCommand: "--target=messenger",
+    markers: ["createRemixMessengerTool", "MESSENGER_APP_SECRET", "productionImageUrl"],
+  },
+  {
+    id: "matrix",
+    title: "Matrix",
+    adapterFiles: ["adapters/matrix/remix-matrix-tool.mjs", "adapters/matrix/lily-sync-bot.mjs"],
+    demoFile: "demos/matrix/demo.md",
+    setupCommand: "--target=matrix",
+    markers: ["createRemixMatrixTool", "MATRIX_ACCESS_TOKEN", "m.image"],
   },
   {
     id: "dify",
@@ -339,6 +366,24 @@ async function verifyHostAdapterDryRuns() {
         reason: "No bridge URL provided.",
       }),
     );
+    checks.push(
+      okCheck("LINE adapter real dry-run", false, {
+        skipped: true,
+        reason: "No bridge URL provided.",
+      }),
+    );
+    checks.push(
+      okCheck("Messenger adapter real dry-run", false, {
+        skipped: true,
+        reason: "No bridge URL provided.",
+      }),
+    );
+    checks.push(
+      okCheck("Matrix adapter real dry-run", false, {
+        skipped: true,
+        reason: "No bridge URL provided.",
+      }),
+    );
     return checks;
   }
 
@@ -394,6 +439,39 @@ async function verifyHostAdapterDryRuns() {
   checks.push(
     okCheck("Slack adapter real dry-run", slack?.payload?.dryRun === true && /Preview ready/i.test(slack.text), {
       command: slack?.command,
+    }),
+  );
+
+  const line = await runLineRemixCommand(parseLineCommand("preview selfie cozy couch with lamp light"), {
+    bridgeUrl,
+    profileId: process.env.REMIX_PROFILE_ID || "",
+    characterName: "Lily",
+  });
+  checks.push(
+    okCheck("LINE adapter real dry-run", line?.payload?.dryRun === true && /Preview ready/i.test(line.text), {
+      command: line?.command,
+    }),
+  );
+
+  const messenger = await runMessengerRemixCommand(parseMessengerCommand("preview selfie cozy couch with lamp light"), {
+    bridgeUrl,
+    profileId: process.env.REMIX_PROFILE_ID || "",
+    characterName: "Lily",
+  });
+  checks.push(
+    okCheck("Messenger adapter real dry-run", messenger?.payload?.dryRun === true && /Preview ready/i.test(messenger.text), {
+      command: messenger?.command,
+    }),
+  );
+
+  const matrix = await runMatrixRemixCommand(parseMatrixCommand("preview selfie cozy couch with lamp light"), {
+    bridgeUrl,
+    profileId: process.env.REMIX_PROFILE_ID || "",
+    characterName: "Lily",
+  });
+  checks.push(
+    okCheck("Matrix adapter real dry-run", matrix?.payload?.dryRun === true && /Preview ready/i.test(matrix.text), {
+      command: matrix?.command,
     }),
   );
 
