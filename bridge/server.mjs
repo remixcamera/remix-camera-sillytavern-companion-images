@@ -39,10 +39,21 @@ const PROMPT_TEMPLATE_QUERIES = {
   "daily-life-snap": "daily life candid selfie at home cafe errands phone camera natural update",
   "private-snap": "adult private snap bedroom mirror lingerie phone camera mature intimate selfie",
 };
-const PROMPT_TEMPLATE_SEARCH_PAGE_SIZE = 4;
-const PROMPT_TEMPLATE_DETAIL_LIMIT = 3;
+const PROMPT_TEMPLATE_SEARCH_PAGE_SIZE = 8;
+const PROMPT_TEMPLATE_DETAIL_LIMIT = 6;
 const PROMPT_TEMPLATE_MAX_TEXT_LENGTH = 1400;
 const PROMPT_TEMPLATE_QUERY_MAX_LENGTH = 260;
+const PREFERRED_PROMPT_TEMPLATE_QUALITY_STATUSES = new Set(["best", "excellent"]);
+const PROMPT_TEMPLATE_QUALITY_SCORES = new Map([
+  ["best", 160],
+  ["excellent", 140],
+  ["great", 35],
+  ["good", 10],
+  ["deprioritized", -120],
+  ["low", -90],
+  ["bad", -90],
+  ["hide", -120],
+]);
 const DEFAULT_ALLOWED_ORIGINS = [
   "http://127.0.0.1:8000",
   "http://localhost:8000",
@@ -380,26 +391,88 @@ function normalizeTemplatePrompt(entry) {
   };
 }
 
+function normalizePromptTemplateQuality(value) {
+  const normalized = cleanString(value).toLowerCase();
+  return PROMPT_TEMPLATE_QUALITY_SCORES.has(normalized) ? normalized : "";
+}
+
+function promptTemplateQualityStatus(pack) {
+  return normalizePromptTemplateQuality(pack?.adminPriorityStatus) || normalizePromptTemplateQuality(pack?.qualityRating);
+}
+
+function promptTemplateQualityScore(pack) {
+  return PROMPT_TEMPLATE_QUALITY_SCORES.get(promptTemplateQualityStatus(pack)) || 0;
+}
+
+function isPreferredPromptTemplateQuality(pack) {
+  return PREFERRED_PROMPT_TEMPLATE_QUALITY_STATUSES.has(promptTemplateQualityStatus(pack));
+}
+
+function sortPromptTemplatePackSummaries(packs) {
+  return [...packs].sort((a, b) => {
+    const qualityDiff = promptTemplateQualityScore(b) - promptTemplateQualityScore(a);
+    if (qualityDiff !== 0) {
+      return qualityDiff;
+    }
+    const aScore = typeof a.searchScore === "number" ? a.searchScore : 0;
+    const bScore = typeof b.searchScore === "number" ? b.searchScore : 0;
+    return bScore - aScore;
+  });
+}
+
+function promptTemplateCommandFitScore(input, text) {
+  const command = input.command;
+  if (command.includes("selfie")) {
+    return /\b(selfie|phone|mirror|camera)\b/.test(text) ? 6 : 0;
+  }
+  if (command === "outfit-try-on") {
+    return /\b(outfit|dress|fashion|wardrobe|full[- ]body|mirror)\b/.test(text) ? 8 : 0;
+  }
+  if (command === "couples-vacation") {
+    return /\b(vacation|travel|beach|hotel|trip|resort|weekend|couple|together|destination|coast|getaway)\b/.test(text)
+      ? 10
+      : 0;
+  }
+  if (USER_INCLUDED_COMMANDS.has(command)) {
+    return /\b(couple|two|partner|date|together)\b/.test(text) ? 8 : 0;
+  }
+  if (command === "date-night") {
+    return /\b(date|dinner|restaurant|bar|night|romantic)\b/.test(text) ? 8 : 0;
+  }
+  if (command === "daily-life-snap") {
+    return /\b(candid|home|daily|casual|morning|coffee|errands)\b/.test(text) ? 8 : 0;
+  }
+  if (command === "private-snap") {
+    return /\b(adult|private|bedroom|lingerie|sensual|intimate|mirror)\b/.test(text) ? 10 : 0;
+  }
+  return 0;
+}
+
 function scorePromptTemplate({ query, input, pack, prompt }) {
   const queryTokens = tokenizeText(query);
-  const promptTokens = tokenizeText([pack.title, pack.description, prompt.text].join(" "));
-  let score = 0;
+  const searchableText = [pack.title, pack.description, prompt.text].join(" ");
+  const promptTokens = tokenizeText(searchableText);
+  let textScore = 0;
   for (const token of queryTokens) {
     if (promptTokens.has(token)) {
-      score += 2;
+      textScore += 2;
     }
   }
-  const promptText = prompt.text.toLowerCase();
-  const command = input.command;
-  if (command.includes("selfie") && /\b(selfie|phone|mirror|camera)\b/.test(promptText)) score += 6;
-  if (command === "outfit-try-on" && /\b(outfit|dress|fashion|wardrobe|full[- ]body|mirror)\b/.test(promptText)) score += 8;
-  if (USER_INCLUDED_COMMANDS.has(command) && /\b(couple|two|partner|date|together)\b/.test(promptText)) score += 8;
-  if (command === "couples-vacation" && /\b(vacation|travel|beach|hotel|trip|resort|weekend)\b/.test(promptText)) score += 10;
-  if (command === "date-night" && /\b(date|dinner|restaurant|bar|night|romantic)\b/.test(promptText)) score += 8;
-  if (command === "daily-life-snap" && /\b(candid|home|daily|casual|morning|coffee|errands)\b/.test(promptText)) score += 8;
-  if (command === "private-snap" && /\b(adult|private|bedroom|lingerie|sensual|intimate|mirror)\b/.test(promptText)) score += 10;
-  if (prompt.text.length > 180) score += 2;
-  return score;
+  const searchableLower = searchableText.toLowerCase();
+  const commandScore = promptTemplateCommandFitScore(input, searchableLower);
+  const lengthScore = prompt.text.length > 180 ? 2 : 0;
+  const rawQualityScore = promptTemplateQualityScore(pack);
+  const qualityScore = commandScore > 0 || textScore >= 8 ? rawQualityScore : Math.min(rawQualityScore, 10);
+  const missingCommandPenalty = commandScore > 0 ? 0 : -12;
+  const score = textScore + commandScore + lengthScore + qualityScore + missingCommandPenalty;
+  return {
+    score,
+    textScore,
+    commandScore,
+    qualityScore,
+    qualityStatus: promptTemplateQualityStatus(pack),
+    preferredQuality: isPreferredPromptTemplateQuality(pack),
+  };
 }
 
 async function fetchPromptTemplatePackDetail(pack) {
@@ -417,6 +490,8 @@ async function fetchPromptTemplatePackDetail(pack) {
     slug: cleanString(detail.slug || pack.slug) || null,
     title: cleanString(detail.title || pack.title) || "Remix.Camera prompt pack",
     description: cleanString(detail.description) || null,
+    adminPriorityStatus: normalizePromptTemplateQuality(detail.adminPriorityStatus || pack.adminPriorityStatus) || null,
+    qualityRating: normalizePromptTemplateQuality(detail.qualityRating || pack.qualityRating) || null,
     matchedText: cleanString(pack.matchedText) || null,
     prompts: Array.isArray(detail.prompts)
       ? detail.prompts.map(normalizeTemplatePrompt).filter(Boolean)
@@ -436,23 +511,26 @@ async function resolvePromptTemplate(input) {
     body: JSON.stringify({ query, pageSize: PROMPT_TEMPLATE_SEARCH_PAGE_SIZE }),
   });
   const packs = Array.isArray(searchPayload?.packs) ? searchPayload.packs : [];
+  const rankedPacks = sortPromptTemplatePackSummaries(packs);
   let best = null;
 
-  for (const packSummary of packs.slice(0, PROMPT_TEMPLATE_DETAIL_LIMIT)) {
+  for (const packSummary of rankedPacks.slice(0, PROMPT_TEMPLATE_DETAIL_LIMIT)) {
     const pack = await fetchPromptTemplatePackDetail(packSummary).catch(() => null);
     if (!pack?.prompts?.length) {
       continue;
     }
     for (const prompt of pack.prompts) {
       const score = scorePromptTemplate({ query, input, pack, prompt });
-      if (!best || score > best.score) {
+      if (!best || score.score > best.score || (score.score === best.score && score.qualityScore > best.qualityScore)) {
         best = {
-          score,
+          ...score,
           query,
           packId: pack.id,
           packSlug: pack.slug,
           packTitle: pack.title,
           packDescription: pack.description,
+          adminPriorityStatus: pack.adminPriorityStatus,
+          qualityRating: pack.qualityRating,
           matchedText: pack.matchedText,
           promptIndex: prompt.index,
           prompt: clipText(prompt.text),
@@ -790,9 +868,16 @@ async function buildPlan(input) {
           packId: promptTemplate.packId || null,
           packSlug: promptTemplate.packSlug || null,
           packTitle: promptTemplate.packTitle || null,
+          adminPriorityStatus: promptTemplate.adminPriorityStatus || null,
+          qualityRating: promptTemplate.qualityRating || null,
+          qualityStatus: promptTemplate.qualityStatus || null,
+          preferredQuality: promptTemplate.preferredQuality === true,
           promptIndex: Number.isInteger(promptTemplate.promptIndex) ? promptTemplate.promptIndex : null,
           matchedText: promptTemplate.matchedText || null,
           score: typeof promptTemplate.score === "number" ? promptTemplate.score : null,
+          textScore: typeof promptTemplate.textScore === "number" ? promptTemplate.textScore : null,
+          commandScore: typeof promptTemplate.commandScore === "number" ? promptTemplate.commandScore : null,
+          qualityScore: typeof promptTemplate.qualityScore === "number" ? promptTemplate.qualityScore : null,
           aspectRatio: promptTemplate.aspectRatio || null,
           cropStyle: promptTemplate.cropStyle || null,
           poseType: promptTemplate.poseType || null,
