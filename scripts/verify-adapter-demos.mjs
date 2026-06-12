@@ -311,6 +311,14 @@ async function verifyHostAdapterDryRuns() {
 }
 
 function renderMarkdownReport(evidence) {
+  const detailText = (check) => {
+    const details = [];
+    if (check.status) details.push(`status ${check.status}`);
+    if (check.authMode) details.push(`auth ${check.authMode}`);
+    if (check.promptTemplate) details.push(`template: ${check.promptTemplate}`);
+    if (check.command) details.push(`command: ${check.command}`);
+    return details.length ? ` (${details.join("; ")})` : "";
+  };
   const lines = [
     "# Remix.Camera Adapter Demo Verification",
     "",
@@ -326,7 +334,7 @@ function renderMarkdownReport(evidence) {
     for (const check of target.checks) {
       const marker = check.ok ? "[x]" : check.skipped ? "[ ]" : "[!]";
       const suffix = check.reason ? ` - ${check.reason}` : "";
-      lines.push(`- ${marker} ${check.name}${suffix}`);
+      lines.push(`- ${marker} ${check.name}${detailText(check)}${suffix}`);
     }
     lines.push("");
   }
@@ -334,13 +342,13 @@ function renderMarkdownReport(evidence) {
   for (const check of evidence.bridgeChecks) {
     const marker = check.ok ? "[x]" : check.skipped ? "[ ]" : "[!]";
     const suffix = check.reason ? ` - ${check.reason}` : "";
-    lines.push(`- ${marker} ${check.name}${suffix}`);
+    lines.push(`- ${marker} ${check.name}${detailText(check)}${suffix}`);
   }
   lines.push("", "## Host Adapter Dry-Runs", "");
   for (const check of evidence.hostAdapterChecks) {
     const marker = check.ok ? "[x]" : check.skipped ? "[ ]" : "[!]";
     const suffix = check.reason ? ` - ${check.reason}` : "";
-    lines.push(`- ${marker} ${check.name}${suffix}`);
+    lines.push(`- ${marker} ${check.name}${detailText(check)}${suffix}`);
   }
   lines.push("");
   return lines.join("\n");
@@ -353,19 +361,28 @@ function renderHtmlReport(evidence) {
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;");
+  const detailHtml = (check) => {
+    const details = [];
+    if (check.status) details.push(`status ${check.status}`);
+    if (check.authMode) details.push(`auth ${check.authMode}`);
+    if (check.promptTemplate) details.push(`template: ${check.promptTemplate}`);
+    if (check.command) details.push(`command: ${check.command}`);
+    if (check.reason) details.push(check.reason);
+    return details.length ? ` <small>${esc(details.join("; "))}</small>` : "";
+  };
   const targetCards = evidence.targets
     .map(
       (target) => `
         <section>
           <h2>${esc(target.title)}</h2>
           <ul>${target.checks
-            .map((check) => `<li class="${check.ok ? "ok" : check.skipped ? "skip" : "fail"}">${check.ok ? "OK" : check.skipped ? "SKIP" : "FAIL"} ${esc(check.name)}${check.reason ? ` <small>${esc(check.reason)}</small>` : ""}</li>`)
+            .map((check) => `<li class="${check.ok ? "ok" : check.skipped ? "skip" : "fail"}">${check.ok ? "OK" : check.skipped ? "SKIP" : "FAIL"} ${esc(check.name)}${detailHtml(check)}</li>`)
             .join("")}</ul>
         </section>`,
     )
     .join("");
   const bridgeItems = [...evidence.bridgeChecks, ...evidence.hostAdapterChecks]
-    .map((check) => `<li class="${check.ok ? "ok" : check.skipped ? "skip" : "fail"}">${check.ok ? "OK" : check.skipped ? "SKIP" : "FAIL"} ${esc(check.name)}${check.reason ? ` <small>${esc(check.reason)}</small>` : ""}</li>`)
+    .map((check) => `<li class="${check.ok ? "ok" : check.skipped ? "skip" : "fail"}">${check.ok ? "OK" : check.skipped ? "SKIP" : "FAIL"} ${esc(check.name)}${detailHtml(check)}</li>`)
     .join("");
   return `<!doctype html>
 <html lang="en">
@@ -449,4 +466,3 @@ console.log(JSON.stringify(evidence, null, 2));
 if (!evidence.ok) {
   process.exitCode = 1;
 }
-

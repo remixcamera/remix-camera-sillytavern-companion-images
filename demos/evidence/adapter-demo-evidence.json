@@ -1,0 +1,389 @@
+{
+  "ok": true,
+  "generatedAt": "2026-06-12T09:31:08.685Z",
+  "mode": "bridge-dry-run",
+  "bridgeUrl": "http://127.0.0.1:8796",
+  "targets": [
+    {
+      "id": "sillytavern",
+      "title": "SillyTavern",
+      "checks": [
+        {
+          "name": "adapter exists: extension/remix-camera-companion-images/index.js",
+          "ok": true,
+          "path": "extension/remix-camera-companion-images/index.js"
+        },
+        {
+          "name": "adapter exists: extension/remix-camera-companion-images/manifest.json",
+          "ok": true,
+          "path": "extension/remix-camera-companion-images/manifest.json"
+        },
+        {
+          "name": "demo runbook exists: demos/sillytavern/demo.md",
+          "ok": true,
+          "path": "demos/sillytavern/demo.md"
+        },
+        {
+          "name": "demo includes setup target",
+          "ok": true,
+          "expected": "--target=sillytavern"
+        },
+        {
+          "name": "marker present: Health Check",
+          "ok": true,
+          "marker": "Health Check"
+        },
+        {
+          "name": "marker present: Preview Prompt",
+          "ok": true,
+          "marker": "Preview Prompt"
+        },
+        {
+          "name": "marker present: real image messages",
+          "ok": true,
+          "marker": "real image messages"
+        }
+      ]
+    },
+    {
+      "id": "risu",
+      "title": "RisuAI",
+      "checks": [
+        {
+          "name": "adapter exists: adapters/risu/remix-camera-companion-images.risu.js",
+          "ok": true,
+          "path": "adapters/risu/remix-camera-companion-images.risu.js"
+        },
+        {
+          "name": "demo runbook exists: demos/risu/demo.md",
+          "ok": true,
+          "path": "demos/risu/demo.md"
+        },
+        {
+          "name": "demo includes setup target",
+          "ok": true,
+          "expected": "--target=risu"
+        },
+        {
+          "name": "marker present: registerMCP",
+          "ok": true,
+          "marker": "registerMCP"
+        },
+        {
+          "name": "marker present: plugin:remix-camera-companion-images",
+          "ok": true,
+          "marker": "plugin:remix-camera-companion-images"
+        },
+        {
+          "name": "marker present: yes=true",
+          "ok": true,
+          "marker": "yes=true"
+        }
+      ]
+    },
+    {
+      "id": "openwebui",
+      "title": "Open WebUI",
+      "checks": [
+        {
+          "name": "adapter exists: adapters/openwebui/remix_camera_companion_images.py",
+          "ok": true,
+          "path": "adapters/openwebui/remix_camera_companion_images.py"
+        },
+        {
+          "name": "demo runbook exists: demos/openwebui/demo.md",
+          "ok": true,
+          "path": "demos/openwebui/demo.md"
+        },
+        {
+          "name": "demo includes setup target",
+          "ok": true,
+          "expected": "--target=openwebui"
+        },
+        {
+          "name": "marker present: class Tools",
+          "ok": true,
+          "marker": "class Tools"
+        },
+        {
+          "name": "marker present: yes=True",
+          "ok": true,
+          "marker": "yes=True"
+        },
+        {
+          "name": "marker present: BRIDGE_URL",
+          "ok": true,
+          "marker": "BRIDGE_URL"
+        }
+      ]
+    },
+    {
+      "id": "librechat",
+      "title": "LibreChat",
+      "checks": [
+        {
+          "name": "adapter exists: adapters/librechat/README.md",
+          "ok": true,
+          "path": "adapters/librechat/README.md"
+        },
+        {
+          "name": "demo runbook exists: demos/librechat/demo.md",
+          "ok": true,
+          "path": "demos/librechat/demo.md"
+        },
+        {
+          "name": "demo includes setup target",
+          "ok": true,
+          "expected": "--target=librechat"
+        },
+        {
+          "name": "marker present: /librechat/openapi.json",
+          "ok": true,
+          "marker": "/librechat/openapi.json"
+        },
+        {
+          "name": "marker present: yes=true",
+          "ok": true,
+          "marker": "yes=true"
+        },
+        {
+          "name": "marker present: dry-run",
+          "ok": true,
+          "marker": "dry-run"
+        }
+      ]
+    },
+    {
+      "id": "lobechat",
+      "title": "LobeChat",
+      "checks": [
+        {
+          "name": "adapter exists: adapters/lobe/README.md",
+          "ok": true,
+          "path": "adapters/lobe/README.md"
+        },
+        {
+          "name": "demo runbook exists: demos/lobechat/demo.md",
+          "ok": true,
+          "path": "demos/lobechat/demo.md"
+        },
+        {
+          "name": "demo includes setup target",
+          "ok": true,
+          "expected": "--target=lobechat"
+        },
+        {
+          "name": "marker present: /lobe/manifest.json",
+          "ok": true,
+          "marker": "/lobe/manifest.json"
+        },
+        {
+          "name": "marker present: yes=true",
+          "ok": true,
+          "marker": "yes=true"
+        }
+      ]
+    },
+    {
+      "id": "agnai",
+      "title": "Agnai",
+      "checks": [
+        {
+          "name": "adapter exists: adapters/agnai/remix-camera-agnai.user.js",
+          "ok": true,
+          "path": "adapters/agnai/remix-camera-agnai.user.js"
+        },
+        {
+          "name": "demo runbook exists: demos/agnai/demo.md",
+          "ok": true,
+          "path": "demos/agnai/demo.md"
+        },
+        {
+          "name": "demo includes setup target",
+          "ok": true,
+          "expected": "--target=agnai"
+        },
+        {
+          "name": "marker present: @match        https://agnai.chat/*",
+          "ok": true,
+          "marker": "@match        https://agnai.chat/*"
+        },
+        {
+          "name": "marker present: Selfie preview",
+          "ok": true,
+          "marker": "Selfie preview"
+        },
+        {
+          "name": "marker present: yes",
+          "ok": true,
+          "marker": "yes"
+        }
+      ]
+    },
+    {
+      "id": "telegram",
+      "title": "Telegram",
+      "checks": [
+        {
+          "name": "adapter exists: adapters/telegram/remix-telegram-tool.mjs",
+          "ok": true,
+          "path": "adapters/telegram/remix-telegram-tool.mjs"
+        },
+        {
+          "name": "adapter exists: adapters/telegram/lily-bot.mjs",
+          "ok": true,
+          "path": "adapters/telegram/lily-bot.mjs"
+        },
+        {
+          "name": "demo runbook exists: demos/telegram/demo.md",
+          "ok": true,
+          "path": "demos/telegram/demo.md"
+        },
+        {
+          "name": "demo includes setup target",
+          "ok": true,
+          "expected": "--target=telegram"
+        },
+        {
+          "name": "marker present: createRemixTelegramTool",
+          "ok": true,
+          "marker": "createRemixTelegramTool"
+        },
+        {
+          "name": "marker present: LILY_PROFILE_ID",
+          "ok": true,
+          "marker": "LILY_PROFILE_ID"
+        },
+        {
+          "name": "marker present: uploads local bridge images",
+          "ok": true,
+          "marker": "uploads local bridge images"
+        }
+      ]
+    },
+    {
+      "id": "discord",
+      "title": "Discord",
+      "checks": [
+        {
+          "name": "adapter exists: adapters/discord/remix-discord-tool.mjs",
+          "ok": true,
+          "path": "adapters/discord/remix-discord-tool.mjs"
+        },
+        {
+          "name": "adapter exists: adapters/discord/lily-interactions-server.mjs",
+          "ok": true,
+          "path": "adapters/discord/lily-interactions-server.mjs"
+        },
+        {
+          "name": "demo runbook exists: demos/discord/demo.md",
+          "ok": true,
+          "path": "demos/discord/demo.md"
+        },
+        {
+          "name": "demo includes setup target",
+          "ok": true,
+          "expected": "--target=discord"
+        },
+        {
+          "name": "marker present: verifyDiscordSignature",
+          "ok": true,
+          "marker": "verifyDiscordSignature"
+        },
+        {
+          "name": "marker present: sendDiscordWebhookResult",
+          "ok": true,
+          "marker": "sendDiscordWebhookResult"
+        },
+        {
+          "name": "marker present: yes:true",
+          "ok": true,
+          "marker": "yes:true"
+        }
+      ]
+    }
+  ],
+  "bridgeChecks": [
+    {
+      "name": "bridge health",
+      "ok": true,
+      "status": 200,
+      "authMode": "design_api_session"
+    },
+    {
+      "name": "OpenAPI exposes all generate endpoints",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "name": "Lobe manifest exposes all tools",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "name": "bridge dry-run: send-selfie",
+      "ok": true,
+      "status": 200,
+      "promptTemplate": "Realistic Bedroom Selfie Girl Phone Mirror"
+    },
+    {
+      "name": "bridge dry-run: auto-selfie-from-chat",
+      "ok": true,
+      "status": 200,
+      "promptTemplate": "Candid Mirror Selfie Squating"
+    },
+    {
+      "name": "bridge dry-run: outfit-try-on",
+      "ok": true,
+      "status": 200,
+      "promptTemplate": "Bedroom Mirror Selfie White Tank Yellow Skirt Braid"
+    },
+    {
+      "name": "bridge dry-run: couple-photo",
+      "ok": true,
+      "status": 200,
+      "promptTemplate": "Realistic Couple Mirror Selfie Black Outfit"
+    },
+    {
+      "name": "bridge dry-run: couples-vacation",
+      "ok": true,
+      "status": 200,
+      "promptTemplate": "Romantic Tropical Beach Couple Golden Hour Kiss"
+    },
+    {
+      "name": "bridge dry-run: date-night",
+      "ok": true,
+      "status": 200,
+      "promptTemplate": "Realistic Couple Restaurant Terrace Evening Warm Light"
+    },
+    {
+      "name": "bridge dry-run: daily-life-snap",
+      "ok": true,
+      "status": 200,
+      "promptTemplate": "Knit Sweater Iced Coffee Cafe Candid"
+    },
+    {
+      "name": "bridge dry-run: private-snap",
+      "ok": true,
+      "status": 200,
+      "promptTemplate": "Adult Woman Cozy Bedroom Mirror Selfie"
+    }
+  ],
+  "hostAdapterChecks": [
+    {
+      "name": "Telegram adapter real dry-run",
+      "ok": true,
+      "command": "send-selfie"
+    },
+    {
+      "name": "Discord adapter real dry-run",
+      "ok": true,
+      "command": "send-selfie"
+    }
+  ],
+  "outputs": {
+    "jsonPath": "demos/evidence/adapter-demo-evidence.json",
+    "markdownPath": "demos/evidence/adapter-demo-evidence.md",
+    "htmlPath": "demos/evidence/adapter-demo-evidence.html"
+  }
+}

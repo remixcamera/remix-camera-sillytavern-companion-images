@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Remix.Camera Adapter Demo Verification</title>
+  <style>
+    body { margin: 0; font-family: Inter, ui-sans-serif, system-ui, sans-serif; background: #171717; color: #f7f7f8; }
+    main { max-width: 1120px; margin: 0 auto; padding: 32px 20px; }
+    h1 { margin: 0 0 8px; font-size: 32px; }
+    p { color: #b8b8b8; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; margin-top: 24px; }
+    section { border: 1px solid #333; background: #222; border-radius: 8px; padding: 16px; }
+    h2 { margin: 0 0 12px; font-size: 18px; }
+    ul { padding-left: 0; list-style: none; margin: 0; display: grid; gap: 8px; }
+    li { border-left: 4px solid #666; padding-left: 10px; color: #ddd; }
+    li.ok { border-color: #d1fe17; }
+    li.skip { border-color: #888; color: #aaa; }
+    li.fail { border-color: #ff6b6b; color: #ffd4d4; }
+    small { display: block; color: #999; margin-top: 2px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Remix.Camera Adapter Demo Verification</h1>
+    <p>Generated at 2026-06-12T09:31:08.685Z. Mode: bridge-dry-run. Bridge: http://127.0.0.1:8796.</p>
+    <div class="grid">
+        <section>
+          <h2>SillyTavern</h2>
+          <ul><li class="ok">OK adapter exists: extension/remix-camera-companion-images/index.js</li><li class="ok">OK adapter exists: extension/remix-camera-companion-images/manifest.json</li><li class="ok">OK demo runbook exists: demos/sillytavern/demo.md</li><li class="ok">OK demo includes setup target</li><li class="ok">OK marker present: Health Check</li><li class="ok">OK marker present: Preview Prompt</li><li class="ok">OK marker present: real image messages</li></ul>
+        </section>
+        <section>
+          <h2>RisuAI</h2>
+          <ul><li class="ok">OK adapter exists: adapters/risu/remix-camera-companion-images.risu.js</li><li class="ok">OK demo runbook exists: demos/risu/demo.md</li><li class="ok">OK demo includes setup target</li><li class="ok">OK marker present: registerMCP</li><li class="ok">OK marker present: plugin:remix-camera-companion-images</li><li class="ok">OK marker present: yes=true</li></ul>
+        </section>
+        <section>
+          <h2>Open WebUI</h2>
+          <ul><li class="ok">OK adapter exists: adapters/openwebui/remix_camera_companion_images.py</li><li class="ok">OK demo runbook exists: demos/openwebui/demo.md</li><li class="ok">OK demo includes setup target</li><li class="ok">OK marker present: class Tools</li><li class="ok">OK marker present: yes=True</li><li class="ok">OK marker present: BRIDGE_URL</li></ul>
+        </section>
+        <section>
+          <h2>LibreChat</h2>
+          <ul><li class="ok">OK adapter exists: adapters/librechat/README.md</li><li class="ok">OK demo runbook exists: demos/librechat/demo.md</li><li class="ok">OK demo includes setup target</li><li class="ok">OK marker present: /librechat/openapi.json</li><li class="ok">OK marker present: yes=true</li><li class="ok">OK marker present: dry-run</li></ul>
+        </section>
+        <section>
+          <h2>LobeChat</h2>
+          <ul><li class="ok">OK adapter exists: adapters/lobe/README.md</li><li class="ok">OK demo runbook exists: demos/lobechat/demo.md</li><li class="ok">OK demo includes setup target</li><li class="ok">OK marker present: /lobe/manifest.json</li><li class="ok">OK marker present: yes=true</li></ul>
+        </section>
+        <section>
+          <h2>Agnai</h2>
+          <ul><li class="ok">OK adapter exists: adapters/agnai/remix-camera-agnai.user.js</li><li class="ok">OK demo runbook exists: demos/agnai/demo.md</li><li class="ok">OK demo includes setup target</li><li class="ok">OK marker present: @match        https://agnai.chat/*</li><li class="ok">OK marker present: Selfie preview</li><li class="ok">OK marker present: yes</li></ul>
+        </section>
+        <section>
+          <h2>Telegram</h2>
+          <ul><li class="ok">OK adapter exists: adapters/telegram/remix-telegram-tool.mjs</li><li class="ok">OK adapter exists: adapters/telegram/lily-bot.mjs</li><li class="ok">OK demo runbook exists: demos/telegram/demo.md</li><li class="ok">OK demo includes setup target</li><li class="ok">OK marker present: createRemixTelegramTool</li><li class="ok">OK marker present: LILY_PROFILE_ID</li><li class="ok">OK marker present: uploads local bridge images</li></ul>
+        </section>
+        <section>
+          <h2>Discord</h2>
+          <ul><li class="ok">OK adapter exists: adapters/discord/remix-discord-tool.mjs</li><li class="ok">OK adapter exists: adapters/discord/lily-interactions-server.mjs</li><li class="ok">OK demo runbook exists: demos/discord/demo.md</li><li class="ok">OK demo includes setup target</li><li class="ok">OK marker present: verifyDiscordSignature</li><li class="ok">OK marker present: sendDiscordWebhookResult</li><li class="ok">OK marker present: yes:true</li></ul>
+        </section></div>
+    <section style="margin-top:14px">
+      <h2>Bridge and Host Adapter Checks</h2>
+      <ul><li class="ok">OK bridge health <small>status 200; auth design_api_session</small></li><li class="ok">OK OpenAPI exposes all generate endpoints <small>status 200</small></li><li class="ok">OK Lobe manifest exposes all tools <small>status 200</small></li><li class="ok">OK bridge dry-run: send-selfie <small>status 200; template: Realistic Bedroom Selfie Girl Phone Mirror</small></li><li class="ok">OK bridge dry-run: auto-selfie-from-chat <small>status 200; template: Candid Mirror Selfie Squating</small></li><li class="ok">OK bridge dry-run: outfit-try-on <small>status 200; template: Bedroom Mirror Selfie White Tank Yellow Skirt Braid</small></li><li class="ok">OK bridge dry-run: couple-photo <small>status 200; template: Realistic Couple Mirror Selfie Black Outfit</small></li><li class="ok">OK bridge dry-run: couples-vacation <small>status 200; template: Romantic Tropical Beach Couple Golden Hour Kiss</small></li><li class="ok">OK bridge dry-run: date-night <small>status 200; template: Realistic Couple Restaurant Terrace Evening Warm Light</small></li><li class="ok">OK bridge dry-run: daily-life-snap <small>status 200; template: Knit Sweater Iced Coffee Cafe Candid</small></li><li class="ok">OK bridge dry-run: private-snap <small>status 200; template: Adult Woman Cozy Bedroom Mirror Selfie</small></li><li class="ok">OK Telegram adapter real dry-run <small>command: send-selfie</small></li><li class="ok">OK Discord adapter real dry-run <small>command: send-selfie</small></li></ul>
+    </section>
+  </main>
+</body>
+</html>
