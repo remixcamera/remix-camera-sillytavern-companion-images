@@ -1,6 +1,6 @@
 # Remix.Camera Adapter Demo Verification
 
-Generated at: 2026-06-12T09:50:44.435Z
+Generated at: 2026-06-12T10:18:42.663Z
 Mode: bridge-dry-run
 Bridge URL: http://127.0.0.1:8796
 
@@ -9,6 +9,9 @@ Bridge URL: http://127.0.0.1:8796
 ### SillyTavern
 - [x] adapter exists: extension/remix-camera-companion-images/index.js
 - [x] adapter exists: extension/remix-camera-companion-images/manifest.json
+- [x] demo artifact exists: demos/sillytavern/live-production-2026-06-12/sillytavern-remix-live-selfie-demo.webm
+- [x] demo artifact exists: demos/sillytavern/live-production-2026-06-12/sillytavern-remix-live-selfie-demo-poster.png
+- [x] demo artifact exists: demos/sillytavern/live-production-2026-06-12/result.json
 - [x] demo runbook exists: demos/sillytavern/demo.md
 - [x] demo includes setup target
 - [x] marker present: Health Check

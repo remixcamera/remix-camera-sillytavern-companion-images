@@ -27,6 +27,11 @@ const targets = [
     id: "sillytavern",
     title: "SillyTavern",
     adapterFiles: ["extension/remix-camera-companion-images/index.js", "extension/remix-camera-companion-images/manifest.json"],
+    artifactFiles: [
+      "demos/sillytavern/live-production-2026-06-12/sillytavern-remix-live-selfie-demo.webm",
+      "demos/sillytavern/live-production-2026-06-12/sillytavern-remix-live-selfie-demo-poster.png",
+      "demos/sillytavern/live-production-2026-06-12/result.json",
+    ],
     demoFile: "demos/sillytavern/demo.md",
     setupCommand: "--target=sillytavern",
     markers: ["Health Check", "Preview Prompt", "real image messages"],
@@ -205,6 +210,10 @@ async function verifyStaticTarget(target) {
   for (const adapterFile of target.adapterFiles) {
     const absolutePath = path.join(packageRoot, adapterFile);
     checks.push(okCheck(`adapter exists: ${adapterFile}`, await fileExists(absolutePath), { path: adapterFile }));
+  }
+  for (const artifactFile of target.artifactFiles || []) {
+    const absolutePath = path.join(packageRoot, artifactFile);
+    checks.push(okCheck(`demo artifact exists: ${artifactFile}`, await fileExists(absolutePath), { path: artifactFile }));
   }
 
   const demoPath = path.join(packageRoot, target.demoFile);

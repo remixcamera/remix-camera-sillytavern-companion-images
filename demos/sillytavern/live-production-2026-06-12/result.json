@@ -1,0 +1,22 @@
+{
+  "ok": true,
+  "mode": "browser-e2e-live-remix-api",
+  "recordedAt": "2026-06-12T10:17:18.160Z",
+  "plannedGenerationCount": 1,
+  "maxLiveGenerations": 1,
+  "commands": [
+    "selfie"
+  ],
+  "generatedImages": [
+    {
+      "kind": "selfie",
+      "imageUrl": "http://127.0.0.1:8787/v1/images/f5a265bc-2fec-472b-92ae-9ec2623bd3dd",
+      "productionImageUrl": "https://v3b.fal.media/files/b/0a9dfc72/SAxPbsbJRVXOaNcFqi0ha_1xoUpfuu.jpg",
+      "modelId": "nano-banana",
+      "generationType": "send-selfie",
+      "ordinal": 1
+    }
+  ],
+  "consoleIssues": [],
+  "note": "This verifies SillyTavern UI, character-card auto-hydration, local bridge calls, real Remix.Camera generation, and chat insertion for the requested command list."
+}
