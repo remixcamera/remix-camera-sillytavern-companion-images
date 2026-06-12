@@ -1,6 +1,6 @@
 # Remix.Camera Adapter Demo Verification
 
-Generated at: 2026-06-12T10:18:42.663Z
+Generated at: 2026-06-12T16:03:41.106Z
 Mode: bridge-dry-run
 Bridge URL: http://127.0.0.1:8796
 
@@ -60,6 +60,9 @@ Bridge URL: http://127.0.0.1:8796
 ### Telegram
 - [x] adapter exists: adapters/telegram/remix-telegram-tool.mjs
 - [x] adapter exists: adapters/telegram/lily-bot.mjs
+- [x] demo artifact exists: demos/telegram/evidence-production-2026-06-12/result.json
+- [x] demo artifact exists: demos/telegram/evidence-production-2026-06-12/transcript.md
+- [x] demo artifact exists: demos/telegram/evidence-production-2026-06-12/transcript.html
 - [x] demo runbook exists: demos/telegram/demo.md
 - [x] demo includes setup target
 - [x] marker present: createRemixTelegramTool

@@ -80,6 +80,11 @@ const targets = [
     id: "telegram",
     title: "Telegram",
     adapterFiles: ["adapters/telegram/remix-telegram-tool.mjs", "adapters/telegram/lily-bot.mjs"],
+    artifactFiles: [
+      "demos/telegram/evidence-production-2026-06-12/result.json",
+      "demos/telegram/evidence-production-2026-06-12/transcript.md",
+      "demos/telegram/evidence-production-2026-06-12/transcript.html",
+    ],
     demoFile: "demos/telegram/demo.md",
     setupCommand: "--target=telegram",
     markers: ["createRemixTelegramTool", "LILY_PROFILE_ID", "uploads local bridge images"],
