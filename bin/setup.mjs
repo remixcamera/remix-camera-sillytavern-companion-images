@@ -11,9 +11,20 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const packageRoot = path.resolve(__dirname, "..");
 const extensionSource = path.join(packageRoot, "extension", "remix-camera-companion-images");
 const bridgePath = path.join(packageRoot, "bridge", "server.mjs");
+const adapterRoot = path.join(packageRoot, "adapters");
 const DEFAULT_API_BASE_URL = "https://remix.camera";
 const DEFAULT_CONFIG_DIR = path.join(os.homedir(), ".remix-camera");
 const DEFAULT_CONFIG_PATH = path.join(DEFAULT_CONFIG_DIR, "sillytavern-bridge.json");
+const SUPPORTED_TARGETS = new Set([
+  "sillytavern",
+  "risu",
+  "openwebui",
+  "librechat",
+  "lobechat",
+  "agnai",
+  "telegram",
+  "discord",
+]);
 
 function printHelp() {
   console.log(`Remix.Camera SillyTavern setup
@@ -26,6 +37,7 @@ Usage:
   npx @remix-camera/sillytavern-setup [options]
 
 Options:
+  --target=sillytavern|risu|openwebui|librechat|lobechat|agnai|telegram|discord
   --sillytavern-dir=/path/to/SillyTavern  Use a specific local SillyTavern checkout
   --profile-id=profile_id                 Use a specific Remix.Camera character profile
   --character-name="Name"                 Override the Character Card name
@@ -45,6 +57,9 @@ What it does:
   4. Writes a local scoped bridge token outside the browser
   5. Downloads a personalized Character Card PNG
   6. Starts the local bridge and opens the health check
+
+For non-SillyTavern targets, setup pairs the local bridge and prints the
+target-specific adapter or manifest URL.
 `);
 }
 
@@ -76,6 +91,32 @@ function safeFileName(name) {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .slice(0, 60) || "remix-companion";
+}
+
+function selectedTarget() {
+  const target = (argValue("--target") || "sillytavern").toLowerCase();
+  if (!SUPPORTED_TARGETS.has(target)) {
+    throw new Error(`Unsupported target "${target}". Use one of: ${[...SUPPORTED_TARGETS].join(", ")}`);
+  }
+  return target;
+}
+
+function allowedOriginsForTarget(target) {
+  const explicit = argValue("--allowed-origins") || process.env.REMIX_ALLOWED_ORIGINS;
+  if (explicit) {
+    return explicit.split(",").map((origin) => origin.trim()).filter(Boolean);
+  }
+  const origins = new Set([
+    "http://127.0.0.1:8000",
+    "http://localhost:8000",
+    "http://[::1]:8000",
+  ]);
+  if (target === "agnai") {
+    origins.add("https://agnai.chat");
+    origins.add("http://localhost:3001");
+    origins.add("http://127.0.0.1:3001");
+  }
+  return [...origins];
 }
 
 async function exists(filePath) {
@@ -179,18 +220,18 @@ function openUrl(url) {
   child.unref();
 }
 
-async function pairDevice(apiBaseUrl) {
-  const clientName = argValue("--client-name") || `${os.hostname()} SillyTavern`;
+async function pairDevice(apiBaseUrl, target) {
+  const clientName = argValue("--client-name") || `${os.hostname()} ${target}`;
   const { payload } = await postJson(apiBaseUrl, "/api/v1/design/auth/device/start", {
     clientName,
-    source: "sillytavern",
+    source: target,
   });
   if (!payload?.deviceCode || !payload?.userCode || !payload?.verificationUriComplete) {
     throw new Error("Device pairing response was incomplete.");
   }
 
   console.log("");
-  console.log("Open Remix.Camera and approve this SillyTavern device:");
+  console.log(`Open Remix.Camera and approve this ${target} device:`);
   console.log(`  ${payload.verificationUriComplete}`);
   console.log("");
   console.log(`Pairing code: ${payload.userCode}`);
@@ -284,7 +325,7 @@ async function installExtension(sillyTavernDir, userName = "default-user") {
   return extensionTarget;
 }
 
-async function startBridge(configPath) {
+async function startBridge(configPath, extraEnv = {}) {
   if (hasFlag("--no-start")) {
     return null;
   }
@@ -294,6 +335,7 @@ async function startBridge(configPath) {
     stdio: "ignore",
     env: {
       ...process.env,
+      ...extraEnv,
       REMIX_CONFIG_FILE: configPath,
       REMIX_BRIDGE_PORT: port,
     },
@@ -307,13 +349,101 @@ async function startBridge(configPath) {
   return healthUrl;
 }
 
+function printTargetInstructions(target, { healthUrl, port, configPath }) {
+  const bridgeUrl = `http://127.0.0.1:${port}`;
+  const instructions = {
+    risu: [
+      "Install the RisuAI plugin file:",
+      `  ${path.join(adapterRoot, "risu", "remix-camera-companion-images.risu.js")}`,
+      "Then set bridge_url to:",
+      `  ${bridgeUrl}`,
+      "Risu exposes the tools through its MCP plugin surface.",
+    ],
+    openwebui: [
+      "Create an Open WebUI Tool from this Python file:",
+      `  ${path.join(adapterRoot, "openwebui", "remix_camera_companion_images.py")}`,
+      "Set BRIDGE_URL in the Tool valves to:",
+      `  ${bridgeUrl}`,
+      "Use yes=True only after the user explicitly asks to spend a generation.",
+    ],
+    librechat: [
+      "Add a LibreChat OpenAPI Action using this local schema URL:",
+      `  ${bridgeUrl}/librechat/openapi.json`,
+      "The schema includes guarded generate endpoints and dry-run preview endpoints.",
+    ],
+    lobechat: [
+      "Install a LobeChat custom plugin with this manifest URL:",
+      `  ${bridgeUrl}/lobe/manifest.json`,
+      "The manifest points each companion image tool at the local bridge.",
+    ],
+    agnai: [
+      "Install this userscript in Tampermonkey or a compatible userscript manager:",
+      `  ${path.join(adapterRoot, "agnai", "remix-camera-agnai.user.js")}`,
+      "The bridge was configured to allow https://agnai.chat by CORS.",
+      "The panel copies or inserts returned Markdown into the active chat input.",
+    ],
+    telegram: [
+      "Reusable Telegram tool module:",
+      `  ${path.join(adapterRoot, "telegram", "remix-telegram-tool.mjs")}`,
+      "Lily proof-of-concept bot:",
+      `  TELEGRAM_BOT_TOKEN=... REMIX_CONFIG_FILE=${configPath} node ${path.join(adapterRoot, "telegram", "lily-bot.mjs")}`,
+      "The adapter uploads local bridge images to Telegram as files, so 127.0.0.1 image URLs work.",
+    ],
+    discord: [
+      "Register Lily/Remix.Camera Discord slash commands:",
+      `  DISCORD_BOT_TOKEN=... DISCORD_APPLICATION_ID=... node ${path.join(adapterRoot, "discord", "register-commands.mjs")}`,
+      "Run the Lily Discord interactions server:",
+      `  DISCORD_PUBLIC_KEY=... DISCORD_APPLICATION_ID=... REMIX_CONFIG_FILE=${configPath} node ${path.join(adapterRoot, "discord", "lily-interactions-server.mjs")}`,
+      "Point the Discord application interactions endpoint at your hosted server URL.",
+    ],
+  };
+  console.log("");
+  console.log(`Remix.Camera ${target} setup complete.`);
+  console.log(`  Bridge config: ${configPath}`);
+  if (healthUrl) {
+    console.log(`  Health check: ${healthUrl}`);
+  }
+  console.log("");
+  for (const line of instructions[target] || []) {
+    console.log(line);
+  }
+}
+
 async function main() {
   if (hasFlag("--help") || hasFlag("-h")) {
     printHelp();
     return;
   }
 
+  const target = selectedTarget();
   const apiBaseUrl = trimTrailingSlash(argValue("--api-base-url") || process.env.REMIX_API_BASE_URL || DEFAULT_API_BASE_URL);
+  const port = argValue("--port") || process.env.REMIX_BRIDGE_PORT || "8787";
+  const allowedOrigins = allowedOriginsForTarget(target);
+
+  if (target !== "sillytavern") {
+    console.log(`Target: ${target}`);
+    console.log(`Remix.Camera: ${apiBaseUrl}`);
+    const pairing = await pairDevice(apiBaseUrl, target);
+    const sessionToken = pairing.sessionToken;
+    const profile = await selectProfile(apiBaseUrl, sessionToken, pairing.profileId);
+    const characterName = argValue("--character-name") || pairing.characterName || profile.name || "Remix Companion";
+    const configPath = await writeBridgeConfig({
+      apiBaseUrl,
+      sessionToken,
+      profileId: profile.id,
+      characterName,
+      target,
+      allowedOrigins,
+      pairedAt: new Date().toISOString(),
+      session: pairing.session || null,
+    });
+    const healthUrl = await startBridge(configPath, {
+      REMIX_ALLOWED_ORIGINS: allowedOrigins.join(","),
+    });
+    printTargetInstructions(target, { healthUrl, port, configPath });
+    return;
+  }
+
   const sillyTavernDir = await findSillyTavernDir();
   const userName = argValue("--user") || "default-user";
   const characterDir = path.join(sillyTavernDir, "data", userName, "characters");
@@ -321,7 +451,7 @@ async function main() {
   console.log(`SillyTavern: ${sillyTavernDir}`);
   console.log(`Remix.Camera: ${apiBaseUrl}`);
 
-  const pairing = await pairDevice(apiBaseUrl);
+  const pairing = await pairDevice(apiBaseUrl, target);
   const sessionToken = pairing.sessionToken;
   const profile = await selectProfile(apiBaseUrl, sessionToken, pairing.profileId);
   const characterName = argValue("--character-name") || pairing.characterName || profile.name || "Remix Companion";
@@ -330,12 +460,16 @@ async function main() {
     sessionToken,
     profileId: profile.id,
     characterName,
+    target,
+    allowedOrigins,
     pairedAt: new Date().toISOString(),
     session: pairing.session || null,
   });
   const extensionTarget = await installExtension(sillyTavernDir, userName);
   const cardPath = await downloadCharacterCard(apiBaseUrl, sessionToken, profile, characterName, characterDir);
-  const healthUrl = await startBridge(configPath);
+  const healthUrl = await startBridge(configPath, {
+    REMIX_ALLOWED_ORIGINS: allowedOrigins.join(","),
+  });
 
   console.log("");
   console.log("Remix.Camera SillyTavern setup complete.");

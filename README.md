@@ -9,6 +9,7 @@ The integration has two parts:
 - `bridge/`: a local Node.js bridge that stores `REMIX_SESSION_TOKEN` server-side and calls the Remix.Camera API.
 - `extension/`: a SillyTavern extension that adds image buttons and optional function tools for a character.
 - `characters/`: importable Character Card V2 examples with Remix.Camera visual metadata.
+- `adapters/`: wrappers for RisuAI, Open WebUI, LibreChat, LobeChat, Agnai, Telegram, and Discord.
 
 ## What It Enables
 
@@ -30,7 +31,7 @@ The integration has two parts:
 
 ## One-Step Setup
 
-Run the public GitHub setup command:
+Run the public GitHub setup command for SillyTavern:
 
 ```bash
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images
@@ -52,6 +53,34 @@ This is the intended path for bringing Remix.Camera image tools to your own Sill
 - starts the local bridge and opens `http://127.0.0.1:8787/health`
 
 The bridge uses a scoped opaque `dapi_...` session token created by the browser approval flow. You do not need to paste a raw API key into SillyTavern or a character card.
+
+## Other Chatbot Targets
+
+The same package can pair Remix.Camera and print target-specific install steps for other hosts:
+
+```bash
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=risu
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=openwebui
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=librechat
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=lobechat
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=agnai
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=telegram
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=discord
+```
+
+Adapter files:
+
+- RisuAI: `adapters/risu/remix-camera-companion-images.risu.js`
+- Open WebUI: `adapters/openwebui/remix_camera_companion_images.py`
+- LibreChat: `http://127.0.0.1:8787/librechat/openapi.json`
+- LobeChat: `http://127.0.0.1:8787/lobe/manifest.json`
+- Agnai: `adapters/agnai/remix-camera-agnai.user.js`
+- Telegram reusable tool: `adapters/telegram/remix-telegram-tool.mjs`
+- Telegram Lily proof of concept: `adapters/telegram/lily-bot.mjs`
+- Discord reusable tool: `adapters/discord/remix-discord-tool.mjs`
+- Discord Lily proof of concept: `adapters/discord/lily-interactions-server.mjs`
+
+See `adapters/README.md` and `demos/README.md` for target-specific demo runbooks.
 
 ## Use an Existing SillyTavern Character
 

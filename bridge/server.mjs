@@ -6,6 +6,7 @@ import { readFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { URL } from "node:url";
+import { createBridgeOpenApiDocument, createLobeManifest } from "../lib/companion-tools.mjs";
 
 const SERVICE = "remix-camera-sillytavern-bridge";
 const VERSION = "0.3.0";
@@ -77,7 +78,10 @@ const config = {
   allowAdHocPromptFallback: process.env.REMIX_ALLOW_AD_HOC_PROMPT_FALLBACK === "true",
   defaultVisualIdentity: process.env.REMIX_CHARACTER_VISUAL_IDENTITY || "",
   defaultNegativePrompt: process.env.REMIX_NEGATIVE_PROMPT || "",
-  allowedOrigins: parseAllowedOrigins(process.env.REMIX_ALLOWED_ORIGINS),
+  allowedOrigins: parseAllowedOrigins(
+    process.env.REMIX_ALLOWED_ORIGINS ||
+      (Array.isArray(persistedConfig.allowedOrigins) ? persistedConfig.allowedOrigins.join(",") : persistedConfig.allowedOrigins),
+  ),
   pollTimeoutMs: Number(process.env.REMIX_POLL_TIMEOUT_MS || 180000),
   pollIntervalMs: Number(process.env.REMIX_POLL_INTERVAL_MS || 2000),
 };
@@ -172,6 +176,13 @@ function corsHeaders(req) {
     headers["Access-Control-Allow-Origin"] = origin;
   }
   return headers;
+}
+
+function requestBaseUrl(req) {
+  const forwardedProto = cleanString(req.headers["x-forwarded-proto"]).split(",")[0].trim();
+  const protocol = forwardedProto || "http";
+  const host = cleanString(req.headers.host) || `${config.host}:${config.port}`;
+  return `${protocol}://${host}`;
 }
 
 function sendJson(req, res, status, body) {
@@ -1334,6 +1345,19 @@ async function route(req, res) {
     return;
   }
 
+  if (
+    req.method === "GET" &&
+    ["/openapi.json", "/openwebui/openapi.json", "/librechat/openapi.json"].includes(url.pathname)
+  ) {
+    sendJson(req, res, 200, createBridgeOpenApiDocument(requestBaseUrl(req)));
+    return;
+  }
+
+  if (req.method === "GET" && url.pathname === "/lobe/manifest.json") {
+    sendJson(req, res, 200, createLobeManifest(requestBaseUrl(req)));
+    return;
+  }
+
   if (req.method === "GET" && url.pathname.startsWith("/v1/images/")) {
     await serveProxiedImage(req, res, decodeURIComponent(url.pathname.slice("/v1/images/".length)));
     return;
@@ -1349,6 +1373,26 @@ async function route(req, res) {
     return;
   }
 
+  const commandToolMatch = url.pathname.match(/^\/v1\/tools\/([^/]+)\/(dry-run|generate)$/);
+  if (req.method === "POST" && commandToolMatch) {
+    const command = decodeURIComponent(commandToolMatch[1]);
+    const action = commandToolMatch[2];
+    const body = normalizeBody({
+      ...(await readJsonBody(req)),
+      command,
+    });
+    if (action === "dry-run") {
+      sendJson(req, res, 200, {
+        ok: true,
+        dryRun: true,
+        ...(await buildPlan(body)),
+      });
+      return;
+    }
+    sendJson(req, res, 200, await generate(body));
+    return;
+  }
+
   if (req.method === "POST" && url.pathname === "/v1/commands/generate") {
     const body = normalizeBody(await readJsonBody(req));
     sendJson(req, res, 200, await generate(body));
@@ -1361,9 +1405,13 @@ async function route(req, res) {
     routes: [
       "GET /health",
       "GET /schema",
+      "GET /openapi.json",
+      "GET /lobe/manifest.json",
       "GET /v1/images/:id",
       "POST /v1/commands/dry-run",
       "POST /v1/commands/generate",
+      "POST /v1/tools/:command/dry-run",
+      "POST /v1/tools/:command/generate",
     ],
   });
 }
