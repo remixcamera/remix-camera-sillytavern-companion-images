@@ -1,0 +1,38 @@
+{
+  "ok": true,
+  "mode": "telegram-bridge-dry-run-no-delivery",
+  "generatedAt": "2026-06-12T15:47:17.313Z",
+  "startedAt": "2026-06-12T15:41:17.603Z",
+  "commandText": "/preview selfie cozy couch with lamp light",
+  "parsed": {
+    "action": "dry-run",
+    "command": "send-selfie",
+    "text": "cozy couch with lamp light"
+  },
+  "character": {
+    "name": "Lily",
+    "profileId": "GLUCbfOgIzOLe37Ft4G7S97B0fu2_lily"
+  },
+  "bridge": {
+    "url": "http://127.0.0.1:8797",
+    "startedByVerifier": true,
+    "dryRun": true,
+    "promptTemplate": "Realistic Bedroom Selfie Girl Phone Mirror"
+  },
+  "telegramDelivery": {
+    "attempted": false,
+    "skippedReason": "TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID were not provided; no Telegram message was sent.",
+    "sentMessageCount": 0,
+    "messageIds": []
+  },
+  "plannedGenerationCount": 0,
+  "generatedImages": [],
+  "text": "Preview ready: Realistic Bedroom Selfie Girl Phone Mirror",
+  "fullPromptIncluded": false,
+  "imageUrls": [],
+  "outputs": {
+    "jsonPath": "/Users/adamhalper/remix-camera-sillytavern-companion-images/demos/telegram/evidence-production-2026-06-12/result.json",
+    "markdownPath": "/Users/adamhalper/remix-camera-sillytavern-companion-images/demos/telegram/evidence-production-2026-06-12/transcript.md",
+    "htmlPath": "/Users/adamhalper/remix-camera-sillytavern-companion-images/demos/telegram/evidence-production-2026-06-12/transcript.html"
+  }
+}
