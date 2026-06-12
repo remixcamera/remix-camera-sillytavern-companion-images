@@ -21,6 +21,9 @@ Targets:
 - `discord/`: Discord slash-command tool plus Lily proof-of-concept demo.
 - `whatsapp/`: WhatsApp Cloud API tool plus Lily proof-of-concept webhook demo.
 - `slack/`: Slack slash-command tool plus Lily proof-of-concept demo.
+- `line/`: LINE Messaging API tool plus Lily proof-of-concept webhook demo.
+- `messenger/`: Messenger Platform tool plus Lily proof-of-concept webhook demo.
+- `matrix/`: Matrix bot tool plus Lily proof-of-concept sync demo.
 - `dify/`: Dify OpenAPI custom tool demo.
 - `flowise/`: Flowise Custom Tool demo.
 - `botpress/`: Botpress Execute Code card or Action demo.

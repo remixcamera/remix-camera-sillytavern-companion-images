@@ -15,6 +15,9 @@ npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=discord
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=whatsapp
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=slack
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=line
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=messenger
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=matrix
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=dify
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=flowise
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=botpress
@@ -38,6 +41,12 @@ npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=
 | WhatsApp Lily | `adapters/whatsapp/lily-webhook-server.mjs` | Proof-of-concept WhatsApp webhook server |
 | Slack | `adapters/slack/remix-slack-tool.mjs` | Reusable Slack slash-command module |
 | Slack Lily | `adapters/slack/lily-slash-command-server.mjs` | Proof-of-concept Slack slash-command server |
+| LINE | `adapters/line/remix-line-tool.mjs` | Reusable LINE Messaging API module |
+| LINE Lily | `adapters/line/lily-webhook-server.mjs` | Proof-of-concept LINE webhook server |
+| Messenger | `adapters/messenger/remix-messenger-tool.mjs` | Reusable Messenger Platform module |
+| Messenger Lily | `adapters/messenger/lily-webhook-server.mjs` | Proof-of-concept Messenger webhook server |
+| Matrix | `adapters/matrix/remix-matrix-tool.mjs` | Reusable Matrix bot module |
+| Matrix Lily | `adapters/matrix/lily-sync-bot.mjs` | Proof-of-concept Matrix sync bot |
 | Dify | `http://127.0.0.1:8787/openapi.json` | Dify custom OpenAPI tool |
 | Flowise | `adapters/flowise/remix-camera-flowise-tool.js` | Flowise Custom Tool helper |
 | Botpress | `adapters/botpress/remix-camera-botpress-action.js` | Botpress Execute Code card or Action helper |

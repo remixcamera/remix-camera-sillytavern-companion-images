@@ -26,6 +26,9 @@ const SUPPORTED_TARGETS = new Set([
   "discord",
   "whatsapp",
   "slack",
+  "line",
+  "messenger",
+  "matrix",
   "dify",
   "flowise",
   "botpress",
@@ -42,7 +45,7 @@ Usage:
   npx @remix-camera/sillytavern-setup [options]
 
 Options:
-  --target=sillytavern|risu|openwebui|librechat|lobechat|agnai|telegram|discord|whatsapp|slack|dify|flowise|botpress
+  --target=sillytavern|risu|openwebui|librechat|lobechat|agnai|telegram|discord|whatsapp|slack|line|messenger|matrix|dify|flowise|botpress
   --sillytavern-dir=/path/to/SillyTavern  Use a specific local SillyTavern checkout
   --profile-id=profile_id                 Use a specific Remix.Camera character profile
   --character-name="Name"                 Override the Character Card name
@@ -416,6 +419,30 @@ function printTargetInstructions(target, { healthUrl, port, configPath }) {
       `  SLACK_SIGNING_SECRET=... SLACK_BOT_TOKEN=... REMIX_CONFIG_FILE=${configPath} node ${path.join(adapterRoot, "slack", "lily-slash-command-server.mjs")}`,
       "Expose the server over HTTPS and set the Slack slash-command Request URL to your hosted endpoint.",
       "The adapter uploads local bridge images to Slack files before sending, so 127.0.0.1 image URLs are not posted as broken Slack image blocks.",
+    ],
+    line: [
+      "Reusable LINE Messaging API tool module:",
+      `  ${path.join(adapterRoot, "line", "remix-line-tool.mjs")}`,
+      "Lily proof-of-concept LINE webhook:",
+      `  LINE_CHANNEL_ACCESS_TOKEN=... LINE_CHANNEL_SECRET=... REMIX_CONFIG_FILE=${configPath} node ${path.join(adapterRoot, "line", "lily-webhook-server.mjs")}`,
+      "Expose the webhook over HTTPS and set that URL in the LINE Developers Console.",
+      "LINE image messages require public HTTPS URLs; the adapter uses productionImageUrl instead of posting 127.0.0.1 bridge URLs.",
+    ],
+    messenger: [
+      "Reusable Messenger Platform tool module:",
+      `  ${path.join(adapterRoot, "messenger", "remix-messenger-tool.mjs")}`,
+      "Lily proof-of-concept Messenger webhook:",
+      `  MESSENGER_PAGE_ACCESS_TOKEN=... MESSENGER_APP_SECRET=... MESSENGER_VERIFY_TOKEN=... REMIX_CONFIG_FILE=${configPath} node ${path.join(adapterRoot, "messenger", "lily-webhook-server.mjs")}`,
+      "Expose the webhook over HTTPS and set that URL in the Meta Messenger webhook settings.",
+      "Messenger image attachments require public HTTPS URLs; the adapter uses productionImageUrl instead of posting 127.0.0.1 bridge URLs.",
+    ],
+    matrix: [
+      "Reusable Matrix bot tool module:",
+      `  ${path.join(adapterRoot, "matrix", "remix-matrix-tool.mjs")}`,
+      "Lily proof-of-concept Matrix sync bot:",
+      `  MATRIX_HOMESERVER_URL=... MATRIX_ACCESS_TOKEN=... REMIX_CONFIG_FILE=${configPath} node ${path.join(adapterRoot, "matrix", "lily-sync-bot.mjs")}`,
+      "Invite the Matrix bot account to a room, optionally set MATRIX_ROOM_ID, then send !lily commands.",
+      "Matrix image events use mxc:// media, so the adapter uploads returned image bytes to the homeserver before sending m.image events.",
     ],
     dify: [
       "Add a Dify custom OpenAPI tool from this schema URL:",
