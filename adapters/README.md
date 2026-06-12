@@ -14,6 +14,7 @@ npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=telegram
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=discord
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=whatsapp
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=slack
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=dify
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=flowise
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=botpress
@@ -35,6 +36,8 @@ npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=
 | Discord Lily | `adapters/discord/lily-interactions-server.mjs` | Proof-of-concept Discord interactions server |
 | WhatsApp | `adapters/whatsapp/remix-whatsapp-tool.mjs` | Reusable WhatsApp Cloud API module |
 | WhatsApp Lily | `adapters/whatsapp/lily-webhook-server.mjs` | Proof-of-concept WhatsApp webhook server |
+| Slack | `adapters/slack/remix-slack-tool.mjs` | Reusable Slack slash-command module |
+| Slack Lily | `adapters/slack/lily-slash-command-server.mjs` | Proof-of-concept Slack slash-command server |
 | Dify | `http://127.0.0.1:8787/openapi.json` | Dify custom OpenAPI tool |
 | Flowise | `adapters/flowise/remix-camera-flowise-tool.js` | Flowise Custom Tool helper |
 | Botpress | `adapters/botpress/remix-camera-botpress-action.js` | Botpress Execute Code card or Action helper |

@@ -1,6 +1,6 @@
 # Remix.Camera Adapter Demo Verification
 
-Generated at: 2026-06-12T16:03:41.106Z
+Generated at: 2026-06-12T16:50:16.469Z
 Mode: bridge-dry-run
 Bridge URL: http://127.0.0.1:8796
 
@@ -87,6 +87,15 @@ Bridge URL: http://127.0.0.1:8796
 - [x] marker present: WHATSAPP_PHONE_NUMBER_ID
 - [x] marker present: uploads local bridge images
 
+### Slack
+- [x] adapter exists: adapters/slack/remix-slack-tool.mjs
+- [x] adapter exists: adapters/slack/lily-slash-command-server.mjs
+- [x] demo runbook exists: demos/slack/demo.md
+- [x] demo includes setup target
+- [x] marker present: createRemixSlackTool
+- [x] marker present: SLACK_SIGNING_SECRET
+- [x] marker present: uploaded files
+
 ### Dify
 - [x] adapter exists: adapters/dify/README.md
 - [x] demo runbook exists: demos/dify/demo.md
@@ -132,3 +141,4 @@ Bridge URL: http://127.0.0.1:8796
 - [x] Telegram adapter real dry-run (command: send-selfie)
 - [x] Discord adapter real dry-run (command: send-selfie)
 - [x] WhatsApp adapter real dry-run (command: send-selfie)
+- [x] Slack adapter real dry-run (command: send-selfie)

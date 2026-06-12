@@ -5,6 +5,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { COMPANION_COMMANDS } from "../lib/companion-tools.mjs";
 import { runDiscordRemixInteraction } from "../adapters/discord/remix-discord-tool.mjs";
+import { parseSlackCommand, runSlackRemixCommand } from "../adapters/slack/remix-slack-tool.mjs";
 import { parseTelegramCommand, runTelegramRemixCommand } from "../adapters/telegram/remix-telegram-tool.mjs";
 import { parseWhatsAppCommand, runWhatsAppRemixCommand } from "../adapters/whatsapp/remix-whatsapp-tool.mjs";
 
@@ -104,6 +105,14 @@ const targets = [
     demoFile: "demos/whatsapp/demo.md",
     setupCommand: "--target=whatsapp",
     markers: ["createRemixWhatsAppTool", "WHATSAPP_PHONE_NUMBER_ID", "uploads local bridge images"],
+  },
+  {
+    id: "slack",
+    title: "Slack",
+    adapterFiles: ["adapters/slack/remix-slack-tool.mjs", "adapters/slack/lily-slash-command-server.mjs"],
+    demoFile: "demos/slack/demo.md",
+    setupCommand: "--target=slack",
+    markers: ["createRemixSlackTool", "SLACK_SIGNING_SECRET", "uploaded files"],
   },
   {
     id: "dify",
@@ -324,6 +333,12 @@ async function verifyHostAdapterDryRuns() {
         reason: "No bridge URL provided.",
       }),
     );
+    checks.push(
+      okCheck("Slack adapter real dry-run", false, {
+        skipped: true,
+        reason: "No bridge URL provided.",
+      }),
+    );
     return checks;
   }
 
@@ -368,6 +383,17 @@ async function verifyHostAdapterDryRuns() {
   checks.push(
     okCheck("WhatsApp adapter real dry-run", whatsapp?.payload?.dryRun === true && /Preview ready/i.test(whatsapp.text), {
       command: whatsapp?.command,
+    }),
+  );
+
+  const slack = await runSlackRemixCommand(parseSlackCommand("preview selfie cozy couch with lamp light"), {
+    bridgeUrl,
+    profileId: process.env.REMIX_PROFILE_ID || "",
+    characterName: "Lily",
+  });
+  checks.push(
+    okCheck("Slack adapter real dry-run", slack?.payload?.dryRun === true && /Preview ready/i.test(slack.text), {
+      command: slack?.command,
     }),
   );
 

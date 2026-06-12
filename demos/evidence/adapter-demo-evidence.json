@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "generatedAt": "2026-06-12T16:03:41.106Z",
+  "generatedAt": "2026-06-12T16:50:16.469Z",
   "mode": "bridge-dry-run",
   "bridgeUrl": "http://127.0.0.1:8796",
   "targets": [
@@ -374,6 +374,47 @@
       ]
     },
     {
+      "id": "slack",
+      "title": "Slack",
+      "checks": [
+        {
+          "name": "adapter exists: adapters/slack/remix-slack-tool.mjs",
+          "ok": true,
+          "path": "adapters/slack/remix-slack-tool.mjs"
+        },
+        {
+          "name": "adapter exists: adapters/slack/lily-slash-command-server.mjs",
+          "ok": true,
+          "path": "adapters/slack/lily-slash-command-server.mjs"
+        },
+        {
+          "name": "demo runbook exists: demos/slack/demo.md",
+          "ok": true,
+          "path": "demos/slack/demo.md"
+        },
+        {
+          "name": "demo includes setup target",
+          "ok": true,
+          "expected": "--target=slack"
+        },
+        {
+          "name": "marker present: createRemixSlackTool",
+          "ok": true,
+          "marker": "createRemixSlackTool"
+        },
+        {
+          "name": "marker present: SLACK_SIGNING_SECRET",
+          "ok": true,
+          "marker": "SLACK_SIGNING_SECRET"
+        },
+        {
+          "name": "marker present: uploaded files",
+          "ok": true,
+          "marker": "uploaded files"
+        }
+      ]
+    },
+    {
       "id": "dify",
       "title": "Dify",
       "checks": [
@@ -571,6 +612,11 @@
     },
     {
       "name": "WhatsApp adapter real dry-run",
+      "ok": true,
+      "command": "send-selfie"
+    },
+    {
+      "name": "Slack adapter real dry-run",
       "ok": true,
       "command": "send-selfie"
     }
