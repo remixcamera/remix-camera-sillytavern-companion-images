@@ -24,6 +24,10 @@ const SUPPORTED_TARGETS = new Set([
   "agnai",
   "telegram",
   "discord",
+  "whatsapp",
+  "dify",
+  "flowise",
+  "botpress",
 ]);
 
 function printHelp() {
@@ -37,7 +41,7 @@ Usage:
   npx @remix-camera/sillytavern-setup [options]
 
 Options:
-  --target=sillytavern|risu|openwebui|librechat|lobechat|agnai|telegram|discord
+  --target=sillytavern|risu|openwebui|librechat|lobechat|agnai|telegram|discord|whatsapp|dify|flowise|botpress
   --sillytavern-dir=/path/to/SillyTavern  Use a specific local SillyTavern checkout
   --profile-id=profile_id                 Use a specific Remix.Camera character profile
   --character-name="Name"                 Override the Character Card name
@@ -395,6 +399,34 @@ function printTargetInstructions(target, { healthUrl, port, configPath }) {
       "Run the Lily Discord interactions server:",
       `  DISCORD_PUBLIC_KEY=... DISCORD_APPLICATION_ID=... REMIX_CONFIG_FILE=${configPath} node ${path.join(adapterRoot, "discord", "lily-interactions-server.mjs")}`,
       "Point the Discord application interactions endpoint at your hosted server URL.",
+    ],
+    whatsapp: [
+      "Reusable WhatsApp Cloud API tool module:",
+      `  ${path.join(adapterRoot, "whatsapp", "remix-whatsapp-tool.mjs")}`,
+      "Lily proof-of-concept WhatsApp webhook:",
+      `  WHATSAPP_ACCESS_TOKEN=... WHATSAPP_PHONE_NUMBER_ID=... WHATSAPP_VERIFY_TOKEN=... REMIX_CONFIG_FILE=${configPath} node ${path.join(adapterRoot, "whatsapp", "lily-webhook-server.mjs")}`,
+      "Expose the webhook over HTTPS and set that URL in the Meta app webhook settings.",
+      "The adapter uploads local bridge images to WhatsApp media before sending.",
+    ],
+    dify: [
+      "Add a Dify custom OpenAPI tool from this schema URL:",
+      `  ${bridgeUrl}/openapi.json`,
+      "Add the imported Remix.Camera tool to an Agent or Workflow Tool node.",
+      "Use dry-run endpoints for previews and generate endpoints only after explicit confirmation.",
+    ],
+    flowise: [
+      "Create a Flowise Custom Tool using this helper:",
+      `  ${path.join(adapterRoot, "flowise", "remix-camera-flowise-tool.js")}`,
+      "Point REMIX_BRIDGE_URL at:",
+      `  ${bridgeUrl}`,
+      "Use preview=true for dry-runs and yes=true only after explicit generation confirmation.",
+    ],
+    botpress: [
+      "Create a Botpress Execute Code card or Action using this helper:",
+      `  ${path.join(adapterRoot, "botpress", "remix-camera-botpress-action.js")}`,
+      "Point REMIX_BRIDGE_URL at:",
+      `  ${bridgeUrl}`,
+      "Use dry-run previews first and set yes=true only after explicit generation confirmation.",
     ],
   };
   console.log("");
