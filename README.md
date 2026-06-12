@@ -460,13 +460,14 @@ That verifier temporarily installs the bundled extension and `characters/lily-re
 
 The browser E2E intentionally mocks only the remote Remix.Camera API boundary so it can run without spending credits. The images inserted into chat are the bundled archived real Remix.Camera JPG outputs from `examples/mila-real-outputs/`; no SVG placeholders or generated mock images are used. The Couple step selects `examples/user-references/couple-photo-user-reference.jpg`, uploads it through the bridge, and verifies that the generation request uses it as the user's reference image. Use `npm run test:live -- --yes` with a real paired session for fresh paid generation proof.
 
-Run the true-live browser E2E only after reviewing the dry-run and setting a real session token. By default this spends one generation and exercises Send Selfie through the full SillyTavern extension, local bridge, Remix.Camera API, and chat insertion path:
+Run the true-live browser E2E only after reviewing the dry-run and pairing Remix.Camera with the setup command. By default this spends one generation and exercises Send Selfie through the full SillyTavern extension, local bridge, Remix.Camera API, and chat insertion path:
 
 ```bash
 export SILLYTAVERN_ROOT="/path/to/SillyTavern"
-export REMIX_SESSION_TOKEN="dapi_..."
 npm run test:browser:live -- --yes
 ```
+
+The recorder uses `REMIX_SESSION_TOKEN`, `REMIX_API_KEY`, or the paired `~/.remix-camera/sillytavern-bridge.json` created by setup. You do not need to paste a raw API key when the bridge is already paired.
 
 To spend ten generations and exercise every browser button against the live Remix.Camera API:
 

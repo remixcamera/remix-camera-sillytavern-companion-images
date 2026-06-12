@@ -6,6 +6,7 @@ import fs from "node:fs/promises";
 import fssync from "node:fs";
 import http from "node:http";
 import net from "node:net";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -39,6 +40,7 @@ const liveApiBaseUrl = (process.env.REMIX_API_BASE_URL || process.env.REMIX_BASE
 const liveOutfitSourceImageUrl =
   process.env.REMIX_SILLYTAVERN_E2E_OUTFIT_SOURCE_IMAGE_URL ||
   "https://remix.camera/examples/ai-companion-image-toolset/outfit-try-on-input.jpg";
+const defaultBridgeConfigPath = path.join(os.homedir(), ".remix-camera", "sillytavern-bridge.json");
 
 const sourceExtensionDir = path.join(packageRoot, "extension", "remix-camera-companion-images");
 const sourceCharacter = await loadSourceCharacter();
@@ -90,7 +92,7 @@ let backupsRestored = false;
 async function main() {
   await loadChromium();
   await assertRequiredFiles();
-  assertGenerationPlan();
+  await assertGenerationPlan();
   await assertRequiredPortsFree();
 
   await fs.mkdir(outputDir, { recursive: true });
@@ -275,7 +277,7 @@ function generationCountForKind(kind) {
   return kind === "vacation" ? 3 : 1;
 }
 
-function assertGenerationPlan() {
+async function assertGenerationPlan() {
   if (!realApiMode) {
     return;
   }
@@ -284,8 +286,14 @@ function assertGenerationPlan() {
       "True-live browser E2E spends Remix.Camera credits. Pass --yes or set REMIX_SILLYTAVERN_E2E_YES=true after reviewing the planned command count.",
     );
   }
-  if (!process.env.REMIX_API_KEY) {
-    throw new Error("REMIX_API_KEY is required for true-live browser E2E.");
+  if (!(await hasLiveBridgeAuth())) {
+    throw new Error(
+      [
+        "True-live browser E2E requires Remix.Camera auth.",
+        "Run npx @remix-camera/sillytavern-setup to create ~/.remix-camera/sillytavern-bridge.json,",
+        "or set REMIX_SESSION_TOKEN or REMIX_API_KEY explicitly.",
+      ].join(" "),
+    );
   }
   if (!Number.isFinite(maxLiveGenerations) || maxLiveGenerations < 1) {
     throw new Error("REMIX_SILLYTAVERN_E2E_MAX_GENERATIONS or --max-generations must be a positive integer.");
@@ -294,6 +302,18 @@ function assertGenerationPlan() {
     throw new Error(
       `True-live browser E2E would run ${plannedGenerationCount} generations, which exceeds max ${maxLiveGenerations}. Raise --max-generations only after reviewing the requested command list.`,
     );
+  }
+}
+
+async function hasLiveBridgeAuth() {
+  if (process.env.REMIX_SESSION_TOKEN || process.env.REMIX_API_KEY) {
+    return true;
+  }
+  try {
+    const config = JSON.parse(await fs.readFile(defaultBridgeConfigPath, "utf8"));
+    return Boolean(config?.sessionToken || config?.apiKey);
+  } catch {
+    return false;
   }
 }
 
@@ -445,19 +465,22 @@ async function copyDir(source, destination) {
 }
 
 async function startBridge() {
+  const bridgeEnv = {
+    ...process.env,
+    REMIX_API_BASE_URL: realApiMode ? liveApiBaseUrl : mockApiOrigin,
+    REMIX_PROFILE_ID: characterProfileId,
+    REMIX_BRIDGE_HOST: "127.0.0.1",
+    REMIX_BRIDGE_PORT: String(bridgePort),
+    REMIX_ALLOWED_ORIGINS: sillyTavernOrigin,
+    REMIX_POLL_INTERVAL_MS: realApiMode ? process.env.REMIX_POLL_INTERVAL_MS || "2000" : "50",
+    REMIX_POLL_TIMEOUT_MS: realApiMode ? process.env.REMIX_POLL_TIMEOUT_MS || "180000" : "5000",
+  };
+  if (!realApiMode) {
+    bridgeEnv.REMIX_API_KEY = "rc_live_browser_e2e_mock";
+  }
   const proc = spawn(process.execPath, [path.join(packageRoot, "bridge", "server.mjs")], {
     cwd: packageRoot,
-    env: {
-      ...process.env,
-      REMIX_API_KEY: realApiMode ? process.env.REMIX_API_KEY : "rc_live_browser_e2e_mock",
-      REMIX_API_BASE_URL: realApiMode ? liveApiBaseUrl : mockApiOrigin,
-      REMIX_PROFILE_ID: characterProfileId,
-      REMIX_BRIDGE_HOST: "127.0.0.1",
-      REMIX_BRIDGE_PORT: String(bridgePort),
-      REMIX_ALLOWED_ORIGINS: sillyTavernOrigin,
-      REMIX_POLL_INTERVAL_MS: realApiMode ? process.env.REMIX_POLL_INTERVAL_MS || "2000" : "50",
-      REMIX_POLL_TIMEOUT_MS: realApiMode ? process.env.REMIX_POLL_TIMEOUT_MS || "180000" : "5000",
-    },
+    env: bridgeEnv,
     stdio: ["ignore", "pipe", "pipe"],
   });
   processes.push({ name: "bridge", proc, logs: collectLogs("bridge", proc) });
