@@ -41,13 +41,35 @@ const mockPromptPacks = {
     id: "pack_selfie",
     slug: "proven-companion-selfie",
     title: "Proven Companion Selfie Pack",
+    adminPriorityStatus: "good",
+    qualityRating: "good",
     prompt:
       "A realistic phone-camera mirror selfie in a cozy cafe corner, warm natural light, candid expression, detailed outfit styling, believable social photo composition, no text overlay.",
+  },
+  genericSelfie: {
+    id: "pack_generic_selfie",
+    slug: "generic-companion-selfie",
+    title: "Generic Companion Selfie Pack",
+    adminPriorityStatus: "good",
+    qualityRating: "good",
+    prompt:
+      "A realistic phone-camera selfie, simple portrait framing, casual expression, indoor lighting, believable social photo composition, no text overlay.",
+  },
+  excellentSelfie: {
+    id: "pack_excellent_selfie",
+    slug: "excellent-companion-selfie",
+    title: "Excellent Companion Selfie Pack",
+    adminPriorityStatus: "excellent",
+    qualityRating: "great",
+    prompt:
+      "A cinematic but natural phone-camera mirror selfie in a detailed lived-in bedroom, warm window light, expressive eye contact, carefully styled outfit, visible environment, premium social photo realism, no text overlay.",
   },
   outfit: {
     id: "pack_outfit",
     slug: "proven-outfit-try-on",
     title: "Proven Outfit Try-On Pack",
+    adminPriorityStatus: "excellent",
+    qualityRating: "great",
     prompt:
       "A full-body fashion mirror photo showing the complete outfit clearly, editorial styling, natural posture, flattering indoor lighting, detailed fabric and accessories, realistic phone photo.",
   },
@@ -55,6 +77,8 @@ const mockPromptPacks = {
     id: "pack_couple",
     slug: "proven-couple-selfie",
     title: "Proven Couple Selfie Pack",
+    adminPriorityStatus: "excellent",
+    qualityRating: "great",
     prompt:
       "A realistic couple selfie with exactly two adults close together, affectionate natural body language, date-night warmth, phone-camera framing, believable shared moment, no extra people.",
   },
@@ -62,6 +86,8 @@ const mockPromptPacks = {
     id: "pack_vacation",
     slug: "proven-couples-vacation",
     title: "Proven Couples Vacation Pack",
+    adminPriorityStatus: "excellent",
+    qualityRating: "great",
     prompt:
       "A cohesive romantic vacation travel photo of a couple on the Amalfi coast, bright Mediterranean light, scenic destination visible, candid keepsake mood, consistent wardrobe palette.",
   },
@@ -69,6 +95,8 @@ const mockPromptPacks = {
     id: "pack_date",
     slug: "proven-date-night",
     title: "Proven Date Night Pack",
+    adminPriorityStatus: "excellent",
+    qualityRating: "great",
     prompt:
       "A warm date-night phone photo at a restaurant booth, soft practical lighting, polished outfit, intimate expression, visible table setting, cinematic but believable social snapshot.",
   },
@@ -76,6 +104,8 @@ const mockPromptPacks = {
     id: "pack_daily",
     slug: "proven-daily-life-snap",
     title: "Proven Daily Life Snap Pack",
+    adminPriorityStatus: "excellent",
+    qualityRating: "great",
     prompt:
       "A casual candid daily-life phone photo at home with coffee and morning light, natural expression, relaxed wardrobe, lived-in background details, realistic companion update.",
   },
@@ -83,27 +113,30 @@ const mockPromptPacks = {
     id: "pack_private",
     slug: "proven-private-snap",
     title: "Proven Private Adult Snap Pack",
+    adminPriorityStatus: "excellent",
+    qualityRating: "great",
     prompt:
       "An adult private bedroom mirror snap, tasteful lingerie styling, intimate phone-camera framing, confident clearly adult subject, warm low light, consensual mature mood, no text overlay.",
   },
 };
 
-function chooseMockPromptPack(query) {
+function chooseMockPromptPacks(query) {
   const text = String(query || "").toLowerCase();
-  if (text.startsWith("couple vacation")) return mockPromptPacks.vacation;
-  if (text.startsWith("date night")) return mockPromptPacks.date;
-  if (text.startsWith("daily life")) return mockPromptPacks.daily;
-  if (text.startsWith("adult private")) return mockPromptPacks.private;
-  if (text.startsWith("fashion outfit")) return mockPromptPacks.outfit;
-  if (text.startsWith("realistic couple selfie")) return mockPromptPacks.couple;
-  if (text.startsWith("realistic companion selfie") || text.startsWith("realistic candid companion selfie")) return mockPromptPacks.selfie;
-  if (text.includes("vacation") || text.includes("amalfi") || text.includes("travel")) return mockPromptPacks.vacation;
-  if (text.includes("outfit") || text.includes("fashion") || text.includes("clothing")) return mockPromptPacks.outfit;
-  if (text.includes("couple") || text.includes("two adults") || text.includes("partner")) return mockPromptPacks.couple;
-  if (/\bdate\b/.test(text) || text.includes("restaurant")) return mockPromptPacks.date;
-  if (text.includes("daily") || text.includes("coffee") || text.includes("morning")) return mockPromptPacks.daily;
-  if (text.includes("private") || text.includes("lingerie") || text.includes("adult")) return mockPromptPacks.private;
-  return mockPromptPacks.selfie;
+  if (text.includes("excellent-first-test")) return [mockPromptPacks.genericSelfie, mockPromptPacks.excellentSelfie];
+  if (text.startsWith("couple vacation")) return [mockPromptPacks.vacation];
+  if (text.startsWith("date night")) return [mockPromptPacks.date];
+  if (text.startsWith("daily life")) return [mockPromptPacks.daily];
+  if (text.startsWith("adult private")) return [mockPromptPacks.private];
+  if (text.startsWith("fashion outfit")) return [mockPromptPacks.outfit];
+  if (text.startsWith("realistic couple selfie")) return [mockPromptPacks.couple];
+  if (text.startsWith("realistic companion selfie") || text.startsWith("realistic candid companion selfie")) return [mockPromptPacks.selfie];
+  if (text.includes("vacation") || text.includes("amalfi") || text.includes("travel")) return [mockPromptPacks.vacation];
+  if (text.includes("outfit") || text.includes("fashion") || text.includes("clothing")) return [mockPromptPacks.outfit];
+  if (text.includes("couple") || text.includes("two adults") || text.includes("partner")) return [mockPromptPacks.couple];
+  if (/\bdate\b/.test(text) || text.includes("restaurant")) return [mockPromptPacks.date];
+  if (text.includes("daily") || text.includes("coffee") || text.includes("morning")) return [mockPromptPacks.daily];
+  if (text.includes("private") || text.includes("lingerie") || text.includes("adult")) return [mockPromptPacks.private];
+  return [mockPromptPacks.selfie];
 }
 
 async function startMockRemixApi() {
@@ -128,18 +161,19 @@ async function startMockRemixApi() {
     }
 
     if (req.method === "POST" && url.pathname === "/api/v1/design/packs/search") {
-      const selected = chooseMockPromptPack(body.query);
+      const selectedPacks = chooseMockPromptPacks(body.query);
       sendJson(res, 200, {
         ok: true,
-        packs: [
-          {
-            id: selected.id,
-            slug: selected.slug,
-            title: selected.title,
-            promptCount: 1,
-            matchedText: selected.prompt,
-          },
-        ],
+        packs: selectedPacks.map((selected) => ({
+          id: selected.id,
+          slug: selected.slug,
+          title: selected.title,
+          promptCount: 1,
+          adminPriorityStatus: selected.adminPriorityStatus,
+          qualityRating: selected.qualityRating,
+          matchedText: selected.prompt,
+          searchScore: selected.id === "pack_generic_selfie" ? 0.95 : 0.9,
+        })),
       });
       return;
     }
@@ -155,6 +189,8 @@ async function startMockRemixApi() {
           id: selected.id,
           slug: selected.slug,
           title: selected.title,
+          adminPriorityStatus: selected.adminPriorityStatus,
+          qualityRating: selected.qualityRating,
           description: "Mock proven Remix.Camera prompt pack.",
           prompts: [
             {
@@ -354,6 +390,48 @@ test("bridge dry-run includes a Remix prompt template and does not spend generat
       [
         "/api/v1/design/packs/search",
         "/api/v1/design/packs/pack_selfie",
+      ],
+    );
+  } finally {
+    await bridge.close();
+    await mockApi.close();
+  }
+});
+
+test("bridge prefers excellent selfie templates over weaker generic selfie matches", async () => {
+  const mockApi = await startMockRemixApi();
+  const bridge = await startBridge({
+    REMIX_API_KEY: "rc_live_test.secret",
+    REMIX_PROFILE_ID: "profile_seraphina",
+    REMIX_API_BASE_URL: mockApi.baseUrl,
+  });
+
+  try {
+    const response = await fetch(`${bridge.url}/v1/commands/dry-run`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        command: "send-selfie",
+        characterName: "Seraphina",
+        visualIdentity: "long pastel-pink hair, amber eyes, black sundress, emerald vine magic",
+        mood: "excellent-first-test warm mirror selfie",
+      }),
+    });
+    const payload = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.equal(payload.ok, true);
+    assert.equal(payload.promptTemplate.packId, "pack_excellent_selfie");
+    assert.equal(payload.promptTemplate.adminPriorityStatus, "excellent");
+    assert.equal(payload.promptTemplate.qualityStatus, "excellent");
+    assert.equal(payload.promptTemplate.preferredQuality, true);
+    assert.match(payload.prompt, /detailed lived-in bedroom/);
+    assert.deepEqual(
+      mockApi.calls.map((call) => call.pathname),
+      [
+        "/api/v1/design/packs/search",
+        "/api/v1/design/packs/pack_excellent_selfie",
+        "/api/v1/design/packs/pack_generic_selfie",
       ],
     );
   } finally {
