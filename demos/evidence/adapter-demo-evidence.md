@@ -1,6 +1,6 @@
 # Remix.Camera Adapter Demo Verification
 
-Generated at: 2026-06-13T09:06:21.439Z
+Generated at: 2026-06-13T09:24:13.405Z
 Mode: bridge-dry-run
 Bridge URL: http://127.0.0.1:8787
 
@@ -40,12 +40,14 @@ Bridge URL: http://127.0.0.1:8787
 | Zapier | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | Voiceflow | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | Manychat | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
+| Microsoft Bot Framework | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
+| Dialogflow ES | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | Dialogflow CX | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | Rasa | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | Amazon Lex V2 | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | IBM watsonx Assistant | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 
-Public demo ready targets: 1/36
+Public demo ready targets: 1/38
 
 ## Targets
 
@@ -394,6 +396,26 @@ Evidence: setup runbook and static adapter preflight. Public demo ready: no.
 - [x] marker present: External Request
 - [x] marker present: yes=true
 
+### Microsoft Bot Framework
+Evidence: setup runbook and static adapter preflight. Public demo ready: no.
+- [x] adapter exists: adapters/bot-framework/README.md
+- [x] adapter exists: adapters/bot-framework/remix-camera-bot-framework-handler.mjs
+- [x] demo runbook exists: demos/bot-framework/demo.md
+- [x] demo includes setup target
+- [x] marker present: createRemixBotFrameworkTurnHandler
+- [x] marker present: Hero Card
+- [x] marker present: yes
+
+### Dialogflow ES
+Evidence: setup runbook and static adapter preflight. Public demo ready: no.
+- [x] adapter exists: adapters/dialogflow-es/README.md
+- [x] adapter exists: adapters/dialogflow-es/remix-camera-dialogflow-es-webhook.mjs
+- [x] demo runbook exists: demos/dialogflow-es/demo.md
+- [x] demo includes setup target
+- [x] marker present: Dialogflow ES
+- [x] marker present: fulfillmentMessages
+- [x] marker present: yes=true
+
 ### Dialogflow CX
 Evidence: setup runbook and static adapter preflight. Public demo ready: no.
 - [x] adapter exists: adapters/dialogflow-cx/README.md
@@ -470,6 +492,8 @@ Evidence: setup runbook and static adapter preflight. Public demo ready: no.
 - [x] Zapier adapter real dry-run (command: send-selfie)
 - [x] Voiceflow adapter real dry-run (command: send-selfie)
 - [x] Manychat adapter real dry-run (command: send-selfie)
+- [x] Microsoft Bot Framework adapter real dry-run (command: send-selfie)
+- [x] Dialogflow ES adapter real dry-run (command: send-selfie)
 - [x] Dialogflow CX adapter real dry-run (command: send-selfie)
 - [x] Rasa adapter real dry-run (command: send-selfie)
 - [x] Amazon Lex V2 adapter real dry-run (command: send-selfie)

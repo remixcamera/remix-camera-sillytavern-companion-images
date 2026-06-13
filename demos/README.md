@@ -43,6 +43,8 @@ Targets:
 - `zapier/`: Zapier Platform CLI action demo.
 - `voiceflow/`: Voiceflow API tool and Workflow API step demo.
 - `manychat/`: Manychat External Request action demo.
+- `bot-framework/`: Microsoft Bot Framework activity handler demo.
+- `dialogflow-es/`: Dialogflow ES webhook fulfillment demo.
 - `dialogflow-cx/`: Dialogflow CX webhook fulfillment demo.
 - `rasa/`: Rasa custom action demo.
 - `amazon-lex/`: Amazon Lex V2 Lambda code-hook demo.

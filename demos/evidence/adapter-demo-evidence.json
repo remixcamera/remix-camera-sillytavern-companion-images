@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "generatedAt": "2026-06-13T09:06:21.439Z",
+  "generatedAt": "2026-06-13T09:24:13.405Z",
   "mode": "bridge-dry-run",
   "bridgeUrl": "http://127.0.0.1:8787",
   "targets": [
@@ -1666,6 +1666,102 @@
       ]
     },
     {
+      "id": "bot-framework",
+      "title": "Microsoft Bot Framework",
+      "demoEvidence": {
+        "status": "runbook-ready",
+        "publicDemoReady": false,
+        "evidenceLevel": "setup runbook and static adapter preflight",
+        "missingArtifacts": [],
+        "nextStep": "Run this target in the real host and add production demo evidence."
+      },
+      "checks": [
+        {
+          "name": "adapter exists: adapters/bot-framework/README.md",
+          "ok": true,
+          "path": "adapters/bot-framework/README.md"
+        },
+        {
+          "name": "adapter exists: adapters/bot-framework/remix-camera-bot-framework-handler.mjs",
+          "ok": true,
+          "path": "adapters/bot-framework/remix-camera-bot-framework-handler.mjs"
+        },
+        {
+          "name": "demo runbook exists: demos/bot-framework/demo.md",
+          "ok": true,
+          "path": "demos/bot-framework/demo.md"
+        },
+        {
+          "name": "demo includes setup target",
+          "ok": true,
+          "expected": "--target=bot-framework"
+        },
+        {
+          "name": "marker present: createRemixBotFrameworkTurnHandler",
+          "ok": true,
+          "marker": "createRemixBotFrameworkTurnHandler"
+        },
+        {
+          "name": "marker present: Hero Card",
+          "ok": true,
+          "marker": "Hero Card"
+        },
+        {
+          "name": "marker present: yes",
+          "ok": true,
+          "marker": "yes"
+        }
+      ]
+    },
+    {
+      "id": "dialogflow-es",
+      "title": "Dialogflow ES",
+      "demoEvidence": {
+        "status": "runbook-ready",
+        "publicDemoReady": false,
+        "evidenceLevel": "setup runbook and static adapter preflight",
+        "missingArtifacts": [],
+        "nextStep": "Run this target in the real host and add production demo evidence."
+      },
+      "checks": [
+        {
+          "name": "adapter exists: adapters/dialogflow-es/README.md",
+          "ok": true,
+          "path": "adapters/dialogflow-es/README.md"
+        },
+        {
+          "name": "adapter exists: adapters/dialogflow-es/remix-camera-dialogflow-es-webhook.mjs",
+          "ok": true,
+          "path": "adapters/dialogflow-es/remix-camera-dialogflow-es-webhook.mjs"
+        },
+        {
+          "name": "demo runbook exists: demos/dialogflow-es/demo.md",
+          "ok": true,
+          "path": "demos/dialogflow-es/demo.md"
+        },
+        {
+          "name": "demo includes setup target",
+          "ok": true,
+          "expected": "--target=dialogflow-es"
+        },
+        {
+          "name": "marker present: Dialogflow ES",
+          "ok": true,
+          "marker": "Dialogflow ES"
+        },
+        {
+          "name": "marker present: fulfillmentMessages",
+          "ok": true,
+          "marker": "fulfillmentMessages"
+        },
+        {
+          "name": "marker present: yes=true",
+          "ok": true,
+          "marker": "yes=true"
+        }
+      ]
+    },
+    {
       "id": "dialogflow-cx",
       "title": "Dialogflow CX",
       "demoEvidence": {
@@ -1864,10 +1960,10 @@
     }
   ],
   "demoSummary": {
-    "targetCount": 36,
+    "targetCount": 38,
     "publicDemoReadyCount": 1,
     "productionBridgeEvidenceCount": 1,
-    "runbookOnlyCount": 34
+    "runbookOnlyCount": 36
   },
   "bridgeChecks": [
     {
@@ -2029,6 +2125,16 @@
     },
     {
       "name": "Manychat adapter real dry-run",
+      "ok": true,
+      "command": "send-selfie"
+    },
+    {
+      "name": "Microsoft Bot Framework adapter real dry-run",
+      "ok": true,
+      "command": "send-selfie"
+    },
+    {
+      "name": "Dialogflow ES adapter real dry-run",
       "ok": true,
       "command": "send-selfie"
     },
