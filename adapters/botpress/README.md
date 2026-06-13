@@ -22,6 +22,6 @@ In Botpress:
 4. Store the returned `workflow.remixCameraText` and `workflow.remixCameraImageUrls`.
 5. Send the text or image URLs in the next Botpress response card.
 
-Use dry-runs for previews. Set `yes=true` only after explicit confirmation.
+The helper defaults to dry-runs for previews. It only calls the bridge `generate` route when `yes=true` or `confirm=true`; set those only after explicit confirmation.
 
 Cloud Botpress cannot call a user's local `127.0.0.1` bridge directly. Use self-hosted Botpress on the same machine/network, or expose the bridge through a private authenticated tunnel that only Botpress can reach.

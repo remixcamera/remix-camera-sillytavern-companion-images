@@ -1,7 +1,9 @@
 export async function remixCameraFlowiseTool(input = {}, options = {}) {
   const bridgeUrl = String(options.bridgeUrl || process.env.REMIX_BRIDGE_URL || "http://127.0.0.1:8787").replace(/\/+$/, "");
   const command = input.command || input.tool || "send-selfie";
-  const action = input.preview === true || input.dryRun === true ? "dry-run" : "generate";
+  const confirmed = input.yes === true || input.confirm === true;
+  const action = confirmed && input.preview !== true && input.dryRun !== true ? "generate" : "dry-run";
+  const fetchImpl = options.fetchImpl || globalThis.fetch;
   const body = {
     profileId: input.profileId || options.profileId || process.env.REMIX_PROFILE_ID,
     characterName: input.characterName || options.characterName || process.env.REMIX_CHARACTER_NAME || "Remix Companion",
@@ -17,10 +19,10 @@ export async function remixCameraFlowiseTool(input = {}, options = {}) {
     theme: input.theme,
     maxGenerations: input.maxGenerations,
     snapTtlSeconds: input.snapTtlSeconds,
-    yes: action === "generate" ? input.yes === true || input.confirm === true : undefined,
+    yes: action === "generate" ? true : undefined,
   };
 
-  const response = await fetch(`${bridgeUrl}/v1/tools/${encodeURIComponent(command)}/${action}`, {
+  const response = await fetchImpl(`${bridgeUrl}/v1/tools/${encodeURIComponent(command)}/${action}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -37,13 +39,14 @@ export async function remixCameraFlowiseTool(input = {}, options = {}) {
 export const flowiseCustomToolSnippet = String.raw`
 const bridgeUrl = $vars.REMIX_BRIDGE_URL || 'http://127.0.0.1:8787';
 const command = $command || 'send-selfie';
-const action = $preview === true ? 'dry-run' : 'generate';
+const confirmed = $yes === true || $confirm === true;
+const action = confirmed && $preview !== true && $dryRun !== true ? 'generate' : 'dry-run';
 const body = {
   characterName: $characterName || 'Remix Companion',
   chatText: $prompt,
   mood: $prompt,
   location: $prompt,
-  yes: action === 'generate' ? $yes === true : undefined
+  yes: action === 'generate' ? true : undefined
 };
 const res = await fetch(bridgeUrl + '/v1/tools/' + command + '/' + action, {
   method: 'POST',
