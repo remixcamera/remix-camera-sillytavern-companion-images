@@ -30,6 +30,12 @@ Targets:
 
 Do not publish generated demo recordings until the runbook has been executed against production Remix.Camera and the inserted images are real Remix.Camera outputs.
 
+## Support Bar
+
+A host is demo-ready only when the evidence is recorded through that host's real UI, API, webhook, OpenAPI action, custom tool, or bot interface. Local bridge transcripts are useful engineering evidence, but they must stay labeled as bridge-only unless a real host received the message or image.
+
+Popular hosted apps such as Character.AI, JanitorAI, Chub/Venus, SpicyChat, CrushOn, Kindroid, Nomi, Candy, and Backyard AI are watchlist targets until they expose a reliable integration surface we can test directly. Do not record browser automation, scraped requests, or local harness output as if it were a production host demo.
+
 ## Executable Verification
 
 Run a static adapter/demo preflight:

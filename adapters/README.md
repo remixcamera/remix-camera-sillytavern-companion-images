@@ -51,6 +51,26 @@ npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=
 | Flowise | `adapters/flowise/remix-camera-flowise-tool.js` | Flowise Custom Tool helper |
 | Botpress | `adapters/botpress/remix-camera-botpress-action.js` | Botpress Execute Code card or Action helper |
 
+## Popular Host Feasibility
+
+Supported means the package has a concrete integration surface and a runbook. Watchlist means the host is popular with companion or roleplay users, but direct support should wait for an official or user-controlled surface that can be tested without scraping or pretending local output is host output.
+
+| Host | Status | Reason |
+| --- | --- | --- |
+| SillyTavern | Supported | Extension and local bridge. |
+| RisuAI | Supported | MCP plugin. |
+| Open WebUI | Supported | Native Tool. |
+| LibreChat | Supported | OpenAPI Action. |
+| LobeChat | Supported | Plugin manifest. |
+| Agnai | Supported | Userscript against the local bridge. |
+| Telegram, Discord, WhatsApp, Slack, LINE, Messenger, Matrix | Supported | Reusable bot/webhook modules plus Lily proof wrappers. |
+| Dify, Flowise, Botpress | Supported | OpenAPI/custom tool/action surfaces. |
+| Character.AI | Watchlist | Popular consumer host, but no production adapter without an official API, plugin, or partner surface. |
+| JanitorAI | Watchlist | Popular roleplay host with external model-provider setup; direct image insertion needs a reliable host callback/tool surface. |
+| Chub/Venus | Watchlist | Strong character-card and API-provider ecosystem; direct chat insertion needs a supported host surface. |
+| SpicyChat, CrushOn, Kindroid, Nomi, Candy | Watchlist | Hosted companion apps; support only through official import/export, bot, webhook, tool, or extension surfaces. |
+| Backyard AI | Watchlist | Character import/export is useful, but direct companion-image support needs a stable local/plugin/API surface. |
+
 ## Shared Bridge URLs
 
 - Health: `GET http://127.0.0.1:8787/health`
