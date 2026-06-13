@@ -419,7 +419,10 @@ test("bridge serves OpenAPI, Lobe manifest, and per-command dry-run tool routes"
     const lobe = await lobeResponse.json();
     assert.equal(lobeResponse.status, 200);
     assert.equal(lobe.identifier, "remix-camera-companion-images");
+    assert.ok(lobe.api.some((tool) => tool.name === "sendSelfiePreview" && tool.url === `${bridge.url}/v1/tools/send-selfie/dry-run`));
     assert.ok(lobe.api.some((tool) => tool.name === "sendSelfie" && tool.url === `${bridge.url}/v1/tools/send-selfie/generate`));
+    assert.ok(lobe.api.find((tool) => tool.name === "sendSelfiePreview").parameters.required.includes("yes") === false);
+    assert.ok(lobe.api.find((tool) => tool.name === "sendSelfie").parameters.required.includes("yes"));
 
     const dryRunResponse = await fetch(`${bridge.url}/v1/tools/send-selfie/dry-run`, {
       method: "POST",
