@@ -17,6 +17,7 @@ const DEFAULT_CONFIG_DIR = path.join(os.homedir(), ".remix-camera");
 const DEFAULT_CONFIG_PATH = path.join(DEFAULT_CONFIG_DIR, "sillytavern-bridge.json");
 const SUPPORTED_TARGETS = new Set([
   "sillytavern",
+  "mcp",
   "risu",
   "openwebui",
   "librechat",
@@ -52,7 +53,7 @@ Usage:
   npx @remix-camera/sillytavern-setup [options]
 
 Options:
-  --target=sillytavern|risu|openwebui|librechat|lobechat|agnai|telegram|discord|whatsapp|slack|line|messenger|instagram|teams|twilio|matrix|dify|flowise|botpress|anythingllm|typingmind|poe|langflow
+  --target=sillytavern|mcp|risu|openwebui|librechat|lobechat|agnai|telegram|discord|whatsapp|slack|line|messenger|instagram|teams|twilio|matrix|dify|flowise|botpress|anythingllm|typingmind|poe|langflow
   --sillytavern-dir=/path/to/SillyTavern  Use a specific local SillyTavern checkout
   --profile-id=profile_id                 Use a specific Remix.Camera character profile
   --character-name="Name"                 Override the Character Card name
@@ -372,6 +373,13 @@ async function startBridge(configPath, extraEnv = {}) {
 function printTargetInstructions(target, { healthUrl, port, configPath }) {
   const bridgeUrl = `http://127.0.0.1:${port}`;
   const instructions = {
+    mcp: [
+      "Add this local stdio MCP server to Claude Desktop, Cursor, Cline, or another MCP client:",
+      `  ${path.join(adapterRoot, "mcp", "remix-camera-mcp-server.mjs")}`,
+      "Example MCP server command:",
+      `  REMIX_BRIDGE_URL=${bridgeUrl} node ${path.join(adapterRoot, "mcp", "remix-camera-mcp-server.mjs")}`,
+      "The server exposes no-spend preview tools plus guarded generate tools that require yes=true.",
+    ],
     risu: [
       "Install the RisuAI plugin file:",
       `  ${path.join(adapterRoot, "risu", "remix-camera-companion-images.risu.js")}`,

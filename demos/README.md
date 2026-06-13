@@ -11,6 +11,7 @@ Targets:
 
 - `sillytavern/`: existing polished SillyTavern extension demo.
 - `sillytavern/live-production-2026-06-12/`: real production SillyTavern screen recording, one live Lily selfie generation, no mocked output.
+- `mcp/`: local stdio MCP server demo for Claude Desktop, Cursor, Cline, and MCP-compatible hosts.
 - `risu/`: RisuAI MCP plugin demo.
 - `openwebui/`: Open WebUI native Tool demo.
 - `librechat/`: LibreChat OpenAPI Action demo.

@@ -1,6 +1,6 @@
 # Remix.Camera Adapter Demo Verification
 
-Generated at: 2026-06-13T06:22:55.877Z
+Generated at: 2026-06-13T06:42:28.663Z
 Mode: bridge-dry-run
 Bridge URL: http://127.0.0.1:8787
 
@@ -9,6 +9,7 @@ Bridge URL: http://127.0.0.1:8787
 | Target | Evidence level | Public demo ready | Next step |
 | --- | --- | --- | --- |
 | SillyTavern | real host recording | yes | Keep recording current when behavior or UI changes. |
+| MCP Clients | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | RisuAI | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | Open WebUI | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | LibreChat | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
@@ -32,7 +33,7 @@ Bridge URL: http://127.0.0.1:8787
 | Poe | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | Langflow | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 
-Public demo ready targets: 1/23
+Public demo ready targets: 1/24
 
 ## Targets
 
@@ -48,6 +49,17 @@ Evidence: real host recording. Public demo ready: yes.
 - [x] marker present: Health Check
 - [x] marker present: Preview Prompt
 - [x] marker present: real image messages
+
+### MCP Clients
+Evidence: setup runbook and static adapter preflight. Public demo ready: no.
+- [x] adapter exists: adapters/mcp/remix-camera-mcp-server.mjs
+- [x] adapter exists: adapters/mcp/README.md
+- [x] demo runbook exists: demos/mcp/demo.md
+- [x] demo includes setup target
+- [x] marker present: tools/list
+- [x] marker present: tools/call
+- [x] marker present: remix_camera_send_selfie_preview
+- [x] marker present: yes=true
 
 ### RisuAI
 Evidence: setup runbook and static adapter preflight. Public demo ready: no.
@@ -303,6 +315,7 @@ Evidence: setup runbook and static adapter preflight. Public demo ready: no.
 ## Host Adapter Dry-Runs
 
 - [x] Telegram adapter real dry-run (command: send-selfie)
+- [x] MCP adapter real dry-run (command: send-selfie)
 - [x] Discord adapter real dry-run (command: send-selfie)
 - [x] WhatsApp adapter real dry-run (command: send-selfie)
 - [x] Slack adapter real dry-run (command: send-selfie)

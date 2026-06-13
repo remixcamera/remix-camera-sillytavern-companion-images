@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "generatedAt": "2026-06-13T06:22:55.877Z",
+  "generatedAt": "2026-06-13T06:42:28.663Z",
   "mode": "bridge-dry-run",
   "bridgeUrl": "http://127.0.0.1:8787",
   "targets": [
@@ -64,6 +64,59 @@
           "name": "marker present: real image messages",
           "ok": true,
           "marker": "real image messages"
+        }
+      ]
+    },
+    {
+      "id": "mcp",
+      "title": "MCP Clients",
+      "demoEvidence": {
+        "status": "runbook-ready",
+        "publicDemoReady": false,
+        "evidenceLevel": "setup runbook and static adapter preflight",
+        "missingArtifacts": [],
+        "nextStep": "Run this target in the real host and add production demo evidence."
+      },
+      "checks": [
+        {
+          "name": "adapter exists: adapters/mcp/remix-camera-mcp-server.mjs",
+          "ok": true,
+          "path": "adapters/mcp/remix-camera-mcp-server.mjs"
+        },
+        {
+          "name": "adapter exists: adapters/mcp/README.md",
+          "ok": true,
+          "path": "adapters/mcp/README.md"
+        },
+        {
+          "name": "demo runbook exists: demos/mcp/demo.md",
+          "ok": true,
+          "path": "demos/mcp/demo.md"
+        },
+        {
+          "name": "demo includes setup target",
+          "ok": true,
+          "expected": "--target=mcp"
+        },
+        {
+          "name": "marker present: tools/list",
+          "ok": true,
+          "marker": "tools/list"
+        },
+        {
+          "name": "marker present: tools/call",
+          "ok": true,
+          "marker": "tools/call"
+        },
+        {
+          "name": "marker present: remix_camera_send_selfie_preview",
+          "ok": true,
+          "marker": "remix_camera_send_selfie_preview"
+        },
+        {
+          "name": "marker present: yes=true",
+          "ok": true,
+          "marker": "yes=true"
         }
       ]
     },
@@ -1210,10 +1263,10 @@
     }
   ],
   "demoSummary": {
-    "targetCount": 23,
+    "targetCount": 24,
     "publicDemoReadyCount": 1,
     "productionBridgeEvidenceCount": 1,
-    "runbookOnlyCount": 21
+    "runbookOnlyCount": 22
   },
   "bridgeChecks": [
     {
@@ -1285,6 +1338,11 @@
   "hostAdapterChecks": [
     {
       "name": "Telegram adapter real dry-run",
+      "ok": true,
+      "command": "send-selfie"
+    },
+    {
+      "name": "MCP adapter real dry-run",
       "ok": true,
       "command": "send-selfie"
     },

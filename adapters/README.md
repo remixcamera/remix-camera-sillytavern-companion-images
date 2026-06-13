@@ -6,6 +6,7 @@ The local bridge is the shared image engine. Each adapter only translates a host
 
 ```bash
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=sillytavern
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=mcp
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=risu
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=openwebui
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=librechat
@@ -35,6 +36,7 @@ npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=
 | Target | Adapter | Integration Surface |
 | --- | --- | --- |
 | SillyTavern | `extension/remix-camera-companion-images` | SillyTavern extension + local bridge |
+| MCP clients | `adapters/mcp/remix-camera-mcp-server.mjs` | Local stdio MCP server for Claude Desktop, Cursor, Cline, and MCP-compatible hosts |
 | RisuAI | `adapters/risu/remix-camera-companion-images.risu.js` | RisuAI MCP plugin |
 | Open WebUI | `adapters/openwebui/remix_camera_companion_images.py` | Native Open WebUI Tool |
 | LibreChat | `http://127.0.0.1:8787/librechat/openapi.json` | OpenAPI Action |
@@ -72,6 +74,7 @@ Supported means the package has a concrete integration surface and a runbook. Wa
 | Host | Status | Reason |
 | --- | --- | --- |
 | SillyTavern | Supported | Extension and local bridge. |
+| MCP clients | Supported | Local stdio MCP server with `tools/list` and `tools/call` support. |
 | RisuAI | Supported | MCP plugin. |
 | Open WebUI | Supported | Native Tool. |
 | LibreChat | Supported | OpenAPI Action. |
