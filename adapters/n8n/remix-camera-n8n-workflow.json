@@ -1,0 +1,114 @@
+{
+  "name": "Remix.Camera Companion Image Tool",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "remix-camera-companion-image",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "RemixCameraWebhook",
+      "name": "Companion Tool Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -640,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const bridgeUrl = ($json.body?.bridgeUrl || $env.REMIX_BRIDGE_URL || 'http://127.0.0.1:8787').replace(/\\/+$/, '');\nconst input = $json.body || $json;\nconst command = input.command || 'send-selfie';\nconst requestedAction = String(input.action || input.mode || '').toLowerCase();\nif (requestedAction === 'generate' && input.yes !== true && input.confirm !== true) {\n  throw new Error('Refusing to spend Remix.Camera credits without yes=true.');\n}\nconst action = requestedAction === 'generate' || (input.yes === true && input.preview !== true && input.dryRun !== true) ? 'generate' : 'dry-run';\nconst prompt = input.prompt || input.text || input.chatText || '';\nconst body = Object.fromEntries(Object.entries({\n  profileId: input.profileId || $env.REMIX_PROFILE_ID,\n  characterName: input.characterName || $env.REMIX_CHARACTER_NAME || 'Remix Companion',\n  visualIdentity: input.visualIdentity || $env.REMIX_CHARACTER_VISUAL_IDENTITY,\n  chatText: input.chatText || prompt,\n  mood: input.mood || prompt,\n  location: input.location || prompt,\n  outfit: input.outfit,\n  sourceImageUrl: input.sourceImageUrl,\n  userReferenceImageUrl: input.userReferenceImageUrl,\n  userConsent: input.userConsent,\n  userDescription: input.userDescription,\n  matureContent: input.matureContent === true || command === 'private-snap' ? true : undefined,\n  theme: input.theme,\n  maxGenerations: input.maxGenerations,\n  snapTtlSeconds: input.snapTtlSeconds,\n  yes: action === 'generate' ? true : undefined,\n}).filter(([, value]) => value !== undefined && value !== null && value !== ''));\nreturn [{ json: { bridgeUrl, command, action, body } }];"
+      },
+      "id": "PrepareBridgeRequest",
+      "name": "Prepare Bridge Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -400,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$json.bridgeUrl}}/v1/tools/{{$json.command}}/{{$json.action}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParametersJson": "={{JSON.stringify($json.body)}}",
+        "options": {}
+      },
+      "id": "CallRemixBridge",
+      "name": "Call Remix.Camera Bridge",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -160,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const payload = $json;\nconst imageUrls = Array.isArray(payload.results)\n  ? payload.results.map((item) => item.imageUrl || item.productionImageUrl).filter(Boolean)\n  : [];\nconst template = payload.promptTemplate?.packTitle || payload.promptTemplate?.packId || 'Remix.Camera template';\nconst text = payload.dryRun\n  ? `Preview ready: ${template}\\n\\n${payload.prompt || ''}`\n  : payload.markdown || payload.prompt || JSON.stringify(payload);\nreturn [{ json: { text, imageUrls, payload, dryRun: payload.dryRun === true } }];"
+      },
+      "id": "FormatToolResult",
+      "name": "Format Tool Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        80,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Companion Tool Webhook": {
+      "main": [
+        [
+          {
+            "node": "Prepare Bridge Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Bridge Request": {
+      "main": [
+        [
+          {
+            "node": "Call Remix.Camera Bridge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Remix.Camera Bridge": {
+      "main": [
+        [
+          {
+            "node": "Format Tool Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

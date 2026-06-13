@@ -31,6 +31,8 @@ npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=langflow
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=langchain
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=vercel-ai-sdk
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=n8n
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=pipedream
 ```
 
 ## Adapter Matrix
@@ -70,6 +72,8 @@ npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=
 | Langflow | `adapters/langflow/remix_camera_component.py` | Langflow custom component tool |
 | LangChain JS | `adapters/langchain/remix-camera-langchain-tools.mjs` | LangChain `tool` helper wrappers for existing agents |
 | Vercel AI SDK | `adapters/vercel-ai-sdk/remix-camera-ai-sdk-tools.mjs` | AI SDK tool map for `generateText`, `streamText`, or agent loops |
+| n8n | `adapters/n8n/remix-camera-n8n-workflow.json` + `adapters/n8n/remix-camera-n8n-tool.mjs` | Importable workflow and Code node helper for chatbot automations |
+| Pipedream | `adapters/pipedream/remix-camera-pipedream-action.mjs` | Pipedream Node.js action component for workflow bots |
 
 ## Popular Host Feasibility
 
@@ -86,7 +90,7 @@ Supported means the package has a concrete integration surface and a runbook. Wa
 | Agnai | Supported | Userscript against the local bridge. |
 | Telegram, Discord, WhatsApp, Slack, LINE, Messenger, Instagram DMs, Microsoft Teams, Twilio SMS/MMS, Matrix | Supported | Reusable bot/webhook modules plus Lily proof wrappers where a direct Lily wrapper is useful. |
 | Dify, Flowise, Botpress | Supported | OpenAPI/custom tool/action surfaces. |
-| AnythingLLM, TypingMind, Poe, Langflow, LangChain JS, Vercel AI SDK | Supported | Official custom skill, plugin, server-bot, custom component, and framework tool surfaces. |
+| AnythingLLM, TypingMind, Poe, Langflow, LangChain JS, Vercel AI SDK, n8n, Pipedream | Supported | Official custom skill, plugin, server-bot, custom component, framework tool, workflow, and action surfaces. |
 | Character.AI | Watchlist | Popular consumer host, but no production adapter without an official API, plugin, or partner surface. |
 | JanitorAI | Watchlist | Popular roleplay host with external model-provider setup; direct image insertion needs a reliable host callback/tool surface. |
 | Chub/Venus | Watchlist | Strong character-card and API-provider ecosystem; direct chat insertion needs a supported host surface. |

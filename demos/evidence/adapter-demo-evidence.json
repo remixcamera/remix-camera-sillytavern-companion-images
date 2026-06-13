@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "generatedAt": "2026-06-13T07:01:25.978Z",
+  "generatedAt": "2026-06-13T07:28:03.540Z",
   "mode": "bridge-dry-run",
   "bridgeUrl": "http://127.0.0.1:8787",
   "targets": [
@@ -1356,13 +1356,114 @@
           "marker": "yes=true"
         }
       ]
+    },
+    {
+      "id": "n8n",
+      "title": "n8n",
+      "demoEvidence": {
+        "status": "runbook-ready",
+        "publicDemoReady": false,
+        "evidenceLevel": "setup runbook and static adapter preflight",
+        "missingArtifacts": [],
+        "nextStep": "Run this target in the real host and add production demo evidence."
+      },
+      "checks": [
+        {
+          "name": "adapter exists: adapters/n8n/README.md",
+          "ok": true,
+          "path": "adapters/n8n/README.md"
+        },
+        {
+          "name": "adapter exists: adapters/n8n/remix-camera-n8n-workflow.json",
+          "ok": true,
+          "path": "adapters/n8n/remix-camera-n8n-workflow.json"
+        },
+        {
+          "name": "adapter exists: adapters/n8n/remix-camera-n8n-tool.mjs",
+          "ok": true,
+          "path": "adapters/n8n/remix-camera-n8n-tool.mjs"
+        },
+        {
+          "name": "demo runbook exists: demos/n8n/demo.md",
+          "ok": true,
+          "path": "demos/n8n/demo.md"
+        },
+        {
+          "name": "demo includes setup target",
+          "ok": true,
+          "expected": "--target=n8n"
+        },
+        {
+          "name": "marker present: Companion Tool Webhook",
+          "ok": true,
+          "marker": "Companion Tool Webhook"
+        },
+        {
+          "name": "marker present: REMIX_BRIDGE_URL",
+          "ok": true,
+          "marker": "REMIX_BRIDGE_URL"
+        },
+        {
+          "name": "marker present: yes=true",
+          "ok": true,
+          "marker": "yes=true"
+        }
+      ]
+    },
+    {
+      "id": "pipedream",
+      "title": "Pipedream",
+      "demoEvidence": {
+        "status": "runbook-ready",
+        "publicDemoReady": false,
+        "evidenceLevel": "setup runbook and static adapter preflight",
+        "missingArtifacts": [],
+        "nextStep": "Run this target in the real host and add production demo evidence."
+      },
+      "checks": [
+        {
+          "name": "adapter exists: adapters/pipedream/README.md",
+          "ok": true,
+          "path": "adapters/pipedream/README.md"
+        },
+        {
+          "name": "adapter exists: adapters/pipedream/remix-camera-pipedream-action.mjs",
+          "ok": true,
+          "path": "adapters/pipedream/remix-camera-pipedream-action.mjs"
+        },
+        {
+          "name": "demo runbook exists: demos/pipedream/demo.md",
+          "ok": true,
+          "path": "demos/pipedream/demo.md"
+        },
+        {
+          "name": "demo includes setup target",
+          "ok": true,
+          "expected": "--target=pipedream"
+        },
+        {
+          "name": "marker present: remix_camera_companion_image",
+          "ok": true,
+          "marker": "remix_camera_companion_image"
+        },
+        {
+          "name": "marker present: Pipedream",
+          "ok": true,
+          "marker": "Pipedream"
+        },
+        {
+          "name": "marker present: yes=true",
+          "ok": true,
+          "marker": "yes=true"
+        }
+      ]
     }
   ],
   "demoSummary": {
-    "targetCount": 26,
+    "targetCount": 28,
     "publicDemoReadyCount": 1,
     "productionBridgeEvidenceCount": 1,
-    "runbookOnlyCount": 24
+    "runbookOnlyCount": 26
   },
   "bridgeChecks": [
     {
@@ -1494,6 +1595,16 @@
     },
     {
       "name": "Vercel AI SDK adapter real dry-run",
+      "ok": true,
+      "command": "send-selfie"
+    },
+    {
+      "name": "n8n adapter real dry-run",
+      "ok": true,
+      "command": "send-selfie"
+    },
+    {
+      "name": "Pipedream adapter real dry-run",
       "ok": true,
       "command": "send-selfie"
     }
