@@ -1,6 +1,6 @@
 # Remix.Camera Adapter Demo Verification
 
-Generated at: 2026-06-13T06:01:07.998Z
+Generated at: 2026-06-13T06:22:55.877Z
 Mode: bridge-dry-run
 Bridge URL: http://127.0.0.1:8787
 
@@ -20,6 +20,9 @@ Bridge URL: http://127.0.0.1:8787
 | Slack | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | LINE | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | Messenger | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
+| Instagram DMs | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
+| Microsoft Teams | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
+| Twilio SMS/MMS | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | Matrix | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | Dify | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | Flowise | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
@@ -29,7 +32,7 @@ Bridge URL: http://127.0.0.1:8787
 | Poe | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | Langflow | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 
-Public demo ready targets: 1/20
+Public demo ready targets: 1/23
 
 ## Targets
 
@@ -165,6 +168,39 @@ Evidence: setup runbook and static adapter preflight. Public demo ready: no.
 - [x] marker present: MESSENGER_APP_SECRET
 - [x] marker present: productionImageUrl
 
+### Instagram DMs
+Evidence: setup runbook and static adapter preflight. Public demo ready: no.
+- [x] adapter exists: adapters/instagram/remix-instagram-tool.mjs
+- [x] adapter exists: adapters/instagram/README.md
+- [x] demo runbook exists: demos/instagram/demo.md
+- [x] demo includes setup target
+- [x] marker present: createRemixInstagramTool
+- [x] marker present: verifyInstagramSignature
+- [x] marker present: autoSend === false
+- [x] marker present: productionImageUrl
+
+### Microsoft Teams
+Evidence: setup runbook and static adapter preflight. Public demo ready: no.
+- [x] adapter exists: adapters/teams/remix-teams-tool.mjs
+- [x] adapter exists: adapters/teams/README.md
+- [x] demo runbook exists: demos/teams/demo.md
+- [x] demo includes setup target
+- [x] marker present: createRemixTeamsMessageHandler
+- [x] marker present: context.sendActivity
+- [x] marker present: contentUrl
+- [x] marker present: autoSend === false
+
+### Twilio SMS/MMS
+Evidence: setup runbook and static adapter preflight. Public demo ready: no.
+- [x] adapter exists: adapters/twilio/remix-twilio-mms-tool.mjs
+- [x] adapter exists: adapters/twilio/README.md
+- [x] demo runbook exists: demos/twilio/demo.md
+- [x] demo includes setup target
+- [x] marker present: createRemixTwilioMmsTool
+- [x] marker present: MediaUrl
+- [x] marker present: autoSend === false
+- [x] marker present: MessagingServiceSid
+
 ### Matrix
 Evidence: setup runbook and static adapter preflight. Public demo ready: no.
 - [x] adapter exists: adapters/matrix/remix-matrix-tool.mjs
@@ -272,4 +308,7 @@ Evidence: setup runbook and static adapter preflight. Public demo ready: no.
 - [x] Slack adapter real dry-run (command: send-selfie)
 - [x] LINE adapter real dry-run (command: send-selfie)
 - [x] Messenger adapter real dry-run (command: send-selfie)
+- [x] Instagram adapter real dry-run (command: send-selfie)
+- [x] Teams adapter real dry-run (command: send-selfie)
+- [x] Twilio adapter real dry-run (command: send-selfie)
 - [x] Matrix adapter real dry-run (command: send-selfie)

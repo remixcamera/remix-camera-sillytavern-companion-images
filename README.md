@@ -9,7 +9,7 @@ The integration has two parts:
 - `bridge/`: a local Node.js bridge that stores `REMIX_SESSION_TOKEN` server-side and calls the Remix.Camera API.
 - `extension/`: a SillyTavern extension that adds image buttons and optional function tools for a character.
 - `characters/`: importable Character Card V2 examples with Remix.Camera visual metadata.
-- `adapters/`: wrappers for RisuAI, Open WebUI, LibreChat, LobeChat, Agnai, Telegram, Discord, WhatsApp, Slack, LINE, Messenger, Matrix, Dify, Flowise, Botpress, AnythingLLM, TypingMind, Poe, and Langflow.
+- `adapters/`: wrappers for RisuAI, Open WebUI, LibreChat, LobeChat, Agnai, Telegram, Discord, WhatsApp, Slack, LINE, Messenger, Instagram DMs, Microsoft Teams, Twilio SMS/MMS, Matrix, Dify, Flowise, Botpress, AnythingLLM, TypingMind, Poe, and Langflow.
 
 ## What It Enables
 
@@ -70,6 +70,9 @@ npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=slack
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=line
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=messenger
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=instagram
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=teams
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=twilio
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=matrix
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=dify
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=flowise
@@ -100,6 +103,9 @@ Adapter files:
 - LINE Lily proof of concept: `adapters/line/lily-webhook-server.mjs`
 - Messenger reusable tool: `adapters/messenger/remix-messenger-tool.mjs`
 - Messenger Lily proof of concept: `adapters/messenger/lily-webhook-server.mjs`
+- Instagram DMs reusable tool: `adapters/instagram/remix-instagram-tool.mjs`
+- Microsoft Teams reusable tool: `adapters/teams/remix-teams-tool.mjs`
+- Twilio SMS/MMS reusable tool: `adapters/twilio/remix-twilio-mms-tool.mjs`
 - Matrix reusable tool: `adapters/matrix/remix-matrix-tool.mjs`
 - Matrix Lily proof of concept: `adapters/matrix/lily-sync-bot.mjs`
 - Dify: `http://127.0.0.1:8787/openapi.json`
@@ -118,7 +124,7 @@ Popular hosted companion apps are tracked separately from supported adapters:
 - JanitorAI: popular roleplay host that can connect to outside model APIs, but this package does not yet have a first-party tool callback surface inside JanitorAI itself.
 - Chub/Venus: strong character-card and API-provider ecosystem; use Remix.Camera character setup plus SillyTavern/Risu/Open WebUI today, and treat direct Chub/Venus chat insertion as pending a supported host surface.
 - AnythingLLM, TypingMind, Poe, and Langflow: supported through official custom skill, plugin, server-bot, or custom component surfaces.
-- SpicyChat, CrushOn, Kindroid, Nomi, Candy, Backyard AI, and similar hosted apps: watchlist targets. Support should be added only through official import/export, bot, webhook, tool, or browser-extension surfaces that can be tested without scraping or fake screenshots.
+- SpicyChat, CrushOn, Kindroid, Nomi, Candy, Backyard AI, and similar hosted apps: watchlist targets. Support should be added only through official import/export, bot, webhook, tool, or browser-extension surfaces that can be tested without scraping or fake screenshots. Nomi and Kindroid can be bridged later through their official APIs, but they are not yet direct chat-surface adapters in this package.
 
 Do not label a host as supported until the package can run through that host's real UI, API, webhook, OpenAPI action, custom tool, or bot interface and produce non-mocked evidence.
 

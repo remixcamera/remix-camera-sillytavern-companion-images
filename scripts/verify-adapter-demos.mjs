@@ -5,11 +5,14 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { COMPANION_COMMANDS } from "../lib/companion-tools.mjs";
 import { runDiscordRemixInteraction } from "../adapters/discord/remix-discord-tool.mjs";
+import { parseInstagramCommand, runInstagramRemixCommand } from "../adapters/instagram/remix-instagram-tool.mjs";
 import { parseLineCommand, runLineRemixCommand } from "../adapters/line/remix-line-tool.mjs";
 import { parseMessengerCommand, runMessengerRemixCommand } from "../adapters/messenger/remix-messenger-tool.mjs";
 import { parseMatrixCommand, runMatrixRemixCommand } from "../adapters/matrix/remix-matrix-tool.mjs";
 import { parseSlackCommand, runSlackRemixCommand } from "../adapters/slack/remix-slack-tool.mjs";
 import { parseTelegramCommand, runTelegramRemixCommand } from "../adapters/telegram/remix-telegram-tool.mjs";
+import { parseTeamsCommand, runTeamsRemixCommand } from "../adapters/teams/remix-teams-tool.mjs";
+import { parseTwilioCommand, runTwilioRemixCommand } from "../adapters/twilio/remix-twilio-mms-tool.mjs";
 import { parseWhatsAppCommand, runWhatsAppRemixCommand } from "../adapters/whatsapp/remix-whatsapp-tool.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -138,6 +141,30 @@ const targets = [
     demoFile: "demos/messenger/demo.md",
     setupCommand: "--target=messenger",
     markers: ["createRemixMessengerTool", "handleWebhookDetailed", "autoSend === false", "MESSENGER_APP_SECRET", "productionImageUrl"],
+  },
+  {
+    id: "instagram",
+    title: "Instagram DMs",
+    adapterFiles: ["adapters/instagram/remix-instagram-tool.mjs", "adapters/instagram/README.md"],
+    demoFile: "demos/instagram/demo.md",
+    setupCommand: "--target=instagram",
+    markers: ["createRemixInstagramTool", "verifyInstagramSignature", "autoSend === false", "productionImageUrl"],
+  },
+  {
+    id: "teams",
+    title: "Microsoft Teams",
+    adapterFiles: ["adapters/teams/remix-teams-tool.mjs", "adapters/teams/README.md"],
+    demoFile: "demos/teams/demo.md",
+    setupCommand: "--target=teams",
+    markers: ["createRemixTeamsMessageHandler", "context.sendActivity", "contentUrl", "autoSend === false"],
+  },
+  {
+    id: "twilio",
+    title: "Twilio SMS/MMS",
+    adapterFiles: ["adapters/twilio/remix-twilio-mms-tool.mjs", "adapters/twilio/README.md"],
+    demoFile: "demos/twilio/demo.md",
+    setupCommand: "--target=twilio",
+    markers: ["createRemixTwilioMmsTool", "MediaUrl", "autoSend === false", "MessagingServiceSid"],
   },
   {
     id: "matrix",
@@ -478,6 +505,24 @@ async function verifyHostAdapterDryRuns() {
       }),
     );
     checks.push(
+      okCheck("Instagram adapter real dry-run", false, {
+        skipped: true,
+        reason: "No bridge URL provided.",
+      }),
+    );
+    checks.push(
+      okCheck("Teams adapter real dry-run", false, {
+        skipped: true,
+        reason: "No bridge URL provided.",
+      }),
+    );
+    checks.push(
+      okCheck("Twilio adapter real dry-run", false, {
+        skipped: true,
+        reason: "No bridge URL provided.",
+      }),
+    );
+    checks.push(
       okCheck("Matrix adapter real dry-run", false, {
         skipped: true,
         reason: "No bridge URL provided.",
@@ -560,6 +605,39 @@ async function verifyHostAdapterDryRuns() {
   checks.push(
     okCheck("Messenger adapter real dry-run", messenger?.payload?.dryRun === true && /Preview ready/i.test(messenger.text), {
       command: messenger?.command,
+    }),
+  );
+
+  const instagram = await runInstagramRemixCommand(parseInstagramCommand("preview selfie cozy couch with lamp light"), {
+    bridgeUrl,
+    profileId: process.env.REMIX_PROFILE_ID || "",
+    characterName: "Lily",
+  });
+  checks.push(
+    okCheck("Instagram adapter real dry-run", instagram?.payload?.dryRun === true && /Preview ready/i.test(instagram.text), {
+      command: instagram?.command,
+    }),
+  );
+
+  const teams = await runTeamsRemixCommand(parseTeamsCommand("preview selfie cozy couch with lamp light"), {
+    bridgeUrl,
+    profileId: process.env.REMIX_PROFILE_ID || "",
+    characterName: "Lily",
+  });
+  checks.push(
+    okCheck("Teams adapter real dry-run", teams?.payload?.dryRun === true && /Preview ready/i.test(teams.text), {
+      command: teams?.command,
+    }),
+  );
+
+  const twilio = await runTwilioRemixCommand(parseTwilioCommand("preview selfie cozy couch with lamp light"), {
+    bridgeUrl,
+    profileId: process.env.REMIX_PROFILE_ID || "",
+    characterName: "Lily",
+  });
+  checks.push(
+    okCheck("Twilio adapter real dry-run", twilio?.payload?.dryRun === true && /Preview ready/i.test(twilio.text), {
+      command: twilio?.command,
     }),
   );
 

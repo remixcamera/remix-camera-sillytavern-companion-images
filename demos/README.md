@@ -23,6 +23,9 @@ Targets:
 - `slack/`: Slack slash-command tool plus Lily proof-of-concept demo.
 - `line/`: LINE Messaging API tool plus Lily proof-of-concept webhook demo.
 - `messenger/`: Messenger Platform tool plus Lily proof-of-concept webhook demo.
+- `instagram/`: Instagram Messaging API tool demo.
+- `teams/`: Microsoft Teams/Bot Framework message handler demo.
+- `twilio/`: Twilio SMS/MMS webhook and Messages API demo.
 - `matrix/`: Matrix bot tool plus Lily proof-of-concept sync demo.
 - `dify/`: Dify OpenAPI custom tool demo.
 - `flowise/`: Flowise Custom Tool demo.

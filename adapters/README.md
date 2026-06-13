@@ -17,6 +17,9 @@ npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=slack
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=line
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=messenger
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=instagram
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=teams
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=twilio
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=matrix
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=dify
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=flowise
@@ -49,6 +52,9 @@ npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=
 | LINE Lily | `adapters/line/lily-webhook-server.mjs` | Proof-of-concept LINE webhook server |
 | Messenger | `adapters/messenger/remix-messenger-tool.mjs` | Reusable Messenger Platform module |
 | Messenger Lily | `adapters/messenger/lily-webhook-server.mjs` | Proof-of-concept Messenger webhook server |
+| Instagram DMs | `adapters/instagram/remix-instagram-tool.mjs` | Reusable Instagram Messaging API module |
+| Microsoft Teams | `adapters/teams/remix-teams-tool.mjs` | Reusable Teams/Bot Framework message handler |
+| Twilio SMS/MMS | `adapters/twilio/remix-twilio-mms-tool.mjs` | Reusable Twilio inbound webhook and Messages API module |
 | Matrix | `adapters/matrix/remix-matrix-tool.mjs` | Reusable Matrix bot module |
 | Matrix Lily | `adapters/matrix/lily-sync-bot.mjs` | Proof-of-concept Matrix sync bot |
 | Dify | `http://127.0.0.1:8787/openapi.json` | Dify custom OpenAPI tool |
@@ -71,13 +77,13 @@ Supported means the package has a concrete integration surface and a runbook. Wa
 | LibreChat | Supported | OpenAPI Action. |
 | LobeChat | Supported | Plugin manifest. |
 | Agnai | Supported | Userscript against the local bridge. |
-| Telegram, Discord, WhatsApp, Slack, LINE, Messenger, Matrix | Supported | Reusable bot/webhook modules plus Lily proof wrappers. |
+| Telegram, Discord, WhatsApp, Slack, LINE, Messenger, Instagram DMs, Microsoft Teams, Twilio SMS/MMS, Matrix | Supported | Reusable bot/webhook modules plus Lily proof wrappers where a direct Lily wrapper is useful. |
 | Dify, Flowise, Botpress | Supported | OpenAPI/custom tool/action surfaces. |
 | AnythingLLM, TypingMind, Poe, Langflow | Supported | Official custom skill, plugin, server-bot, and custom component surfaces. |
 | Character.AI | Watchlist | Popular consumer host, but no production adapter without an official API, plugin, or partner surface. |
 | JanitorAI | Watchlist | Popular roleplay host with external model-provider setup; direct image insertion needs a reliable host callback/tool surface. |
 | Chub/Venus | Watchlist | Strong character-card and API-provider ecosystem; direct chat insertion needs a supported host surface. |
-| SpicyChat, CrushOn, Kindroid, Nomi, Candy | Watchlist | Hosted companion apps; support only through official import/export, bot, webhook, tool, or extension surfaces. |
+| SpicyChat, CrushOn, Kindroid, Nomi, Candy | Watchlist | Hosted companion apps; support only through official import/export, bot, webhook, tool, or extension surfaces. Nomi and Kindroid API bridges are useful follow-ups, but they are not direct in-chat host adapters yet. |
 | Backyard AI | Watchlist | Character import/export is useful, but direct companion-image support needs a stable local/plugin/API surface. |
 
 ## Shared Bridge URLs

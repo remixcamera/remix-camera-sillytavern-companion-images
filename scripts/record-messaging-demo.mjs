@@ -15,6 +15,12 @@ import {
   sendLineRemixResult,
 } from "../adapters/line/remix-line-tool.mjs";
 import {
+  parseInstagramCommand,
+  runInstagramRemixCommand,
+  sendInstagramRemixResult,
+  sendInstagramText,
+} from "../adapters/instagram/remix-instagram-tool.mjs";
+import {
   parseMatrixCommand,
   runMatrixRemixCommand,
   sendMatrixRemixResult,
@@ -39,6 +45,12 @@ import {
   sendTelegramText,
 } from "../adapters/telegram/remix-telegram-tool.mjs";
 import {
+  parseTwilioCommand,
+  runTwilioRemixCommand,
+  sendTwilioRemixResult,
+  sendTwilioText,
+} from "../adapters/twilio/remix-twilio-mms-tool.mjs";
+import {
   parseWhatsAppCommand,
   runWhatsAppRemixCommand,
   sendWhatsAppRemixResult,
@@ -48,7 +60,7 @@ import {
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const packageRoot = path.resolve(__dirname, "..");
 
-const MESSAGING_TARGETS = ["telegram", "discord", "whatsapp", "slack", "line", "messenger", "matrix"];
+const MESSAGING_TARGETS = ["telegram", "discord", "whatsapp", "slack", "line", "messenger", "instagram", "twilio", "matrix"];
 
 const COMMAND_ALIASES = new Map([
   ["selfie", "send-selfie"],
@@ -83,6 +95,8 @@ const DEFAULT_COMMANDS = {
   slack: "preview selfie cozy couch with lamp light",
   line: "preview selfie cozy couch with lamp light",
   messenger: "preview selfie cozy couch with lamp light",
+  instagram: "preview selfie cozy couch with lamp light",
+  twilio: "preview selfie cozy couch with lamp light",
   matrix: "!lily preview selfie cozy couch with lamp light",
 };
 
@@ -93,6 +107,8 @@ const DELIVERY_ENV = {
   slack: ["SLACK_BOT_TOKEN", "SLACK_CHANNEL_ID"],
   line: ["LINE_CHANNEL_ACCESS_TOKEN", "LINE_TO"],
   messenger: ["MESSENGER_PAGE_ACCESS_TOKEN", "MESSENGER_RECIPIENT_ID"],
+  instagram: ["INSTAGRAM_ACCESS_TOKEN", "INSTAGRAM_RECIPIENT_ID"],
+  twilio: ["TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_FROM", "TWILIO_TO"],
   matrix: ["MATRIX_HOMESERVER_URL", "MATRIX_ACCESS_TOKEN", "MATRIX_ROOM_ID"],
 };
 
@@ -208,6 +224,10 @@ export function parseTargetCommand(target, commandText) {
       return parseLineCommand(commandText);
     case "messenger":
       return parseMessengerCommand(commandText);
+    case "instagram":
+      return parseInstagramCommand(commandText);
+    case "twilio":
+      return parseTwilioCommand(commandText);
     case "matrix":
       return parseMatrixCommand(commandText);
     default:
@@ -282,6 +302,10 @@ export async function runTargetCommand({ target, parsedResult, options }) {
       return runLineRemixCommand(parsedResult, options);
     case "messenger":
       return runMessengerRemixCommand(parsedResult, options);
+    case "instagram":
+      return runInstagramRemixCommand(parsedResult, options);
+    case "twilio":
+      return runTwilioRemixCommand(parsedResult, options);
     case "matrix":
       return runMatrixRemixCommand(parsedResult, options);
     default:
@@ -433,6 +457,36 @@ async function deliverTargetResult({ target, result, commandText }) {
       return sendMessengerRemixResult({
         pageAccessToken: process.env.MESSENGER_PAGE_ACCESS_TOKEN,
         recipientId: process.env.MESSENGER_RECIPIENT_ID,
+        result,
+      });
+    case "instagram":
+      await sendInstagramText({
+        accessToken: process.env.INSTAGRAM_ACCESS_TOKEN,
+        igId: process.env.INSTAGRAM_IG_ID || "me",
+        recipientId: process.env.INSTAGRAM_RECIPIENT_ID,
+        text: `Instagram live demo command: ${commandText}`,
+      });
+      return sendInstagramRemixResult({
+        accessToken: process.env.INSTAGRAM_ACCESS_TOKEN,
+        igId: process.env.INSTAGRAM_IG_ID || "me",
+        recipientId: process.env.INSTAGRAM_RECIPIENT_ID,
+        result,
+      });
+    case "twilio":
+      await sendTwilioText({
+        accountSid: process.env.TWILIO_ACCOUNT_SID,
+        authToken: process.env.TWILIO_AUTH_TOKEN,
+        from: process.env.TWILIO_FROM,
+        to: process.env.TWILIO_TO,
+        text: `Twilio live demo command: ${commandText}`,
+        messagingServiceSid: process.env.TWILIO_MESSAGING_SERVICE_SID,
+      });
+      return sendTwilioRemixResult({
+        accountSid: process.env.TWILIO_ACCOUNT_SID,
+        authToken: process.env.TWILIO_AUTH_TOKEN,
+        from: process.env.TWILIO_FROM,
+        to: process.env.TWILIO_TO,
+        messagingServiceSid: process.env.TWILIO_MESSAGING_SERVICE_SID,
         result,
       });
     case "matrix":

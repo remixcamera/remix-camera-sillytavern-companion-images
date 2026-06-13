@@ -23,8 +23,8 @@
 <body>
   <main>
     <h1>Remix.Camera Adapter Demo Verification</h1>
-    <p>Generated at 2026-06-13T06:01:07.998Z. Mode: bridge-dry-run. Bridge: http://127.0.0.1:8787.</p>
-    <p>Public demo ready targets: 1/20. Bridge-only or runbook-only evidence is intentionally not counted as a public host recording.</p>
+    <p>Generated at 2026-06-13T06:22:55.877Z. Mode: bridge-dry-run. Bridge: http://127.0.0.1:8787.</p>
+    <p>Public demo ready targets: 1/23. Bridge-only or runbook-only evidence is intentionally not counted as a public host recording.</p>
     <div class="grid">
         <section>
           <h2>SillyTavern</h2>
@@ -111,6 +111,27 @@
           <ul><li class="ok">OK adapter exists: adapters/messenger/remix-messenger-tool.mjs</li><li class="ok">OK adapter exists: adapters/messenger/lily-webhook-server.mjs</li><li class="ok">OK demo runbook exists: demos/messenger/demo.md</li><li class="ok">OK demo includes setup target</li><li class="ok">OK marker present: createRemixMessengerTool</li><li class="ok">OK marker present: handleWebhookDetailed</li><li class="ok">OK marker present: autoSend === false</li><li class="ok">OK marker present: MESSENGER_APP_SECRET</li><li class="ok">OK marker present: productionImageUrl</li></ul>
         </section>
         <section>
+          <h2>Instagram DMs</h2>
+          <p><strong>Evidence:</strong> setup runbook and static adapter preflight<br>
+          <strong>Public demo ready:</strong> no<br>
+          <small>Run this target in the real host and add production demo evidence.</small></p>
+          <ul><li class="ok">OK adapter exists: adapters/instagram/remix-instagram-tool.mjs</li><li class="ok">OK adapter exists: adapters/instagram/README.md</li><li class="ok">OK demo runbook exists: demos/instagram/demo.md</li><li class="ok">OK demo includes setup target</li><li class="ok">OK marker present: createRemixInstagramTool</li><li class="ok">OK marker present: verifyInstagramSignature</li><li class="ok">OK marker present: autoSend === false</li><li class="ok">OK marker present: productionImageUrl</li></ul>
+        </section>
+        <section>
+          <h2>Microsoft Teams</h2>
+          <p><strong>Evidence:</strong> setup runbook and static adapter preflight<br>
+          <strong>Public demo ready:</strong> no<br>
+          <small>Run this target in the real host and add production demo evidence.</small></p>
+          <ul><li class="ok">OK adapter exists: adapters/teams/remix-teams-tool.mjs</li><li class="ok">OK adapter exists: adapters/teams/README.md</li><li class="ok">OK demo runbook exists: demos/teams/demo.md</li><li class="ok">OK demo includes setup target</li><li class="ok">OK marker present: createRemixTeamsMessageHandler</li><li class="ok">OK marker present: context.sendActivity</li><li class="ok">OK marker present: contentUrl</li><li class="ok">OK marker present: autoSend === false</li></ul>
+        </section>
+        <section>
+          <h2>Twilio SMS/MMS</h2>
+          <p><strong>Evidence:</strong> setup runbook and static adapter preflight<br>
+          <strong>Public demo ready:</strong> no<br>
+          <small>Run this target in the real host and add production demo evidence.</small></p>
+          <ul><li class="ok">OK adapter exists: adapters/twilio/remix-twilio-mms-tool.mjs</li><li class="ok">OK adapter exists: adapters/twilio/README.md</li><li class="ok">OK demo runbook exists: demos/twilio/demo.md</li><li class="ok">OK demo includes setup target</li><li class="ok">OK marker present: createRemixTwilioMmsTool</li><li class="ok">OK marker present: MediaUrl</li><li class="ok">OK marker present: autoSend === false</li><li class="ok">OK marker present: MessagingServiceSid</li></ul>
+        </section>
+        <section>
           <h2>Matrix</h2>
           <p><strong>Evidence:</strong> setup runbook and static adapter preflight<br>
           <strong>Public demo ready:</strong> no<br>
@@ -168,7 +189,7 @@
         </section></div>
     <section style="margin-top:14px">
       <h2>Bridge and Host Adapter Checks</h2>
-      <ul><li class="ok">OK bridge health <small>status 200; auth design_api_session</small></li><li class="ok">OK OpenAPI exposes all generate endpoints <small>status 200</small></li><li class="ok">OK Lobe manifest exposes preview and generate tools <small>status 200; apis 16</small></li><li class="ok">OK bridge dry-run: send-selfie <small>status 200; template: Realistic Bedroom Selfie Girl Phone Mirror</small></li><li class="ok">OK bridge dry-run: auto-selfie-from-chat <small>status 200; template: Candid Mirror Selfie Squating</small></li><li class="ok">OK bridge dry-run: outfit-try-on <small>status 200; template: Bedroom Mirror Selfie White Tank Yellow Skirt Braid</small></li><li class="ok">OK bridge dry-run: couple-photo <small>status 200; template: Realistic Couple Mirror Selfie Black Outfit</small></li><li class="ok">OK bridge dry-run: couples-vacation <small>status 200; template: Romantic Tropical Beach Couple Golden Hour Kiss</small></li><li class="ok">OK bridge dry-run: date-night <small>status 200; template: Realistic Couple Restaurant Terrace Evening Warm Light</small></li><li class="ok">OK bridge dry-run: daily-life-snap <small>status 200; template: Knit Sweater Iced Coffee Cafe Candid</small></li><li class="ok">OK bridge dry-run: private-snap <small>status 200; template: Adult Woman Cozy Bedroom Mirror Selfie</small></li><li class="ok">OK Telegram adapter real dry-run <small>command: send-selfie</small></li><li class="ok">OK Discord adapter real dry-run <small>command: send-selfie</small></li><li class="ok">OK WhatsApp adapter real dry-run <small>command: send-selfie</small></li><li class="ok">OK Slack adapter real dry-run <small>command: send-selfie</small></li><li class="ok">OK LINE adapter real dry-run <small>command: send-selfie</small></li><li class="ok">OK Messenger adapter real dry-run <small>command: send-selfie</small></li><li class="ok">OK Matrix adapter real dry-run <small>command: send-selfie</small></li></ul>
+      <ul><li class="ok">OK bridge health <small>status 200; auth design_api_session</small></li><li class="ok">OK OpenAPI exposes all generate endpoints <small>status 200</small></li><li class="ok">OK Lobe manifest exposes preview and generate tools <small>status 200; apis 16</small></li><li class="ok">OK bridge dry-run: send-selfie <small>status 200; template: Realistic Bedroom Selfie Girl Phone Mirror</small></li><li class="ok">OK bridge dry-run: auto-selfie-from-chat <small>status 200; template: Candid Mirror Selfie Squating</small></li><li class="ok">OK bridge dry-run: outfit-try-on <small>status 200; template: Bedroom Mirror Selfie White Tank Yellow Skirt Braid</small></li><li class="ok">OK bridge dry-run: couple-photo <small>status 200; template: Realistic Couple Mirror Selfie Black Outfit</small></li><li class="ok">OK bridge dry-run: couples-vacation <small>status 200; template: Romantic Tropical Beach Couple Golden Hour Kiss</small></li><li class="ok">OK bridge dry-run: date-night <small>status 200; template: Realistic Couple Restaurant Terrace Evening Warm Light</small></li><li class="ok">OK bridge dry-run: daily-life-snap <small>status 200; template: Knit Sweater Iced Coffee Cafe Candid</small></li><li class="ok">OK bridge dry-run: private-snap <small>status 200; template: Adult Woman Cozy Bedroom Mirror Selfie</small></li><li class="ok">OK Telegram adapter real dry-run <small>command: send-selfie</small></li><li class="ok">OK Discord adapter real dry-run <small>command: send-selfie</small></li><li class="ok">OK WhatsApp adapter real dry-run <small>command: send-selfie</small></li><li class="ok">OK Slack adapter real dry-run <small>command: send-selfie</small></li><li class="ok">OK LINE adapter real dry-run <small>command: send-selfie</small></li><li class="ok">OK Messenger adapter real dry-run <small>command: send-selfie</small></li><li class="ok">OK Instagram adapter real dry-run <small>command: send-selfie</small></li><li class="ok">OK Teams adapter real dry-run <small>command: send-selfie</small></li><li class="ok">OK Twilio adapter real dry-run <small>command: send-selfie</small></li><li class="ok">OK Matrix adapter real dry-run <small>command: send-selfie</small></li></ul>
     </section>
   </main>
 </body>
