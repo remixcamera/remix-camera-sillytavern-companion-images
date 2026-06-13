@@ -112,6 +112,14 @@ export function parseDiscordInteraction(interaction) {
   };
 }
 
+export function isRemixDiscordInteraction(interaction) {
+  return parseDiscordInteraction(interaction) !== null;
+}
+
+export function shouldHandleDiscordInteraction(interaction) {
+  return interaction?.type === 2 && isRemixDiscordInteraction(interaction);
+}
+
 export function buildBridgeInputFromDiscord(parsed, options = {}) {
   const interactionOptions = parsed?.options || {};
   const prompt = parsed?.prompt || "";
@@ -230,3 +238,58 @@ export async function sendDiscordWebhookResult({ applicationId, interactionToken
   return payload;
 }
 
+export function createRemixDiscordTool(options = {}) {
+  const handleInteractionDetailed = async (interaction, overrides = {}) => {
+    const parsed = parseDiscordInteraction(interaction);
+    if (!parsed) {
+      return {
+        handled: false,
+        reason: "unknown-command",
+        interactionId: interaction?.id,
+        commandName: interaction?.data?.name,
+        parsed: null,
+        result: null,
+        sentMessages: [],
+      };
+    }
+
+    const merged = { ...options, ...overrides };
+    const result = await runDiscordRemixInteraction(interaction, merged);
+    const interactionToken = merged.interactionToken || interaction?.token;
+    const sentMessages =
+      merged.autoSend === false || !merged.applicationId || !interactionToken
+        ? []
+        : [
+            await sendDiscordWebhookResult({
+              applicationId: merged.applicationId,
+              interactionToken,
+              result,
+            }),
+          ];
+
+    return {
+      handled: true,
+      interactionId: interaction?.id,
+      interactionToken,
+      commandName: interaction?.data?.name,
+      parsed,
+      result,
+      sentMessages,
+    };
+  };
+
+  return {
+    slashCommands: discordSlashCommands,
+    parseInteraction: parseDiscordInteraction,
+    isInteraction: isRemixDiscordInteraction,
+    shouldHandleInteraction: shouldHandleDiscordInteraction,
+    buildInput: (parsed) => buildBridgeInputFromDiscord(parsed, options),
+    run: (interaction, overrides = {}) => runDiscordRemixInteraction(interaction, { ...options, ...overrides }),
+    send: (result, sendOptions = {}) => sendDiscordWebhookResult({ ...options, ...sendOptions, result }),
+    handleInteractionDetailed,
+    async handleInteraction(interaction, overrides = {}) {
+      const details = await handleInteractionDetailed(interaction, overrides);
+      return details.handled ? details.result : null;
+    },
+  };
+}
