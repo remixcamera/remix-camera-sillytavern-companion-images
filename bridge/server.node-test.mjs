@@ -445,6 +445,65 @@ test("bridge serves OpenAPI, Lobe manifest, and per-command dry-run tool routes"
   }
 });
 
+test("bridge exposes bearer-guarded ChatGPT Actions routes with public image URLs", async () => {
+  const mockApi = await startMockRemixApi();
+  const bridge = await startBridge({
+    REMIX_API_KEY: "rc_live_test.secret",
+    REMIX_PROFILE_ID: "profile_seraphina",
+    REMIX_API_BASE_URL: mockApi.baseUrl,
+    REMIX_ACTION_API_KEY: "action-secret",
+    REMIX_ACTION_BASE_URL: "https://chatgpt-action.example.com",
+  });
+
+  try {
+    const openApiResponse = await fetch(`${bridge.url}/chatgpt-actions/openapi.json`);
+    const openApi = await openApiResponse.json();
+    assert.equal(openApiResponse.status, 200);
+    assert.equal(openApi.servers[0].url, "https://chatgpt-action.example.com");
+    assert.equal(openApi.components.securitySchemes.bearerAuth.scheme, "bearer");
+    assert.ok(openApi.paths["/chatgpt-actions/v1/tools/send-selfie/generate"].post.security[0].bearerAuth);
+
+    const unauthorizedResponse = await fetch(`${bridge.url}/chatgpt-actions/v1/tools/send-selfie/dry-run`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: "Bearer wrong-secret" },
+      body: JSON.stringify({
+        characterName: "Seraphina",
+        visualIdentity: "long pastel-pink hair, amber eyes, black sundress, emerald vine magic",
+      }),
+    });
+    assert.equal(unauthorizedResponse.status, 401);
+
+    const healthResponse = await fetch(`${bridge.url}/chatgpt-actions/health`, {
+      headers: { Authorization: "Bearer action-secret" },
+    });
+    const health = await healthResponse.json();
+    assert.equal(healthResponse.status, 200);
+    assert.equal(health.actionSurface, "chatgpt-actions");
+
+    const generateResponse = await fetch(`${bridge.url}/chatgpt-actions/v1/tools/send-selfie/generate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: "Bearer action-secret" },
+      body: JSON.stringify({
+        yes: true,
+        characterName: "Seraphina",
+        visualIdentity: "long pastel-pink hair, amber eyes, black sundress, emerald vine magic",
+        mood: "warm",
+      }),
+    });
+    const generated = await generateResponse.json();
+    assert.equal(generateResponse.status, 200);
+    assert.equal(generated.ok, true);
+    assert.equal(generated.chatgptAction.generateGuard.includes("yes=true"), true);
+    assert.equal(generated.results[0].imageUrl, `${mockApi.baseUrl}/generated/seraphina.jpg`);
+    assert.equal(generated.results[0].productionImageUrl, `${mockApi.baseUrl}/generated/seraphina.jpg`);
+    assert.match(generated.markdown, new RegExp(`${mockApi.baseUrl.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}/generated/seraphina\\.jpg`));
+    assert.doesNotMatch(generated.markdown, new RegExp(`${bridge.url.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}/v1/images/`));
+  } finally {
+    await bridge.close();
+    await mockApi.close();
+  }
+});
+
 test("bridge prefers excellent selfie templates over weaker generic selfie matches", async () => {
   const mockApi = await startMockRemixApi();
   const bridge = await startBridge({

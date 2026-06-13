@@ -11,6 +11,7 @@ npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=openwebui
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=librechat
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=lobechat
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=chatgpt-actions
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=agnai
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=telegram
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=discord
@@ -61,6 +62,7 @@ npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=
 | Open WebUI | `adapters/openwebui/remix_camera_companion_images.py` | Native Open WebUI Tool |
 | LibreChat | `http://127.0.0.1:8787/librechat/openapi.json` | OpenAPI Action |
 | LobeChat | `http://127.0.0.1:8787/lobe/manifest.json` | Lobe plugin manifest with preview and guarded generate tools |
+| ChatGPT Actions | `http://127.0.0.1:8787/chatgpt-actions/openapi.json` | Custom GPT Action schema for a public HTTPS bridge with Bearer auth |
 | Agnai | `adapters/agnai/remix-camera-agnai.user.js` | Browser userscript against local bridge |
 | Telegram | `adapters/telegram/remix-telegram-tool.mjs` + `adapters/telegram/framework-middleware.mjs` | Reusable bot integration module plus Telegraf/grammY middleware |
 | Telegram Lily | `adapters/telegram/lily-bot.mjs` | Proof-of-concept Telegram bot |
@@ -123,6 +125,7 @@ Supported means the package has a concrete integration surface and a runbook. Wa
 | Open WebUI | Supported | Native Tool. |
 | LibreChat | Supported | OpenAPI Action. |
 | LobeChat | Supported | Plugin manifest. |
+| ChatGPT Actions | Supported | Custom GPT Action OpenAPI schema with Bearer auth and preview/generate endpoints. |
 | Agnai | Supported | Userscript against the local bridge. |
 | Telegram, Discord, WhatsApp, WeChat Official Account, Viber, Slack, LINE, Zalo Official Account, KakaoTalk, Messenger, Instagram DMs, Microsoft Teams, Twilio SMS/MMS, Matrix | Supported | Reusable bot/webhook/skill modules plus Lily proof wrappers where a direct Lily wrapper is useful. |
 | Dify, Flowise, Botpress | Supported | OpenAPI/custom tool/action surfaces. |
@@ -140,6 +143,7 @@ Supported means the package has a concrete integration surface and a runbook. Wa
 - OpenAPI: `GET http://127.0.0.1:8787/openapi.json`
 - LibreChat OpenAPI: `GET http://127.0.0.1:8787/librechat/openapi.json`
 - Open WebUI OpenAPI: `GET http://127.0.0.1:8787/openwebui/openapi.json`
+- ChatGPT Actions OpenAPI: `GET http://127.0.0.1:8787/chatgpt-actions/openapi.json`
 - Lobe manifest: `GET http://127.0.0.1:8787/lobe/manifest.json`
 
 Every command has:
