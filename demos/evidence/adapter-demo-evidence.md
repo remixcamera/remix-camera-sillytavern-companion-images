@@ -1,6 +1,6 @@
 # Remix.Camera Adapter Demo Verification
 
-Generated at: 2026-06-13T08:38:43.928Z
+Generated at: 2026-06-13T09:06:21.439Z
 Mode: bridge-dry-run
 Bridge URL: http://127.0.0.1:8787
 
@@ -42,8 +42,10 @@ Bridge URL: http://127.0.0.1:8787
 | Manychat | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | Dialogflow CX | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | Rasa | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
+| Amazon Lex V2 | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
+| IBM watsonx Assistant | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 
-Public demo ready targets: 1/34
+Public demo ready targets: 1/36
 
 ## Targets
 
@@ -412,6 +414,27 @@ Evidence: setup runbook and static adapter preflight. Public demo ready: no.
 - [x] marker present: dispatcher.utter_message
 - [x] marker present: yes=true
 
+### Amazon Lex V2
+Evidence: setup runbook and static adapter preflight. Public demo ready: no.
+- [x] adapter exists: adapters/amazon-lex/README.md
+- [x] adapter exists: adapters/amazon-lex/remix-camera-lex-v2-lambda.mjs
+- [x] demo runbook exists: demos/amazon-lex/demo.md
+- [x] demo includes setup target
+- [x] marker present: Lex V2
+- [x] marker present: sessionState
+- [x] marker present: yes=true
+
+### IBM watsonx Assistant
+Evidence: setup runbook and static adapter preflight. Public demo ready: no.
+- [x] adapter exists: adapters/watsonx-assistant/README.md
+- [x] adapter exists: adapters/watsonx-assistant/remix-camera-watsonx-extension.openapi.json
+- [x] adapter exists: adapters/watsonx-assistant/remix-camera-watsonx-tool.mjs
+- [x] demo runbook exists: demos/watsonx-assistant/demo.md
+- [x] demo includes setup target
+- [x] marker present: custom extension
+- [x] marker present: OpenAPI
+- [x] marker present: yes=true
+
 ## Bridge Contracts
 
 - [x] bridge health (status 200; auth design_api_session)
@@ -449,3 +472,5 @@ Evidence: setup runbook and static adapter preflight. Public demo ready: no.
 - [x] Manychat adapter real dry-run (command: send-selfie)
 - [x] Dialogflow CX adapter real dry-run (command: send-selfie)
 - [x] Rasa adapter real dry-run (command: send-selfie)
+- [x] Amazon Lex V2 adapter real dry-run (command: send-selfie)
+- [x] IBM watsonx Assistant adapter real dry-run (command: send-selfie)

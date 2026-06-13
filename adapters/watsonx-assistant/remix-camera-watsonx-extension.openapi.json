@@ -1,0 +1,119 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Remix.Camera Companion Image",
+    "version": "0.4.0",
+    "description": "watsonx Assistant custom extension for Remix.Camera companion-image previews and guarded generation."
+  },
+  "servers": [
+    {
+      "url": "https://YOUR-BRIDGE-HOST.example.com",
+      "description": "Public HTTPS Remix.Camera bridge URL or secure tunnel"
+    }
+  ],
+  "paths": {
+    "/v1/tools/{command}/{action}": {
+      "post": {
+        "operationId": "previewOrGenerateCompanionImage",
+        "summary": "Preview or generate a companion image",
+        "description": "Calls the local Remix.Camera bridge. Use action=dry-run first. Use action=generate only after explicit user confirmation with yes=true.",
+        "parameters": [
+          {
+            "name": "command",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "send-selfie",
+                "auto-selfie-from-chat",
+                "outfit-try-on",
+                "couple-photo",
+                "couples-vacation",
+                "date-night",
+                "daily-life-snap",
+                "private-snap"
+              ]
+            }
+          },
+          {
+            "name": "action",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "dry-run",
+                "generate"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "profileId": { "type": "string" },
+                  "characterName": { "type": "string" },
+                  "prompt": { "type": "string" },
+                  "chatText": { "type": "string" },
+                  "mood": { "type": "string" },
+                  "location": { "type": "string" },
+                  "outfit": { "type": "string" },
+                  "theme": { "type": "string" },
+                  "sourceImageUrl": { "type": "string" },
+                  "userReferenceImageUrl": { "type": "string" },
+                  "userConsent": { "type": "string" },
+                  "userDescription": { "type": "string" },
+                  "matureContent": { "type": "boolean" },
+                  "yes": { "type": "boolean" }
+                }
+              },
+              "example": {
+                "characterName": "Lily",
+                "prompt": "cozy couch with lamp light",
+                "yes": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Remix.Camera bridge response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": { "type": "boolean" },
+                    "dryRun": { "type": "boolean" },
+                    "prompt": { "type": "string" },
+                    "markdown": { "type": "string" },
+                    "results": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "productionImageUrl": { "type": "string" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-remix-camera-guardrails": [
+          "Default to action=dry-run.",
+          "Only call action=generate after explicit user confirmation.",
+          "Set yes=true only for confirmed generation.",
+          "watsonx Assistant custom extensions require a public HTTPS bridge URL."
+        ]
+      }
+    }
+  }
+}

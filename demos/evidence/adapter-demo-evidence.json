@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "generatedAt": "2026-06-13T08:38:43.928Z",
+  "generatedAt": "2026-06-13T09:06:21.439Z",
   "mode": "bridge-dry-run",
   "bridgeUrl": "http://127.0.0.1:8787",
   "targets": [
@@ -1760,13 +1760,114 @@
           "marker": "yes=true"
         }
       ]
+    },
+    {
+      "id": "amazon-lex",
+      "title": "Amazon Lex V2",
+      "demoEvidence": {
+        "status": "runbook-ready",
+        "publicDemoReady": false,
+        "evidenceLevel": "setup runbook and static adapter preflight",
+        "missingArtifacts": [],
+        "nextStep": "Run this target in the real host and add production demo evidence."
+      },
+      "checks": [
+        {
+          "name": "adapter exists: adapters/amazon-lex/README.md",
+          "ok": true,
+          "path": "adapters/amazon-lex/README.md"
+        },
+        {
+          "name": "adapter exists: adapters/amazon-lex/remix-camera-lex-v2-lambda.mjs",
+          "ok": true,
+          "path": "adapters/amazon-lex/remix-camera-lex-v2-lambda.mjs"
+        },
+        {
+          "name": "demo runbook exists: demos/amazon-lex/demo.md",
+          "ok": true,
+          "path": "demos/amazon-lex/demo.md"
+        },
+        {
+          "name": "demo includes setup target",
+          "ok": true,
+          "expected": "--target=amazon-lex"
+        },
+        {
+          "name": "marker present: Lex V2",
+          "ok": true,
+          "marker": "Lex V2"
+        },
+        {
+          "name": "marker present: sessionState",
+          "ok": true,
+          "marker": "sessionState"
+        },
+        {
+          "name": "marker present: yes=true",
+          "ok": true,
+          "marker": "yes=true"
+        }
+      ]
+    },
+    {
+      "id": "watsonx-assistant",
+      "title": "IBM watsonx Assistant",
+      "demoEvidence": {
+        "status": "runbook-ready",
+        "publicDemoReady": false,
+        "evidenceLevel": "setup runbook and static adapter preflight",
+        "missingArtifacts": [],
+        "nextStep": "Run this target in the real host and add production demo evidence."
+      },
+      "checks": [
+        {
+          "name": "adapter exists: adapters/watsonx-assistant/README.md",
+          "ok": true,
+          "path": "adapters/watsonx-assistant/README.md"
+        },
+        {
+          "name": "adapter exists: adapters/watsonx-assistant/remix-camera-watsonx-extension.openapi.json",
+          "ok": true,
+          "path": "adapters/watsonx-assistant/remix-camera-watsonx-extension.openapi.json"
+        },
+        {
+          "name": "adapter exists: adapters/watsonx-assistant/remix-camera-watsonx-tool.mjs",
+          "ok": true,
+          "path": "adapters/watsonx-assistant/remix-camera-watsonx-tool.mjs"
+        },
+        {
+          "name": "demo runbook exists: demos/watsonx-assistant/demo.md",
+          "ok": true,
+          "path": "demos/watsonx-assistant/demo.md"
+        },
+        {
+          "name": "demo includes setup target",
+          "ok": true,
+          "expected": "--target=watsonx-assistant"
+        },
+        {
+          "name": "marker present: custom extension",
+          "ok": true,
+          "marker": "custom extension"
+        },
+        {
+          "name": "marker present: OpenAPI",
+          "ok": true,
+          "marker": "OpenAPI"
+        },
+        {
+          "name": "marker present: yes=true",
+          "ok": true,
+          "marker": "yes=true"
+        }
+      ]
     }
   ],
   "demoSummary": {
-    "targetCount": 34,
+    "targetCount": 36,
     "publicDemoReadyCount": 1,
     "productionBridgeEvidenceCount": 1,
-    "runbookOnlyCount": 32
+    "runbookOnlyCount": 34
   },
   "bridgeChecks": [
     {
@@ -1938,6 +2039,16 @@
     },
     {
       "name": "Rasa adapter real dry-run",
+      "ok": true,
+      "command": "send-selfie"
+    },
+    {
+      "name": "Amazon Lex V2 adapter real dry-run",
+      "ok": true,
+      "command": "send-selfie"
+    },
+    {
+      "name": "IBM watsonx Assistant adapter real dry-run",
       "ok": true,
       "command": "send-selfie"
     }
