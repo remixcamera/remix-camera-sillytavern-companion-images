@@ -2,9 +2,13 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
   buildBridgeInputFromTelegram,
+  createRemixTelegramTool,
+  getTelegramMessage,
+  isRemixTelegramCommand,
   parseTelegramCommand,
   runTelegramRemixCommand,
   sendTelegramRemixResult,
+  shouldHandleTelegramUpdate,
 } from "../adapters/telegram/remix-telegram-tool.mjs";
 
 test("Telegram parser maps slash commands to bridge commands", () => {
@@ -21,6 +25,23 @@ test("Telegram parser maps slash commands to bridge commands", () => {
     text: "restaurant booth",
   });
   assert.deepEqual(parseTelegramCommand("/help"), { type: "help" });
+});
+
+test("Telegram routing helpers identify only Remix.Camera commands", () => {
+  const update = {
+    message: {
+      message_id: 42,
+      chat: { id: 123 },
+      text: "/selfie cafe mirror",
+    },
+  };
+
+  assert.equal(getTelegramMessage(update).message_id, 42);
+  assert.equal(isRemixTelegramCommand("/selfie cafe mirror"), true);
+  assert.equal(isRemixTelegramCommand("/unknown cafe mirror"), false);
+  assert.equal(isRemixTelegramCommand("normal chat message"), false);
+  assert.equal(shouldHandleTelegramUpdate(update), true);
+  assert.equal(shouldHandleTelegramUpdate({ message: { chat: { id: 123 }, text: "/unknown" } }), false);
 });
 
 test("Telegram bridge input requires explicit yes for couple and private generation", () => {
@@ -125,3 +146,108 @@ test("Telegram sender uploads local bridge images instead of passing 127.0.0.1 U
   assert.equal(calls.length, 2);
 });
 
+test("Telegram detailed update handler can run without auto-sending for existing bots", async () => {
+  const tool = createRemixTelegramTool({
+    botToken: "bot_token",
+    bridgeUrl: "http://127.0.0.1:8787",
+    profileId: "profile_lily",
+    characterName: "Lily",
+    fetchImpl: async () =>
+      new Response(
+        JSON.stringify({
+          ok: true,
+          markdown: "![Lily send-selfie](https://cdn.example.test/photo_1.jpg)",
+          results: [{ ok: true, imageUrl: "https://cdn.example.test/photo_1.jpg" }],
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      ),
+  });
+
+  const details = await tool.handleUpdateDetailed(
+    {
+      message: {
+        message_id: 7,
+        chat: { id: 123 },
+        text: "/selfie couch lamp",
+      },
+    },
+    { autoSend: false },
+  );
+
+  assert.equal(details.handled, true);
+  assert.equal(details.chatId, 123);
+  assert.equal(details.messageId, 7);
+  assert.equal(details.parsed.command, "send-selfie");
+  assert.deepEqual(details.result.imageUrls, ["https://cdn.example.test/photo_1.jpg"]);
+  assert.deepEqual(details.sentMessages, []);
+});
+
+test("Telegram detailed update handler returns sent message records when auto-send is enabled", async (t) => {
+  const originalFetch = globalThis.fetch;
+  const telegramCalls = [];
+  t.after(() => {
+    globalThis.fetch = originalFetch;
+  });
+
+  globalThis.fetch = async (url, options = {}) => {
+    telegramCalls.push({ url: String(url), options });
+    assert.equal(String(url), "https://api.telegram.org/botbot_token/sendPhoto");
+    assert.equal(options.body.get("chat_id"), "123");
+    assert.equal(options.body.get("photo"), "https://cdn.example.test/photo_1.jpg");
+    return new Response(JSON.stringify({ ok: true, result: { message_id: 99 } }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  };
+
+  const tool = createRemixTelegramTool({
+    botToken: "bot_token",
+    bridgeUrl: "http://127.0.0.1:8787",
+    fetchImpl: async () =>
+      new Response(
+        JSON.stringify({
+          ok: true,
+          markdown: "![Lily send-selfie](https://cdn.example.test/photo_1.jpg)",
+          results: [{ ok: true, imageUrl: "https://cdn.example.test/photo_1.jpg" }],
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      ),
+  });
+
+  const details = await tool.handleUpdateDetailed({
+    message: {
+      chat: { id: 123 },
+      text: "/selfie couch lamp",
+    },
+  });
+
+  assert.equal(details.handled, true);
+  assert.equal(details.sentMessages[0].message_id, 99);
+  assert.equal(telegramCalls.length, 1);
+});
+
+test("Telegram simple update handler remains compatible when destructured", async () => {
+  const tool = createRemixTelegramTool({
+    bridgeUrl: "http://127.0.0.1:8787",
+    fetchImpl: async () =>
+      new Response(
+        JSON.stringify({
+          ok: true,
+          markdown: "![Lily send-selfie](https://cdn.example.test/photo_1.jpg)",
+          results: [{ ok: true, imageUrl: "https://cdn.example.test/photo_1.jpg" }],
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      ),
+  });
+  const { handleUpdate } = tool;
+
+  const result = await handleUpdate({
+    message: {
+      chat: { id: 123 },
+      text: "/selfie couch lamp",
+    },
+  });
+
+  assert.equal(result.command, "send-selfie");
+  assert.deepEqual(result.imageUrls, ["https://cdn.example.test/photo_1.jpg"]);
+});

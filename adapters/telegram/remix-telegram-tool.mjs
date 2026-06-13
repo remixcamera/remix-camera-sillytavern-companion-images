@@ -77,6 +77,19 @@ export function parseTelegramCommand(text) {
   };
 }
 
+export function getTelegramMessage(update) {
+  return update?.message || update?.edited_message || null;
+}
+
+export function isRemixTelegramCommand(text) {
+  return parseTelegramCommand(text) !== null;
+}
+
+export function shouldHandleTelegramUpdate(update) {
+  const message = getTelegramMessage(update);
+  return isRemixTelegramCommand(message?.text || "");
+}
+
 function firstUrl(text) {
   return String(text || "").match(/https?:\/\/\S+/i)?.[0] || "";
 }
@@ -228,33 +241,65 @@ export async function sendTelegramRemixResult({ botToken, chatId, result }) {
 }
 
 export function createRemixTelegramTool(options = {}) {
+  const handleUpdateDetailed = async (update, overrides = {}) => {
+    const message = getTelegramMessage(update);
+    const text = message?.text || "";
+    const chatId = message?.chat?.id;
+    if (!chatId) {
+      return {
+        handled: false,
+        reason: "missing-chat",
+        parsed: null,
+        result: null,
+        sentMessages: [],
+      };
+    }
+    const parsed = parseTelegramCommand(text);
+    if (!parsed) {
+      return {
+        handled: false,
+        reason: "unknown-command",
+        chatId,
+        messageId: message?.message_id,
+        text,
+        parsed: null,
+        result: null,
+        sentMessages: [],
+      };
+    }
+    const merged = { ...options, ...overrides };
+    const result = await runTelegramRemixCommand(parsed, merged);
+    const sentMessages =
+      merged.autoSend === false || !merged.botToken
+        ? []
+        : await sendTelegramRemixResult({
+            botToken: merged.botToken,
+            chatId,
+            result,
+          });
+    return {
+      handled: true,
+      chatId,
+      messageId: message?.message_id,
+      text,
+      parsed,
+      result,
+      sentMessages,
+    };
+  };
+
   return {
     helpText: () => telegramHelpText(options.characterName),
     parseCommand: parseTelegramCommand,
+    isCommand: isRemixTelegramCommand,
+    shouldHandleUpdate: shouldHandleTelegramUpdate,
     buildInput: (parsed) => buildBridgeInputFromTelegram(parsed, options),
     run: (parsed, overrides = {}) => runTelegramRemixCommand(parsed, { ...options, ...overrides }),
     send: (result, sendOptions = {}) => sendTelegramRemixResult({ ...options, ...sendOptions, result }),
+    handleUpdateDetailed,
     async handleUpdate(update, overrides = {}) {
-      const message = update?.message || update?.edited_message;
-      const text = message?.text || "";
-      const chatId = message?.chat?.id;
-      if (!chatId) {
-        return null;
-      }
-      const parsed = parseTelegramCommand(text);
-      if (!parsed) {
-        return null;
-      }
-      const merged = { ...options, ...overrides };
-      const result = await runTelegramRemixCommand(parsed, merged);
-      if (merged.botToken) {
-        await sendTelegramRemixResult({
-          botToken: merged.botToken,
-          chatId,
-          result,
-        });
-      }
-      return result;
+      const details = await handleUpdateDetailed(update, overrides);
+      return details.handled ? details.result : null;
     },
   };
 }
