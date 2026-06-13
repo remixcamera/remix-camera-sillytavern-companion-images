@@ -46,6 +46,8 @@ const SUPPORTED_TARGETS = new Set([
   "pipedream",
   "make",
   "zapier",
+  "voiceflow",
+  "manychat",
 ]);
 
 function printHelp() {
@@ -59,7 +61,7 @@ Usage:
   npx @remix-camera/sillytavern-setup [options]
 
 Options:
-  --target=sillytavern|mcp|risu|openwebui|librechat|lobechat|agnai|telegram|discord|whatsapp|slack|line|messenger|instagram|teams|twilio|matrix|dify|flowise|botpress|anythingllm|typingmind|poe|langflow|langchain|vercel-ai-sdk|n8n|pipedream|make|zapier
+  --target=sillytavern|mcp|risu|openwebui|librechat|lobechat|agnai|telegram|discord|whatsapp|slack|line|messenger|instagram|teams|twilio|matrix|dify|flowise|botpress|anythingllm|typingmind|poe|langflow|langchain|vercel-ai-sdk|n8n|pipedream|make|zapier|voiceflow|manychat
   --sillytavern-dir=/path/to/SillyTavern  Use a specific local SillyTavern checkout
   --profile-id=profile_id                 Use a specific Remix.Camera character profile
   --character-name="Name"                 Override the Character Card name
@@ -593,6 +595,25 @@ function printTargetInstructions(target, { healthUrl, port, configPath }) {
       `  ${bridgeUrl}`,
       "Zapier cloud Zaps need a public HTTPS bridge URL or secure tunnel; they cannot call your laptop's 127.0.0.1 directly.",
       "The action defaults to dry-run and requires action=generate plus yes=true before spending credits.",
+    ],
+    voiceflow: [
+      "Create a Voiceflow API tool from this JSON request contract:",
+      `  ${path.join(adapterRoot, "voiceflow", "remix-camera-voiceflow-api-tool.json")}`,
+      "Optional Node helper for local tests or self-hosted runners:",
+      `  ${path.join(adapterRoot, "voiceflow", "remix-camera-voiceflow-tool.mjs")}`,
+      "Set bridgeUrl to a URL Voiceflow can reach:",
+      `  ${bridgeUrl}`,
+      "Voiceflow Cloud needs a public HTTPS bridge URL or secure tunnel; it cannot call your laptop's 127.0.0.1 directly.",
+      "Use action=dry-run first and require action=generate plus yes=true before spending credits.",
+    ],
+    manychat: [
+      "Create a Manychat Action block -> External Request from this request contract:",
+      `  ${path.join(adapterRoot, "manychat", "remix-camera-manychat-external-request.json")}`,
+      "Optional Node helper for local tests or self-hosted runners:",
+      `  ${path.join(adapterRoot, "manychat", "remix-camera-manychat-tool.mjs")}`,
+      "Set the request URL to a public HTTPS bridge URL. Manychat External Request does not allow plain HTTP URLs.",
+      "Use action=dry-run first and require action=generate plus yes=true before spending credits.",
+      "Map $.results[0].productionImageUrl into a Manychat custom field before sending an image message.",
     ],
   };
   console.log("");

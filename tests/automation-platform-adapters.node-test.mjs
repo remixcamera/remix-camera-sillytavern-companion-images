@@ -2,9 +2,11 @@ import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import { runRemixCameraManychatTool } from "../adapters/manychat/remix-camera-manychat-tool.mjs";
 import { runRemixCameraMakeTool } from "../adapters/make/remix-camera-make-tool.mjs";
 import { runRemixCameraN8nTool } from "../adapters/n8n/remix-camera-n8n-tool.mjs";
 import pipedreamAction, { runRemixCameraPipedreamAction } from "../adapters/pipedream/remix-camera-pipedream-action.mjs";
+import { runRemixCameraVoiceflowTool } from "../adapters/voiceflow/remix-camera-voiceflow-tool.mjs";
 
 const require = createRequire(import.meta.url);
 const zapierApp = require("../adapters/zapier/remix-camera-zapier-app/index.cjs");
@@ -56,6 +58,44 @@ test("Make helper defaults to a no-spend dry-run preview", async () => {
   assert.equal(result.dryRun, true);
 });
 
+test("Voiceflow helper defaults to a no-spend dry-run preview", async () => {
+  const { calls, fetchImpl } = mockFetchRecorder({
+    ok: true,
+    dryRun: true,
+    promptTemplate: { packTitle: "Excellent Lily Selfie" },
+    prompt: "preview prompt",
+  });
+  const result = await runRemixCameraVoiceflowTool(
+    { command: "send-selfie", prompt: "cozy couch" },
+    { bridgeUrl: "http://bridge.local", fetchImpl, characterName: "Lily" },
+  );
+
+  assert.equal(calls[0].url, "http://bridge.local/v1/tools/send-selfie/dry-run");
+  assert.equal(calls[0].body.yes, undefined);
+  assert.equal(calls[0].body.characterName, "Lily");
+  assert.match(result.text, /Preview ready: Excellent Lily Selfie/);
+  assert.equal(result.dryRun, true);
+});
+
+test("Manychat helper defaults to a no-spend dry-run preview", async () => {
+  const { calls, fetchImpl } = mockFetchRecorder({
+    ok: true,
+    dryRun: true,
+    promptTemplate: { packTitle: "Excellent Lily Selfie" },
+    prompt: "preview prompt",
+  });
+  const result = await runRemixCameraManychatTool(
+    { command: "send-selfie", prompt: "cozy couch" },
+    { bridgeUrl: "http://bridge.local", fetchImpl, characterName: "Lily" },
+  );
+
+  assert.equal(calls[0].url, "http://bridge.local/v1/tools/send-selfie/dry-run");
+  assert.equal(calls[0].body.yes, undefined);
+  assert.equal(calls[0].body.characterName, "Lily");
+  assert.match(result.text, /Preview ready: Excellent Lily Selfie/);
+  assert.equal(result.dryRun, true);
+});
+
 test("Make action module JSON keeps generation behind action=generate and yes=true", () => {
   const moduleJson = JSON.parse(readFileSync(new URL("../adapters/make/remix-camera-make-action-module.json", import.meta.url), "utf8"));
   assert.equal(moduleJson.type, "action");
@@ -63,6 +103,24 @@ test("Make action module JSON keeps generation behind action=generate and yes=tr
   assert.match(moduleJson.communication.url, /parameters\.yes/);
   assert.equal(moduleJson.communication.method, "POST");
   assert.equal(moduleJson.communication.body.yes.includes("parameters.yes"), true);
+});
+
+test("Voiceflow API tool JSON documents generate confirmation and response capture", () => {
+  const toolJson = JSON.parse(readFileSync(new URL("../adapters/voiceflow/remix-camera-voiceflow-api-tool.json", import.meta.url), "utf8"));
+  assert.equal(toolJson.type, "api_tool");
+  assert.match(toolJson.url, /v1\/tools\/\{command\}\/\{action\}/);
+  assert.equal(toolJson.method, "POST");
+  assert.equal(toolJson.captureResponse.imageUrl, "results.0.productionImageUrl");
+  assert.ok(toolJson.guardrails.some((line) => /yes to true/.test(line)));
+});
+
+test("Manychat External Request JSON requires HTTPS and maps image URL", () => {
+  const requestJson = JSON.parse(readFileSync(new URL("../adapters/manychat/remix-camera-manychat-external-request.json", import.meta.url), "utf8"));
+  assert.equal(requestJson.surface, "Manychat External Request");
+  assert.equal(requestJson.method, "POST");
+  assert.match(requestJson.url, /^https:\/\//);
+  assert.ok(requestJson.customFieldMappings.some((mapping) => mapping.jsonPath === "$.results[0].productionImageUrl"));
+  assert.ok(requestJson.guardrails.some((line) => /HTTPS/.test(line)));
 });
 
 test("n8n helper refuses requested generation without yes=true", async () => {

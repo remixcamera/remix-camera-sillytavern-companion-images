@@ -35,6 +35,8 @@ npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=pipedream
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=make
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=zapier
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=voiceflow
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=manychat
 ```
 
 ## Adapter Matrix
@@ -78,6 +80,8 @@ npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=
 | Pipedream | `adapters/pipedream/remix-camera-pipedream-action.mjs` | Pipedream Node.js action component for workflow bots |
 | Make | `adapters/make/remix-camera-make-action-module.json` + `adapters/make/remix-camera-make-tool.mjs` | Make Custom Apps action module for bot and automation scenarios |
 | Zapier | `adapters/zapier/remix-camera-zapier-app/index.cjs` | Zapier Platform CLI create action for bot and workflow Zaps |
+| Voiceflow | `adapters/voiceflow/remix-camera-voiceflow-api-tool.json` + `adapters/voiceflow/remix-camera-voiceflow-tool.mjs` | Voiceflow API tool or Workflow API step for assistant builders |
+| Manychat | `adapters/manychat/remix-camera-manychat-external-request.json` + `adapters/manychat/remix-camera-manychat-tool.mjs` | Manychat External Request action for Messenger, Instagram, WhatsApp, Telegram, SMS, and automation flows |
 
 ## Popular Host Feasibility
 
@@ -94,7 +98,7 @@ Supported means the package has a concrete integration surface and a runbook. Wa
 | Agnai | Supported | Userscript against the local bridge. |
 | Telegram, Discord, WhatsApp, Slack, LINE, Messenger, Instagram DMs, Microsoft Teams, Twilio SMS/MMS, Matrix | Supported | Reusable bot/webhook modules plus Lily proof wrappers where a direct Lily wrapper is useful. |
 | Dify, Flowise, Botpress | Supported | OpenAPI/custom tool/action surfaces. |
-| AnythingLLM, TypingMind, Poe, Langflow, LangChain JS, Vercel AI SDK, n8n, Pipedream, Make, Zapier | Supported | Official custom skill, plugin, server-bot, custom component, framework tool, workflow, custom app, and action surfaces. |
+| AnythingLLM, TypingMind, Poe, Langflow, LangChain JS, Vercel AI SDK, n8n, Pipedream, Make, Zapier, Voiceflow, Manychat | Supported | Official custom skill, plugin, server-bot, custom component, framework tool, workflow, custom app, API tool, and External Request surfaces. |
 | Character.AI | Watchlist | Popular consumer host, but no production adapter without an official API, plugin, or partner surface. |
 | JanitorAI | Watchlist | Popular roleplay host with external model-provider setup; direct image insertion needs a reliable host callback/tool surface. |
 | Chub/Venus | Watchlist | Strong character-card and API-provider ecosystem; direct chat insertion needs a supported host surface. |

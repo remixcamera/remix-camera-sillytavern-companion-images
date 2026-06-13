@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "generatedAt": "2026-06-13T07:52:27.910Z",
+  "generatedAt": "2026-06-13T08:18:03.519Z",
   "mode": "bridge-dry-run",
   "bridgeUrl": "http://127.0.0.1:8787",
   "targets": [
@@ -1558,13 +1558,119 @@
           "marker": "yes=true"
         }
       ]
+    },
+    {
+      "id": "voiceflow",
+      "title": "Voiceflow",
+      "demoEvidence": {
+        "status": "runbook-ready",
+        "publicDemoReady": false,
+        "evidenceLevel": "setup runbook and static adapter preflight",
+        "missingArtifacts": [],
+        "nextStep": "Run this target in the real host and add production demo evidence."
+      },
+      "checks": [
+        {
+          "name": "adapter exists: adapters/voiceflow/README.md",
+          "ok": true,
+          "path": "adapters/voiceflow/README.md"
+        },
+        {
+          "name": "adapter exists: adapters/voiceflow/remix-camera-voiceflow-api-tool.json",
+          "ok": true,
+          "path": "adapters/voiceflow/remix-camera-voiceflow-api-tool.json"
+        },
+        {
+          "name": "adapter exists: adapters/voiceflow/remix-camera-voiceflow-tool.mjs",
+          "ok": true,
+          "path": "adapters/voiceflow/remix-camera-voiceflow-tool.mjs"
+        },
+        {
+          "name": "demo runbook exists: demos/voiceflow/demo.md",
+          "ok": true,
+          "path": "demos/voiceflow/demo.md"
+        },
+        {
+          "name": "demo includes setup target",
+          "ok": true,
+          "expected": "--target=voiceflow"
+        },
+        {
+          "name": "marker present: Remix.Camera Companion Image",
+          "ok": true,
+          "marker": "Remix.Camera Companion Image"
+        },
+        {
+          "name": "marker present: Voiceflow API tool",
+          "ok": true,
+          "marker": "Voiceflow API tool"
+        },
+        {
+          "name": "marker present: yes=true",
+          "ok": true,
+          "marker": "yes=true"
+        }
+      ]
+    },
+    {
+      "id": "manychat",
+      "title": "Manychat",
+      "demoEvidence": {
+        "status": "runbook-ready",
+        "publicDemoReady": false,
+        "evidenceLevel": "setup runbook and static adapter preflight",
+        "missingArtifacts": [],
+        "nextStep": "Run this target in the real host and add production demo evidence."
+      },
+      "checks": [
+        {
+          "name": "adapter exists: adapters/manychat/README.md",
+          "ok": true,
+          "path": "adapters/manychat/README.md"
+        },
+        {
+          "name": "adapter exists: adapters/manychat/remix-camera-manychat-external-request.json",
+          "ok": true,
+          "path": "adapters/manychat/remix-camera-manychat-external-request.json"
+        },
+        {
+          "name": "adapter exists: adapters/manychat/remix-camera-manychat-tool.mjs",
+          "ok": true,
+          "path": "adapters/manychat/remix-camera-manychat-tool.mjs"
+        },
+        {
+          "name": "demo runbook exists: demos/manychat/demo.md",
+          "ok": true,
+          "path": "demos/manychat/demo.md"
+        },
+        {
+          "name": "demo includes setup target",
+          "ok": true,
+          "expected": "--target=manychat"
+        },
+        {
+          "name": "marker present: Manychat External Request",
+          "ok": true,
+          "marker": "Manychat External Request"
+        },
+        {
+          "name": "marker present: External Request",
+          "ok": true,
+          "marker": "External Request"
+        },
+        {
+          "name": "marker present: yes=true",
+          "ok": true,
+          "marker": "yes=true"
+        }
+      ]
     }
   ],
   "demoSummary": {
-    "targetCount": 30,
+    "targetCount": 32,
     "publicDemoReadyCount": 1,
     "productionBridgeEvidenceCount": 1,
-    "runbookOnlyCount": 28
+    "runbookOnlyCount": 30
   },
   "bridgeChecks": [
     {
@@ -1716,6 +1822,16 @@
     },
     {
       "name": "Zapier adapter real dry-run",
+      "ok": true,
+      "command": "send-selfie"
+    },
+    {
+      "name": "Voiceflow adapter real dry-run",
+      "ok": true,
+      "command": "send-selfie"
+    },
+    {
+      "name": "Manychat adapter real dry-run",
       "ok": true,
       "command": "send-selfie"
     }

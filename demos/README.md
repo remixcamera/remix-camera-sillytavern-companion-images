@@ -41,6 +41,8 @@ Targets:
 - `pipedream/`: Pipedream Node.js action demo.
 - `make/`: Make Custom Apps action-module demo.
 - `zapier/`: Zapier Platform CLI action demo.
+- `voiceflow/`: Voiceflow API tool and Workflow API step demo.
+- `manychat/`: Manychat External Request action demo.
 
 Do not publish generated demo recordings until the runbook has been executed against production Remix.Camera and the inserted images are real Remix.Camera outputs.
 

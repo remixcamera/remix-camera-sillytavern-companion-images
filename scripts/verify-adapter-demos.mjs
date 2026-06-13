@@ -13,6 +13,7 @@ import { parseMessengerCommand, runMessengerRemixCommand } from "../adapters/mes
 import { parseMatrixCommand, runMatrixRemixCommand } from "../adapters/matrix/remix-matrix-tool.mjs";
 import { handleMcpRequest, normalizeMcpToolName } from "../adapters/mcp/remix-camera-mcp-server.mjs";
 import { runRemixCameraMakeTool } from "../adapters/make/remix-camera-make-tool.mjs";
+import { runRemixCameraManychatTool } from "../adapters/manychat/remix-camera-manychat-tool.mjs";
 import { runRemixCameraN8nTool } from "../adapters/n8n/remix-camera-n8n-tool.mjs";
 import { runRemixCameraPipedreamAction } from "../adapters/pipedream/remix-camera-pipedream-action.mjs";
 import { parseSlackCommand, runSlackRemixCommand } from "../adapters/slack/remix-slack-tool.mjs";
@@ -20,6 +21,7 @@ import { parseTelegramCommand, runTelegramRemixCommand } from "../adapters/teleg
 import { parseTeamsCommand, runTeamsRemixCommand } from "../adapters/teams/remix-teams-tool.mjs";
 import { parseTwilioCommand, runTwilioRemixCommand } from "../adapters/twilio/remix-twilio-mms-tool.mjs";
 import { createRemixCameraAiSdkTools } from "../adapters/vercel-ai-sdk/remix-camera-ai-sdk-tools.mjs";
+import { runRemixCameraVoiceflowTool } from "../adapters/voiceflow/remix-camera-voiceflow-tool.mjs";
 import { parseWhatsAppCommand, runWhatsAppRemixCommand } from "../adapters/whatsapp/remix-whatsapp-tool.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -298,6 +300,30 @@ const targets = [
     demoFile: "demos/zapier/demo.md",
     setupCommand: "--target=zapier",
     markers: ["Preview or Generate Companion Image", "Zapier Platform CLI", "yes=true"],
+  },
+  {
+    id: "voiceflow",
+    title: "Voiceflow",
+    adapterFiles: [
+      "adapters/voiceflow/README.md",
+      "adapters/voiceflow/remix-camera-voiceflow-api-tool.json",
+      "adapters/voiceflow/remix-camera-voiceflow-tool.mjs",
+    ],
+    demoFile: "demos/voiceflow/demo.md",
+    setupCommand: "--target=voiceflow",
+    markers: ["Remix.Camera Companion Image", "Voiceflow API tool", "yes=true"],
+  },
+  {
+    id: "manychat",
+    title: "Manychat",
+    adapterFiles: [
+      "adapters/manychat/README.md",
+      "adapters/manychat/remix-camera-manychat-external-request.json",
+      "adapters/manychat/remix-camera-manychat-tool.mjs",
+    ],
+    demoFile: "demos/manychat/demo.md",
+    setupCommand: "--target=manychat",
+    markers: ["Manychat External Request", "External Request", "yes=true"],
   },
 ];
 
@@ -635,6 +661,18 @@ async function verifyHostAdapterDryRuns() {
         reason: "No bridge URL provided.",
       }),
     );
+    checks.push(
+      okCheck("Voiceflow adapter real dry-run", false, {
+        skipped: true,
+        reason: "No bridge URL provided.",
+      }),
+    );
+    checks.push(
+      okCheck("Manychat adapter real dry-run", false, {
+        skipped: true,
+        reason: "No bridge URL provided.",
+      }),
+    );
     return checks;
   }
 
@@ -869,6 +907,28 @@ async function verifyHostAdapterDryRuns() {
   );
   checks.push(
     okCheck("Zapier adapter real dry-run", zapier?.dryRun === true && /Preview ready/i.test(zapier?.text || ""), {
+      command: "send-selfie",
+    }),
+  );
+
+  const voiceflow = await runRemixCameraVoiceflowTool(commandInputs["send-selfie"], {
+    bridgeUrl,
+    profileId: process.env.REMIX_PROFILE_ID || "",
+    characterName: "Lily",
+  });
+  checks.push(
+    okCheck("Voiceflow adapter real dry-run", voiceflow?.payload?.dryRun === true && /Preview ready/i.test(voiceflow?.text || ""), {
+      command: "send-selfie",
+    }),
+  );
+
+  const manychat = await runRemixCameraManychatTool(commandInputs["send-selfie"], {
+    bridgeUrl,
+    profileId: process.env.REMIX_PROFILE_ID || "",
+    characterName: "Lily",
+  });
+  checks.push(
+    okCheck("Manychat adapter real dry-run", manychat?.payload?.dryRun === true && /Preview ready/i.test(manychat?.text || ""), {
       command: "send-selfie",
     }),
   );

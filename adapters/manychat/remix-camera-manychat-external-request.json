@@ -1,0 +1,47 @@
+{
+  "name": "Remix.Camera Companion Image",
+  "surface": "Manychat External Request",
+  "method": "POST",
+  "url": "https://YOUR-BRIDGE-HOST.example.com/v1/tools/{{command}}/{{action}}",
+  "headers": {
+    "Content-Type": "application/json",
+    "Accept": "application/json"
+  },
+  "body": {
+    "profileId": "{{remix_profile_id}}",
+    "characterName": "{{character_name}}",
+    "chatText": "{{last_text_input}}",
+    "mood": "{{last_text_input}}",
+    "location": "{{last_text_input}}",
+    "sourceImageUrl": "{{source_image_url}}",
+    "userReferenceImageUrl": "{{user_reference_image_url}}",
+    "userConsent": "{{user_consent}}",
+    "matureContent": "{{mature_content}}",
+    "yes": "{{yes}}"
+  },
+  "customFieldMappings": [
+    {
+      "jsonPath": "$.dryRun",
+      "customField": "remix_dry_run"
+    },
+    {
+      "jsonPath": "$.prompt",
+      "customField": "remix_prompt_preview"
+    },
+    {
+      "jsonPath": "$.markdown",
+      "customField": "remix_markdown"
+    },
+    {
+      "jsonPath": "$.results[0].productionImageUrl",
+      "customField": "remix_image_url"
+    }
+  ],
+  "guardrails": [
+    "Manychat External Request requires HTTPS URLs.",
+    "Default action should be dry-run.",
+    "Only set action to generate and yes to true after explicit user intent.",
+    "Use a Send Message step after the External Request to display remix_image_url."
+  ]
+}
+
