@@ -35,6 +35,8 @@ Targets:
 - `typingmind/`: TypingMind plugin function demo.
 - `poe/`: Poe server bot demo.
 - `langflow/`: Langflow custom component demo.
+- `langchain/`: LangChain JS tool wrapper demo for existing agents.
+- `vercel-ai-sdk/`: Vercel AI SDK tool map demo for `generateText`, `streamText`, or agents.
 
 Do not publish generated demo recordings until the runbook has been executed against production Remix.Camera and the inserted images are real Remix.Camera outputs.
 
