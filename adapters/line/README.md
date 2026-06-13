@@ -21,6 +21,19 @@ const remix = createRemixLineTool({
 });
 ```
 
+For an existing bot, keep your own routing and delivery:
+
+```js
+if (remix.shouldHandleWebhook(lineWebhookPayload)) {
+  const details = await remix.handleWebhookDetailed(lineWebhookPayload, {
+    autoSend: false,
+  });
+  await yourBot.replyWithImages(details[0].replyToken, details[0].result.imageUrls);
+}
+```
+
+Use `handleTextEventDetailed(event, { autoSend: false })` when you already have the LINE event object. The simple `handleTextEvent()` and `handleWebhook()` helpers still reply automatically when credentials are configured.
+
 The tool parses text messages such as:
 
 ```text

@@ -108,6 +108,28 @@ export function parseMatrixCommand(text) {
   };
 }
 
+export function isRemixMatrixCommand(text) {
+  return parseMatrixCommand(text) !== null;
+}
+
+export function shouldHandleMatrixTextEvent(event, options = {}) {
+  const text = typeof event?.text === "string" ? event.text : event?.content?.body;
+  if (!text) {
+    return false;
+  }
+  if (options.ownUserId && event?.sender === options.ownUserId) {
+    return false;
+  }
+  if (options.requirePrefix && !/^(!lily|\/lily)\b/i.test(text)) {
+    return false;
+  }
+  return isRemixMatrixCommand(text);
+}
+
+export function shouldHandleMatrixSync(syncPayload, options = {}) {
+  return extractMatrixTextEvents(syncPayload, options).some((event) => shouldHandleMatrixTextEvent(event, options));
+}
+
 export function buildBridgeInputFromMatrix(parsed, options = {}) {
   const text = parsed?.text || "";
   const hasYes = /\byes\b/i.test(text);
@@ -375,33 +397,111 @@ export async function matrixSync({
 }
 
 export function createRemixMatrixTool(options = {}) {
+  const handleTextEventDetailed = async (event, overrides = {}) => {
+    const text = typeof event?.text === "string" ? event.text : event?.content?.body || "";
+    const merged = { ...options, ...overrides };
+    if (merged.ownUserId && event?.sender === merged.ownUserId) {
+      return {
+        handled: false,
+        reason: "own-message",
+        roomId: event?.roomId,
+        eventId: event?.eventId || event?.event_id,
+        sender: event?.sender,
+        text,
+        parsed: null,
+        result: null,
+        sentMessages: [],
+      };
+    }
+    if (merged.requirePrefix && !/^(!lily|\/lily)\b/i.test(text)) {
+      return {
+        handled: false,
+        reason: "missing-prefix",
+        roomId: event?.roomId,
+        eventId: event?.eventId || event?.event_id,
+        sender: event?.sender,
+        text,
+        parsed: null,
+        result: null,
+        sentMessages: [],
+      };
+    }
+    const parsed = parseMatrixCommand(text);
+    if (!parsed) {
+      return {
+        handled: false,
+        reason: "unknown-command",
+        roomId: event?.roomId,
+        eventId: event?.eventId || event?.event_id,
+        sender: event?.sender,
+        text,
+        parsed: null,
+        result: null,
+        sentMessages: [],
+      };
+    }
+
+    const roomId = event?.roomId || merged.roomId;
+    const result = await runMatrixRemixCommand(parsed, merged);
+    const sentMessages =
+      merged.autoSend === false || !merged.accessToken || !roomId
+        ? []
+        : await sendMatrixRemixResult({
+            ...merged,
+            roomId,
+            result,
+          });
+
+    return {
+      handled: true,
+      roomId,
+      eventId: event?.eventId || event?.event_id,
+      sender: event?.sender,
+      text,
+      parsed,
+      result,
+      sentMessages,
+    };
+  };
+
+  const handleSyncDetailed = async (syncPayload, overrides = {}) => {
+    const events = extractMatrixTextEvents(syncPayload, {
+      ownUserId: overrides.ownUserId || options.ownUserId,
+      requirePrefix: overrides.requirePrefix ?? options.requirePrefix,
+    });
+    const results = [];
+    for (const event of events) {
+      results.push(await handleTextEventDetailed(event, overrides));
+    }
+    return results;
+  };
+
   return {
     helpText: () => matrixHelpText(options.characterName),
     parseCommand: parseMatrixCommand,
+    isCommand: isRemixMatrixCommand,
+    shouldHandleTextEvent: (event, overrides = {}) =>
+      shouldHandleMatrixTextEvent(event, {
+        ownUserId: overrides.ownUserId || options.ownUserId,
+        requirePrefix: overrides.requirePrefix ?? options.requirePrefix,
+      }),
+    shouldHandleSync: (syncPayload, overrides = {}) =>
+      shouldHandleMatrixSync(syncPayload, {
+        ownUserId: overrides.ownUserId || options.ownUserId,
+        requirePrefix: overrides.requirePrefix ?? options.requirePrefix,
+      }),
     buildInput: (parsed) => buildBridgeInputFromMatrix(parsed, options),
     run: (parsed, overrides = {}) => runMatrixRemixCommand(parsed, { ...options, ...overrides }),
     send: (result, sendOptions = {}) => sendMatrixRemixResult({ ...options, ...sendOptions, result }),
+    handleTextEventDetailed,
     async handleTextEvent(event, overrides = {}) {
-      const parsed = parseMatrixCommand(event?.text || "");
-      const result = await runMatrixRemixCommand(parsed, { ...options, ...overrides });
-      await sendMatrixRemixResult({
-        ...options,
-        ...overrides,
-        roomId: event?.roomId || overrides.roomId || options.roomId,
-        result,
-      });
-      return result;
+      const details = await handleTextEventDetailed(event, overrides);
+      return details.handled ? details.result : null;
     },
+    handleSyncDetailed,
     async handleSync(syncPayload, overrides = {}) {
-      const events = extractMatrixTextEvents(syncPayload, {
-        ownUserId: overrides.ownUserId || options.ownUserId,
-        requirePrefix: overrides.requirePrefix ?? options.requirePrefix,
-      });
-      const results = [];
-      for (const event of events) {
-        results.push(await this.handleTextEvent(event, overrides));
-      }
-      return results;
+      const details = await handleSyncDetailed(syncPayload, overrides);
+      return details.filter((item) => item.handled).map((item) => item.result);
     },
   };
 }

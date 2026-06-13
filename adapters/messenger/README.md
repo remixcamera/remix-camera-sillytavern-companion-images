@@ -21,6 +21,19 @@ const remix = createRemixMessengerTool({
 });
 ```
 
+For an existing bot, keep your own routing and Send API delivery:
+
+```js
+if (remix.shouldHandleWebhook(messengerWebhookPayload)) {
+  const details = await remix.handleWebhookDetailed(messengerWebhookPayload, {
+    autoSend: false,
+  });
+  await yourBot.sendImages(details[0].recipientId, details[0].result.imageUrls);
+}
+```
+
+Use `handleTextMessageDetailed(message, { autoSend: false })` when you already have a normalized Messenger message. The simple `handleTextMessage()` and `handleWebhook()` helpers still send automatically when credentials are configured.
+
 The tool parses message text such as:
 
 ```text

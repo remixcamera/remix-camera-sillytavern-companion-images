@@ -113,6 +113,19 @@ export function parseLineCommand(text) {
   };
 }
 
+export function isRemixLineCommand(text) {
+  return parseLineCommand(text) !== null;
+}
+
+export function shouldHandleLineTextEvent(event) {
+  const text = typeof event?.text === "string" ? event.text : event?.message?.text;
+  return isRemixLineCommand(text || "");
+}
+
+export function shouldHandleLineWebhook(webhookPayload) {
+  return extractLineTextEvents(webhookPayload).some((event) => shouldHandleLineTextEvent(event));
+}
+
 export function buildBridgeInputFromLine(parsed, options = {}) {
   const text = parsed?.text || "";
   const hasYes = /\byes\b/i.test(text);
@@ -303,30 +316,80 @@ export function extractLineTextEvents(webhookPayload) {
 }
 
 export function createRemixLineTool(options = {}) {
+  const handleTextEventDetailed = async (event, overrides = {}) => {
+    const text = typeof event?.text === "string" ? event.text : event?.message?.text || "";
+    const parsed = parseLineCommand(text);
+    if (!parsed) {
+      return {
+        handled: false,
+        reason: "unknown-command",
+        replyToken: event?.replyToken,
+        source: event?.source || {},
+        webhookEventId: event?.webhookEventId,
+        text,
+        parsed: null,
+        result: null,
+        sentMessages: [],
+      };
+    }
+
+    const merged = { ...options, ...overrides };
+    const source = event?.source || {};
+    const to = merged.to || source.userId || source.groupId || source.roomId;
+    const replyToken = event?.replyToken || merged.replyToken;
+    const result = await runLineRemixCommand(parsed, merged);
+    const sentMessages =
+      merged.autoSend === false || !merged.channelAccessToken || (!replyToken && !to)
+        ? []
+        : [
+            await sendLineRemixResult({
+              ...merged,
+              replyToken,
+              to,
+              result,
+            }),
+          ];
+
+    return {
+      handled: true,
+      replyToken,
+      to,
+      source,
+      webhookEventId: event?.webhookEventId,
+      text,
+      parsed,
+      result,
+      sentMessages,
+    };
+  };
+
+  const handleWebhookDetailed = async (webhookPayload, overrides = {}) => {
+    const events = extractLineTextEvents(webhookPayload);
+    const results = [];
+    for (const event of events) {
+      results.push(await handleTextEventDetailed(event, overrides));
+    }
+    return results;
+  };
+
   return {
     helpText: () => lineHelpText(options.characterName),
     parseCommand: parseLineCommand,
+    isCommand: isRemixLineCommand,
+    shouldHandleTextEvent: shouldHandleLineTextEvent,
+    shouldHandleWebhook: shouldHandleLineWebhook,
     buildInput: (parsed) => buildBridgeInputFromLine(parsed, options),
     run: (parsed, overrides = {}) => runLineRemixCommand(parsed, { ...options, ...overrides }),
     send: (result, sendOptions = {}) => sendLineRemixResult({ ...options, ...sendOptions, result }),
+    handleTextEventDetailed,
     async handleTextEvent(event, overrides = {}) {
-      const parsed = parseLineCommand(event?.text || "");
-      const result = await runLineRemixCommand(parsed, { ...options, ...overrides });
-      await sendLineRemixResult({
-        ...options,
-        ...overrides,
-        replyToken: event?.replyToken,
-        result,
-      });
-      return result;
+      const details = await handleTextEventDetailed(event, overrides);
+      return details.handled ? details.result : null;
     },
+    handleWebhookDetailed,
     async handleWebhook(webhookPayload, overrides = {}) {
-      const events = extractLineTextEvents(webhookPayload);
-      const results = [];
-      for (const event of events) {
-        results.push(await this.handleTextEvent(event, overrides));
-      }
-      return results;
+      const details = await handleWebhookDetailed(webhookPayload, overrides);
+      return details.filter((item) => item.handled).map((item) => item.result);
     },
   };
 }

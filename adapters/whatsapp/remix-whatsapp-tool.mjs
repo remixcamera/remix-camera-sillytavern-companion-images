@@ -98,6 +98,19 @@ export function parseWhatsAppCommand(text) {
   };
 }
 
+export function isRemixWhatsAppCommand(text) {
+  return parseWhatsAppCommand(text) !== null;
+}
+
+export function shouldHandleWhatsAppMessage(message) {
+  const text = typeof message?.text === "string" ? message.text : message?.text?.body;
+  return isRemixWhatsAppCommand(text || "");
+}
+
+export function shouldHandleWhatsAppWebhook(webhookPayload) {
+  return extractWhatsAppTextMessages(webhookPayload).some((message) => shouldHandleWhatsAppMessage(message));
+}
+
 export function buildBridgeInputFromWhatsApp(parsed, options = {}) {
   const text = parsed?.text || "";
   const lowerText = text.toLowerCase();
@@ -358,30 +371,76 @@ export function extractWhatsAppTextMessages(webhookPayload) {
 }
 
 export function createRemixWhatsAppTool(options = {}) {
+  const handleTextDetailed = async (message, overrides = {}) => {
+    const text = typeof message?.text === "string" ? message.text : message?.text?.body || "";
+    const parsed = parseWhatsAppCommand(text);
+    if (!parsed) {
+      return {
+        handled: false,
+        reason: "unknown-command",
+        from: message?.from,
+        text,
+        messageId: message?.messageId || message?.id,
+        parsed: null,
+        result: null,
+        sentMessages: [],
+      };
+    }
+
+    const merged = { ...options, ...overrides };
+    const to = message?.from || merged.to;
+    const phoneNumberId = message?.phoneNumberId || merged.phoneNumberId;
+    const result = await runWhatsAppRemixCommand(parsed, merged);
+    const sentMessages =
+      merged.autoSend === false || !merged.accessToken || !phoneNumberId || !to
+        ? []
+        : await sendWhatsAppRemixResult({
+            ...merged,
+            phoneNumberId,
+            to,
+            result,
+          });
+
+    return {
+      handled: true,
+      from: message?.from,
+      to,
+      phoneNumberId,
+      text,
+      messageId: message?.messageId || message?.id,
+      parsed,
+      result,
+      sentMessages,
+    };
+  };
+
+  const handleWebhookDetailed = async (webhookPayload, overrides = {}) => {
+    const messages = extractWhatsAppTextMessages(webhookPayload);
+    const results = [];
+    for (const message of messages) {
+      results.push(await handleTextDetailed(message, overrides));
+    }
+    return results;
+  };
+
   return {
     helpText: () => whatsappHelpText(options.characterName),
     parseCommand: parseWhatsAppCommand,
+    isCommand: isRemixWhatsAppCommand,
+    shouldHandleMessage: shouldHandleWhatsAppMessage,
+    shouldHandleWebhook: shouldHandleWhatsAppWebhook,
     buildInput: (parsed) => buildBridgeInputFromWhatsApp(parsed, options),
     run: (parsed, overrides = {}) => runWhatsAppRemixCommand(parsed, { ...options, ...overrides }),
     send: (result, sendOptions = {}) => sendWhatsAppRemixResult({ ...options, ...sendOptions, result }),
+    handleTextDetailed,
     async handleText({ from, text }, overrides = {}) {
-      const parsed = parseWhatsAppCommand(text);
-      const result = await runWhatsAppRemixCommand(parsed, { ...options, ...overrides });
-      await sendWhatsAppRemixResult({
-        ...options,
-        ...overrides,
-        to: from,
-        result,
-      });
-      return result;
+      const details = await handleTextDetailed({ from, text }, overrides);
+      return details.handled ? details.result : null;
     },
+    handleWebhookDetailed,
     async handleWebhook(webhookPayload, overrides = {}) {
-      const messages = extractWhatsAppTextMessages(webhookPayload);
-      const results = [];
-      for (const message of messages) {
-        results.push(await this.handleText(message, overrides));
-      }
-      return results;
+      const details = await handleWebhookDetailed(webhookPayload, overrides);
+      return details.filter((item) => item.handled).map((item) => item.result);
     },
   };
 }

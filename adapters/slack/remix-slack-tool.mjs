@@ -92,6 +92,14 @@ export function parseSlackCommand(text) {
   };
 }
 
+export function isRemixSlackCommand(text) {
+  return parseSlackCommand(text) !== null;
+}
+
+export function shouldHandleSlackSlashCommand(payload) {
+  return isRemixSlackCommand(payload?.text || "");
+}
+
 export function buildBridgeInputFromSlack(parsed, options = {}) {
   const text = parsed?.text || "";
   const hasYes = /\byes\b/i.test(text);
@@ -390,23 +398,62 @@ export async function sendSlackRemixResult({
 }
 
 export function createRemixSlackTool(options = {}) {
+  const handleSlashCommandDetailed = async (payload, overrides = {}) => {
+    const text = payload?.text || "";
+    const parsed = parseSlackCommand(text);
+    if (!parsed) {
+      return {
+        handled: false,
+        reason: "unknown-command",
+        text,
+        teamId: payload?.team_id,
+        channelId: payload?.channel_id,
+        userId: payload?.user_id,
+        parsed: null,
+        result: null,
+        sentMessages: [],
+      };
+    }
+
+    const merged = { ...options, ...overrides };
+    const responseUrl = payload?.response_url || merged.responseUrl;
+    const channelId = payload?.channel_id || merged.channelId;
+    const result = await runSlackRemixCommand(parsed, merged);
+    const sentMessages =
+      merged.autoSend === false
+        ? []
+        : await sendSlackRemixResult({
+            ...merged,
+            responseUrl,
+            channelId,
+            result,
+          });
+
+    return {
+      handled: true,
+      text,
+      teamId: payload?.team_id,
+      channelId,
+      userId: payload?.user_id,
+      responseUrl,
+      parsed,
+      result,
+      sentMessages,
+    };
+  };
+
   return {
     helpText: () => slackHelpText(options.characterName),
     parseCommand: parseSlackCommand,
+    isCommand: isRemixSlackCommand,
+    shouldHandleSlashCommand: shouldHandleSlackSlashCommand,
     buildInput: (parsed) => buildBridgeInputFromSlack(parsed, options),
     run: (parsed, overrides = {}) => runSlackRemixCommand(parsed, { ...options, ...overrides }),
     send: (result, sendOptions = {}) => sendSlackRemixResult({ ...options, ...sendOptions, result }),
+    handleSlashCommandDetailed,
     async handleSlashCommand(payload, overrides = {}) {
-      const parsed = parseSlackCommand(payload?.text || "");
-      const result = await runSlackRemixCommand(parsed, { ...options, ...overrides });
-      await sendSlackRemixResult({
-        ...options,
-        ...overrides,
-        responseUrl: payload?.response_url || overrides.responseUrl,
-        channelId: payload?.channel_id || overrides.channelId || options.channelId,
-        result,
-      });
-      return result;
+      const details = await handleSlashCommandDetailed(payload, overrides);
+      return details.handled ? details.result : null;
     },
   };
 }
