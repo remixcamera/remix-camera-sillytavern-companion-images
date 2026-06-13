@@ -42,6 +42,8 @@ const SUPPORTED_TARGETS = new Set([
   "langflow",
   "langchain",
   "vercel-ai-sdk",
+  "n8n",
+  "pipedream",
 ]);
 
 function printHelp() {
@@ -55,7 +57,7 @@ Usage:
   npx @remix-camera/sillytavern-setup [options]
 
 Options:
-  --target=sillytavern|mcp|risu|openwebui|librechat|lobechat|agnai|telegram|discord|whatsapp|slack|line|messenger|instagram|teams|twilio|matrix|dify|flowise|botpress|anythingllm|typingmind|poe|langflow|langchain|vercel-ai-sdk
+  --target=sillytavern|mcp|risu|openwebui|librechat|lobechat|agnai|telegram|discord|whatsapp|slack|line|messenger|instagram|teams|twilio|matrix|dify|flowise|botpress|anythingllm|typingmind|poe|langflow|langchain|vercel-ai-sdk|n8n|pipedream
   --sillytavern-dir=/path/to/SillyTavern  Use a specific local SillyTavern checkout
   --profile-id=profile_id                 Use a specific Remix.Camera character profile
   --character-name="Name"                 Override the Character Card name
@@ -555,6 +557,21 @@ function printTargetInstructions(target, { healthUrl, port, configPath }) {
       "  import { streamText, tool } from \"ai\";",
       "  import * as z from \"zod\";",
       "The adapter exposes preview tools plus guarded generate tools that require yes=true.",
+    ],
+    n8n: [
+      "Import this n8n workflow or paste the Code node helper into an existing chatbot workflow:",
+      `  ${path.join(adapterRoot, "n8n", "remix-camera-n8n-workflow.json")}`,
+      `  ${path.join(adapterRoot, "n8n", "remix-camera-n8n-tool.mjs")}`,
+      "Set REMIX_BRIDGE_URL for the n8n process if the bridge URL differs from:",
+      `  ${bridgeUrl}`,
+      "The workflow previews by default and requires action=generate plus yes=true before spending credits.",
+    ],
+    pipedream: [
+      "Use this Pipedream Node.js action component inside an existing workflow:",
+      `  ${path.join(adapterRoot, "pipedream", "remix-camera-pipedream-action.mjs")}`,
+      "Set Bridge URL to:",
+      `  ${bridgeUrl}`,
+      "The action defaults to dry-run and requires action=generate plus yes=true before spending credits.",
     ],
   };
   console.log("");

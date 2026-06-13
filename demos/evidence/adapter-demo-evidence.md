@@ -1,6 +1,6 @@
 # Remix.Camera Adapter Demo Verification
 
-Generated at: 2026-06-13T07:01:25.978Z
+Generated at: 2026-06-13T07:28:03.540Z
 Mode: bridge-dry-run
 Bridge URL: http://127.0.0.1:8787
 
@@ -34,8 +34,10 @@ Bridge URL: http://127.0.0.1:8787
 | Langflow | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | LangChain JS | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | Vercel AI SDK | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
+| n8n | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
+| Pipedream | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 
-Public demo ready targets: 1/26
+Public demo ready targets: 1/28
 
 ## Targets
 
@@ -320,6 +322,27 @@ Evidence: setup runbook and static adapter preflight. Public demo ready: no.
 - [x] marker present: inputSchema
 - [x] marker present: yes=true
 
+### n8n
+Evidence: setup runbook and static adapter preflight. Public demo ready: no.
+- [x] adapter exists: adapters/n8n/README.md
+- [x] adapter exists: adapters/n8n/remix-camera-n8n-workflow.json
+- [x] adapter exists: adapters/n8n/remix-camera-n8n-tool.mjs
+- [x] demo runbook exists: demos/n8n/demo.md
+- [x] demo includes setup target
+- [x] marker present: Companion Tool Webhook
+- [x] marker present: REMIX_BRIDGE_URL
+- [x] marker present: yes=true
+
+### Pipedream
+Evidence: setup runbook and static adapter preflight. Public demo ready: no.
+- [x] adapter exists: adapters/pipedream/README.md
+- [x] adapter exists: adapters/pipedream/remix-camera-pipedream-action.mjs
+- [x] demo runbook exists: demos/pipedream/demo.md
+- [x] demo includes setup target
+- [x] marker present: remix_camera_companion_image
+- [x] marker present: Pipedream
+- [x] marker present: yes=true
+
 ## Bridge Contracts
 
 - [x] bridge health (status 200; auth design_api_session)
@@ -349,3 +372,5 @@ Evidence: setup runbook and static adapter preflight. Public demo ready: no.
 - [x] Matrix adapter real dry-run (command: send-selfie)
 - [x] LangChain adapter real dry-run (command: send-selfie)
 - [x] Vercel AI SDK adapter real dry-run (command: send-selfie)
+- [x] n8n adapter real dry-run (command: send-selfie)
+- [x] Pipedream adapter real dry-run (command: send-selfie)

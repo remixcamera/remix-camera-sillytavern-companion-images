@@ -11,6 +11,8 @@ import { parseLineCommand, runLineRemixCommand } from "../adapters/line/remix-li
 import { parseMessengerCommand, runMessengerRemixCommand } from "../adapters/messenger/remix-messenger-tool.mjs";
 import { parseMatrixCommand, runMatrixRemixCommand } from "../adapters/matrix/remix-matrix-tool.mjs";
 import { handleMcpRequest, normalizeMcpToolName } from "../adapters/mcp/remix-camera-mcp-server.mjs";
+import { runRemixCameraN8nTool } from "../adapters/n8n/remix-camera-n8n-tool.mjs";
+import { runRemixCameraPipedreamAction } from "../adapters/pipedream/remix-camera-pipedream-action.mjs";
 import { parseSlackCommand, runSlackRemixCommand } from "../adapters/slack/remix-slack-tool.mjs";
 import { parseTelegramCommand, runTelegramRemixCommand } from "../adapters/telegram/remix-telegram-tool.mjs";
 import { parseTeamsCommand, runTeamsRemixCommand } from "../adapters/teams/remix-teams-tool.mjs";
@@ -260,6 +262,22 @@ const targets = [
     demoFile: "demos/vercel-ai-sdk/demo.md",
     setupCommand: "--target=vercel-ai-sdk",
     markers: ["createRemixCameraAiSdkTools", "inputSchema", "yes=true"],
+  },
+  {
+    id: "n8n",
+    title: "n8n",
+    adapterFiles: ["adapters/n8n/README.md", "adapters/n8n/remix-camera-n8n-workflow.json", "adapters/n8n/remix-camera-n8n-tool.mjs"],
+    demoFile: "demos/n8n/demo.md",
+    setupCommand: "--target=n8n",
+    markers: ["Companion Tool Webhook", "REMIX_BRIDGE_URL", "yes=true"],
+  },
+  {
+    id: "pipedream",
+    title: "Pipedream",
+    adapterFiles: ["adapters/pipedream/README.md", "adapters/pipedream/remix-camera-pipedream-action.mjs"],
+    demoFile: "demos/pipedream/demo.md",
+    setupCommand: "--target=pipedream",
+    markers: ["remix_camera_companion_image", "Pipedream", "yes=true"],
   },
 ];
 
@@ -573,6 +591,18 @@ async function verifyHostAdapterDryRuns() {
         reason: "No bridge URL provided.",
       }),
     );
+    checks.push(
+      okCheck("n8n adapter real dry-run", false, {
+        skipped: true,
+        reason: "No bridge URL provided.",
+      }),
+    );
+    checks.push(
+      okCheck("Pipedream adapter real dry-run", false, {
+        skipped: true,
+        reason: "No bridge URL provided.",
+      }),
+    );
     return checks;
   }
 
@@ -745,6 +775,28 @@ async function verifyHostAdapterDryRuns() {
   const aiSdk = await aiSdkTools.remix_camera_send_selfie_preview.execute(commandInputs["send-selfie"]);
   checks.push(
     okCheck("Vercel AI SDK adapter real dry-run", aiSdk?.payload?.dryRun === true && /Preview ready/i.test(aiSdk?.text || ""), {
+      command: "send-selfie",
+    }),
+  );
+
+  const n8n = await runRemixCameraN8nTool(commandInputs["send-selfie"], {
+    bridgeUrl,
+    profileId: process.env.REMIX_PROFILE_ID || "",
+    characterName: "Lily",
+  });
+  checks.push(
+    okCheck("n8n adapter real dry-run", n8n?.payload?.dryRun === true && /Preview ready/i.test(n8n?.text || ""), {
+      command: "send-selfie",
+    }),
+  );
+
+  const pipedream = await runRemixCameraPipedreamAction(commandInputs["send-selfie"], {
+    bridgeUrl,
+    profileId: process.env.REMIX_PROFILE_ID || "",
+    characterName: "Lily",
+  });
+  checks.push(
+    okCheck("Pipedream adapter real dry-run", pipedream?.payload?.dryRun === true && /Preview ready/i.test(pipedream?.text || ""), {
       command: "send-selfie",
     }),
   );
