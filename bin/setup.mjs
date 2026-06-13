@@ -26,8 +26,10 @@ const SUPPORTED_TARGETS = new Set([
   "telegram",
   "discord",
   "whatsapp",
+  "viber",
   "slack",
   "line",
+  "kakao",
   "messenger",
   "instagram",
   "teams",
@@ -69,7 +71,7 @@ Usage:
   npx @remix-camera/sillytavern-setup [options]
 
 Options:
-  --target=sillytavern|mcp|risu|openwebui|librechat|lobechat|agnai|telegram|discord|whatsapp|slack|line|messenger|instagram|teams|twilio|matrix|dify|flowise|botpress|anythingllm|typingmind|poe|langflow|langchain|vercel-ai-sdk|n8n|pipedream|make|zapier|voiceflow|manychat|nomi|kindroid|bot-framework|dialogflow-es|dialogflow-cx|rasa|amazon-lex|watsonx-assistant
+  --target=sillytavern|mcp|risu|openwebui|librechat|lobechat|agnai|telegram|discord|whatsapp|viber|slack|line|kakao|messenger|instagram|teams|twilio|matrix|dify|flowise|botpress|anythingllm|typingmind|poe|langflow|langchain|vercel-ai-sdk|n8n|pipedream|make|zapier|voiceflow|manychat|nomi|kindroid|bot-framework|dialogflow-es|dialogflow-cx|rasa|amazon-lex|watsonx-assistant
   --sillytavern-dir=/path/to/SillyTavern  Use a specific local SillyTavern checkout
   --profile-id=profile_id                 Use a specific Remix.Camera character profile
   --character-name="Name"                 Override the Character Card name
@@ -448,6 +450,14 @@ function printTargetInstructions(target, { healthUrl, port, configPath }) {
       "Expose the webhook over HTTPS and set that URL in the Meta app webhook settings.",
       "The adapter uploads local bridge images to WhatsApp media before sending.",
     ],
+    viber: [
+      "Reusable Viber Bot API tool module:",
+      `  ${path.join(adapterRoot, "viber", "remix-viber-tool.mjs")}`,
+      "Lily proof-of-concept Viber webhook:",
+      `  VIBER_AUTH_TOKEN=... REMIX_CONFIG_FILE=${configPath} node ${path.join(adapterRoot, "viber", "lily-webhook-server.mjs")}`,
+      "Expose the webhook over HTTPS and set that URL with Viber's set_webhook endpoint.",
+      "Viber picture messages require public HTTPS image URLs ending in .jpg, .jpeg, .png, or .gif; the adapter refuses to post local bridge URLs as broken images.",
+    ],
     slack: [
       "Reusable Slack slash-command tool module:",
       `  ${path.join(adapterRoot, "slack", "remix-slack-tool.mjs")}`,
@@ -463,6 +473,14 @@ function printTargetInstructions(target, { healthUrl, port, configPath }) {
       `  LINE_CHANNEL_ACCESS_TOKEN=... LINE_CHANNEL_SECRET=... REMIX_CONFIG_FILE=${configPath} node ${path.join(adapterRoot, "line", "lily-webhook-server.mjs")}`,
       "Expose the webhook over HTTPS and set that URL in the LINE Developers Console.",
       "LINE image messages require public HTTPS URLs; the adapter uses productionImageUrl instead of posting 127.0.0.1 bridge URLs.",
+    ],
+    kakao: [
+      "Reusable Kakao i/Open Builder Skill handler:",
+      `  ${path.join(adapterRoot, "kakao", "remix-kakao-skill.mjs")}`,
+      "Lily proof-of-concept Kakao Skill server:",
+      `  REMIX_CONFIG_FILE=${configPath} node ${path.join(adapterRoot, "kakao", "lily-skill-server.mjs")}`,
+      "Expose the server over HTTPS and set the Kakao Skill URL to your hosted /kakao/skill endpoint.",
+      "Kakao simpleImage outputs require public image URLs; the adapter uses productionImageUrl instead of posting 127.0.0.1 bridge URLs.",
     ],
     messenger: [
       "Reusable Messenger Platform tool module:",

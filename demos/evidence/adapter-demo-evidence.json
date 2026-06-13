@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "generatedAt": "2026-06-13T09:49:20.345Z",
+  "generatedAt": "2026-06-13T10:24:59.652Z",
   "mode": "bridge-dry-run",
   "bridgeUrl": "http://127.0.0.1:8787",
   "targets": [
@@ -520,6 +520,69 @@
       ]
     },
     {
+      "id": "viber",
+      "title": "Viber",
+      "demoEvidence": {
+        "status": "runbook-ready",
+        "publicDemoReady": false,
+        "evidenceLevel": "setup runbook and static adapter preflight",
+        "missingArtifacts": [],
+        "nextStep": "Run this target in the real host and add production demo evidence."
+      },
+      "checks": [
+        {
+          "name": "adapter exists: adapters/viber/remix-viber-tool.mjs",
+          "ok": true,
+          "path": "adapters/viber/remix-viber-tool.mjs"
+        },
+        {
+          "name": "adapter exists: adapters/viber/lily-webhook-server.mjs",
+          "ok": true,
+          "path": "adapters/viber/lily-webhook-server.mjs"
+        },
+        {
+          "name": "adapter exists: adapters/viber/README.md",
+          "ok": true,
+          "path": "adapters/viber/README.md"
+        },
+        {
+          "name": "demo runbook exists: demos/viber/demo.md",
+          "ok": true,
+          "path": "demos/viber/demo.md"
+        },
+        {
+          "name": "demo includes setup target",
+          "ok": true,
+          "expected": "--target=viber"
+        },
+        {
+          "name": "marker present: createRemixViberTool",
+          "ok": true,
+          "marker": "createRemixViberTool"
+        },
+        {
+          "name": "marker present: handleWebhookDetailed",
+          "ok": true,
+          "marker": "handleWebhookDetailed"
+        },
+        {
+          "name": "marker present: x-viber-content-signature",
+          "ok": true,
+          "marker": "x-viber-content-signature"
+        },
+        {
+          "name": "marker present: send_message",
+          "ok": true,
+          "marker": "send_message"
+        },
+        {
+          "name": "marker present: public HTTPS image URLs",
+          "ok": true,
+          "marker": "public HTTPS image URLs"
+        }
+      ]
+    },
+    {
       "id": "slack",
       "title": "Slack",
       "demoEvidence": {
@@ -632,6 +695,69 @@
           "name": "marker present: productionImageUrl",
           "ok": true,
           "marker": "productionImageUrl"
+        }
+      ]
+    },
+    {
+      "id": "kakao",
+      "title": "KakaoTalk",
+      "demoEvidence": {
+        "status": "runbook-ready",
+        "publicDemoReady": false,
+        "evidenceLevel": "setup runbook and static adapter preflight",
+        "missingArtifacts": [],
+        "nextStep": "Run this target in the real host and add production demo evidence."
+      },
+      "checks": [
+        {
+          "name": "adapter exists: adapters/kakao/remix-kakao-skill.mjs",
+          "ok": true,
+          "path": "adapters/kakao/remix-kakao-skill.mjs"
+        },
+        {
+          "name": "adapter exists: adapters/kakao/lily-skill-server.mjs",
+          "ok": true,
+          "path": "adapters/kakao/lily-skill-server.mjs"
+        },
+        {
+          "name": "adapter exists: adapters/kakao/README.md",
+          "ok": true,
+          "path": "adapters/kakao/README.md"
+        },
+        {
+          "name": "demo runbook exists: demos/kakao/demo.md",
+          "ok": true,
+          "path": "demos/kakao/demo.md"
+        },
+        {
+          "name": "demo includes setup target",
+          "ok": true,
+          "expected": "--target=kakao"
+        },
+        {
+          "name": "marker present: createRemixKakaoSkill",
+          "ok": true,
+          "marker": "createRemixKakaoSkill"
+        },
+        {
+          "name": "marker present: simpleImage",
+          "ok": true,
+          "marker": "simpleImage"
+        },
+        {
+          "name": "marker present: version: \"2.0\"",
+          "ok": true,
+          "marker": "version: \"2.0\""
+        },
+        {
+          "name": "marker present: Kakao i/Open Builder",
+          "ok": true,
+          "marker": "Kakao i/Open Builder"
+        },
+        {
+          "name": "marker present: public image URLs",
+          "ok": true,
+          "marker": "public image URLs"
         }
       ]
     },
@@ -2056,10 +2182,10 @@
     }
   ],
   "demoSummary": {
-    "targetCount": 40,
+    "targetCount": 42,
     "publicDemoReadyCount": 1,
     "productionBridgeEvidenceCount": 1,
-    "runbookOnlyCount": 38
+    "runbookOnlyCount": 40
   },
   "bridgeChecks": [
     {
@@ -2150,12 +2276,22 @@
       "command": "send-selfie"
     },
     {
+      "name": "Viber adapter real dry-run",
+      "ok": true,
+      "command": "send-selfie"
+    },
+    {
       "name": "Slack adapter real dry-run",
       "ok": true,
       "command": "send-selfie"
     },
     {
       "name": "LINE adapter real dry-run",
+      "ok": true,
+      "command": "send-selfie"
+    },
+    {
+      "name": "KakaoTalk adapter real dry-run",
       "ok": true,
       "command": "send-selfie"
     },
