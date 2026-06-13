@@ -12,6 +12,34 @@ Run Lily:
 TELEGRAM_BOT_TOKEN=... node adapters/telegram/lily-bot.mjs
 ```
 
+Use the same tool inside an existing Telegraf bot:
+
+```js
+import { createRemixTelegramTelegrafMiddleware } from "../../adapters/telegram/framework-middleware.mjs";
+
+bot.use(createRemixTelegramTelegrafMiddleware({
+  botToken: process.env.TELEGRAM_BOT_TOKEN,
+  bridgeUrl: "http://127.0.0.1:8787",
+  profileId: process.env.REMIX_PROFILE_ID,
+  characterName: "Lily",
+}));
+```
+
+Use the same tool inside an existing grammY bot:
+
+```js
+import { InputFile } from "grammy";
+import { createRemixTelegramGrammyMiddleware } from "../../adapters/telegram/framework-middleware.mjs";
+
+bot.use(createRemixTelegramGrammyMiddleware({
+  botToken: process.env.TELEGRAM_BOT_TOKEN,
+  bridgeUrl: "http://127.0.0.1:8787",
+  profileId: process.env.REMIX_PROFILE_ID,
+  characterName: "Lily",
+  inputFileFactory: (buffer, filename) => new InputFile(buffer, filename),
+}));
+```
+
 ## Demo Flow
 
 1. Message Lily: `/help`.
@@ -24,6 +52,7 @@ TELEGRAM_BOT_TOKEN=... node adapters/telegram/lily-bot.mjs
 ## Proof Points
 
 - The reusable module can be imported by any existing Telegram bot.
+- Existing Telegraf and grammY bots can use the drop-in middleware with `bot.use(...)`.
 - Lily is only a proof-of-concept wrapper on top of the reusable tool.
 - The adapter uploads local bridge images to Telegram as files, not passed as unusable `127.0.0.1` URLs.
 - Couple/private commands require `yes`.

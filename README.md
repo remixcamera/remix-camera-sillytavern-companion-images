@@ -88,6 +88,7 @@ Adapter files:
 - LobeChat: `http://127.0.0.1:8787/lobe/manifest.json` with `*Preview` tools for dry-runs and guarded generate tools that require `yes=true`
 - Agnai: `adapters/agnai/remix-camera-agnai.user.js`
 - Telegram reusable tool: `adapters/telegram/remix-telegram-tool.mjs`
+- Telegram Telegraf/grammY middleware: `adapters/telegram/framework-middleware.mjs`
 - Telegram Lily proof of concept: `adapters/telegram/lily-bot.mjs`
 - Discord reusable tool: `adapters/discord/remix-discord-tool.mjs`
 - Discord Lily proof of concept: `adapters/discord/lily-interactions-server.mjs`

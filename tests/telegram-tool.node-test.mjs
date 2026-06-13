@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
+  createRemixTelegramGrammyMiddleware,
+  createRemixTelegramTelegrafMiddleware,
+} from "../adapters/telegram/framework-middleware.mjs";
+import {
   buildBridgeInputFromTelegram,
   createRemixTelegramTool,
   getTelegramMessage,
@@ -250,4 +254,166 @@ test("Telegram simple update handler remains compatible when destructured", asyn
 
   assert.equal(result.command, "send-selfie");
   assert.deepEqual(result.imageUrls, ["https://cdn.example.test/photo_1.jpg"]);
+});
+
+test("Telegraf middleware passes through unrelated updates", async () => {
+  const middleware = createRemixTelegramTelegrafMiddleware();
+  let nextCalled = false;
+  const result = await middleware(
+    {
+      update: {
+        message: {
+          chat: { id: 123 },
+          text: "normal chat",
+        },
+      },
+    },
+    async () => {
+      nextCalled = true;
+      return "next-result";
+    },
+  );
+
+  assert.equal(nextCalled, true);
+  assert.equal(result, "next-result");
+});
+
+test("Telegraf middleware can send local bridge images through framework replies", async () => {
+  const photoReplies = [];
+  const middleware = createRemixTelegramTelegrafMiddleware({
+    bridgeUrl: "http://127.0.0.1:8787",
+    fetchImpl: async (url, options = {}) => {
+      if (String(url).startsWith("http://127.0.0.1:8787/v1/tools/")) {
+        return new Response(
+          JSON.stringify({
+            ok: true,
+            markdown: "![Lily](http://127.0.0.1:8787/v1/images/photo_1)",
+            results: [{ ok: true, imageUrl: "http://127.0.0.1:8787/v1/images/photo_1" }],
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+      assert.equal(String(url), "http://127.0.0.1:8787/v1/images/photo_1");
+      assert.equal(options.method, undefined);
+      return new Response(new Uint8Array([0xff, 0xd8, 0xff, 0xd9]), {
+        status: 200,
+        headers: { "Content-Type": "image/jpeg" },
+      });
+    },
+  });
+
+  const details = await middleware({
+    state: {},
+    update: {
+      message: {
+        message_id: 3,
+        chat: { id: 123 },
+        text: "/selfie couch lamp",
+      },
+    },
+    replyWithPhoto: async (photo, extra) => {
+      photoReplies.push({ photo, extra });
+      return { message_id: 10 };
+    },
+  });
+
+  assert.equal(details.handled, true);
+  assert.equal(details.sentMessages[0].message_id, 10);
+  assert.ok(Buffer.isBuffer(photoReplies[0].photo.source));
+  assert.equal(photoReplies[0].photo.filename, "remix-camera.jpg");
+  assert.equal(photoReplies[0].extra.caption, "Remix.Camera");
+});
+
+test("grammY middleware can upload local images with an InputFile factory", async () => {
+  const sentPhotos = [];
+  const inputFileFactory = (buffer, filename) => ({ kind: "InputFile", buffer, filename });
+  const middleware = createRemixTelegramGrammyMiddleware({
+    bridgeUrl: "http://127.0.0.1:8787",
+    inputFileFactory,
+    fetchImpl: async (url) => {
+      if (String(url).startsWith("http://127.0.0.1:8787/v1/tools/")) {
+        return new Response(
+          JSON.stringify({
+            ok: true,
+            markdown: "![Lily](http://127.0.0.1:8787/v1/images/photo_1)",
+            results: [{ ok: true, imageUrl: "http://127.0.0.1:8787/v1/images/photo_1" }],
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+      return new Response(new Uint8Array([0xff, 0xd8, 0xff, 0xd9]), {
+        status: 200,
+        headers: { "Content-Type": "image/jpeg" },
+      });
+    },
+  });
+
+  const details = await middleware({
+    update: {
+      message: {
+        message_id: 4,
+        chat: { id: 123 },
+        text: "/selfie couch lamp",
+      },
+    },
+    replyWithPhoto: async (photo, extra) => {
+      sentPhotos.push({ photo, extra });
+      return { message_id: 11 };
+    },
+  });
+
+  assert.equal(details.handled, true);
+  assert.equal(sentPhotos[0].photo.kind, "InputFile");
+  assert.ok(Buffer.isBuffer(sentPhotos[0].photo.buffer));
+  assert.equal(sentPhotos[0].photo.filename, "remix-camera.jpg");
+  assert.equal(sentPhotos[0].extra.caption, "Remix.Camera");
+});
+
+test("Telegram framework middleware can disable delivery even with a bot token", async () => {
+  const originalFetch = globalThis.fetch;
+  let telegramSendCount = 0;
+  globalThis.fetch = async (url) => {
+    if (String(url).startsWith("https://api.telegram.org/")) {
+      telegramSendCount += 1;
+      throw new Error("unexpected telegram send");
+    }
+    return originalFetch(url);
+  };
+
+  try {
+    const middleware = createRemixTelegramTelegrafMiddleware({
+      botToken: "bot_token",
+      delivery: false,
+      fetchImpl: async (url) => {
+        assert.equal(String(url), "http://127.0.0.1:8787/v1/tools/send-selfie");
+        return new Response(
+          JSON.stringify({
+            ok: true,
+            markdown: "![Lily](https://cdn.example.test/photo_1.jpg)",
+            results: [{ ok: true, imageUrl: "https://cdn.example.test/photo_1.jpg" }],
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      },
+    });
+
+    const details = await middleware({
+      update: {
+        message: {
+          message_id: 5,
+          chat: { id: 123 },
+          text: "/selfie couch lamp",
+        },
+      },
+      replyWithPhoto: async () => {
+        throw new Error("unexpected framework send");
+      },
+    });
+
+    assert.equal(details.handled, true);
+    assert.equal(details.sentMessages.length, 0);
+    assert.equal(telegramSendCount, 0);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });

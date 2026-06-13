@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "generatedAt": "2026-06-13T05:17:04.921Z",
+  "generatedAt": "2026-06-13T06:01:07.998Z",
   "mode": "bridge-dry-run",
   "bridgeUrl": "http://127.0.0.1:8787",
   "targets": [
@@ -299,6 +299,11 @@
           "path": "adapters/telegram/remix-telegram-tool.mjs"
         },
         {
+          "name": "adapter exists: adapters/telegram/framework-middleware.mjs",
+          "ok": true,
+          "path": "adapters/telegram/framework-middleware.mjs"
+        },
+        {
           "name": "adapter exists: adapters/telegram/lily-bot.mjs",
           "ok": true,
           "path": "adapters/telegram/lily-bot.mjs"
@@ -332,6 +337,11 @@
           "name": "marker present: createRemixTelegramTool",
           "ok": true,
           "marker": "createRemixTelegramTool"
+        },
+        {
+          "name": "marker present: createRemixTelegramTelegrafMiddleware",
+          "ok": true,
+          "marker": "createRemixTelegramTelegrafMiddleware"
         },
         {
           "name": "marker present: LILY_PROFILE_ID",

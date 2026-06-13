@@ -3,6 +3,7 @@
 Telegram has two deliverables:
 
 - `remix-telegram-tool.mjs`: reusable integration module for existing Telegram bots.
+- `framework-middleware.mjs`: drop-in Telegraf and grammY middleware for existing bots.
 - `lily-bot.mjs`: Lily proof-of-concept bot using long polling.
 
 ## Setup
@@ -20,6 +21,8 @@ TELEGRAM_BOT_TOKEN=... node adapters/telegram/lily-bot.mjs
 Lily defaults to profile `GLUCbfOgIzOLe37Ft4G7S97B0fu2_lily`. Override with `REMIX_PROFILE_ID`.
 
 ## Existing Bot Integration
+
+### Raw Telegram Update Loop
 
 ```js
 import { createRemixTelegramTool } from "./adapters/telegram/remix-telegram-tool.mjs";
@@ -71,3 +74,44 @@ Detailed handler return shape:
   sentMessages: [{ message_id: 789 }]
 }
 ```
+
+### Telegraf
+
+```js
+import { Telegraf } from "telegraf";
+import { createRemixTelegramTelegrafMiddleware } from "./adapters/telegram/framework-middleware.mjs";
+
+const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
+
+bot.use(
+  createRemixTelegramTelegrafMiddleware({
+    botToken: process.env.TELEGRAM_BOT_TOKEN,
+    bridgeUrl: "http://127.0.0.1:8787",
+    profileId: process.env.REMIX_PROFILE_ID,
+    characterName: "Lily",
+  }),
+);
+```
+
+The middleware only handles Remix.Camera commands. Other messages continue to the next Telegraf middleware. When `botToken` is present, it uses the built-in Bot API sender so local bridge images are uploaded as files instead of being sent as unusable local URLs.
+
+### grammY
+
+```js
+import { Bot, InputFile } from "grammy";
+import { createRemixTelegramGrammyMiddleware } from "./adapters/telegram/framework-middleware.mjs";
+
+const bot = new Bot(process.env.TELEGRAM_BOT_TOKEN);
+
+bot.use(
+  createRemixTelegramGrammyMiddleware({
+    botToken: process.env.TELEGRAM_BOT_TOKEN,
+    bridgeUrl: "http://127.0.0.1:8787",
+    profileId: process.env.REMIX_PROFILE_ID,
+    characterName: "Lily",
+    inputFileFactory: (buffer, filename) => new InputFile(buffer, filename),
+  }),
+);
+```
+
+`inputFileFactory` is only needed when you want the middleware to send local bridge images through grammY directly. If `botToken` is set, the middleware can use the built-in Bot API sender without a grammY-specific upload helper.
