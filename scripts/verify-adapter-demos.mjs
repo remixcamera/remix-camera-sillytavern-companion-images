@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import { COMPANION_COMMANDS } from "../lib/companion-tools.mjs";
 import { runDiscordRemixInteraction } from "../adapters/discord/remix-discord-tool.mjs";
 import { parseInstagramCommand, runInstagramRemixCommand } from "../adapters/instagram/remix-instagram-tool.mjs";
+import { createRemixCameraLangChainTools } from "../adapters/langchain/remix-camera-langchain-tools.mjs";
 import { parseLineCommand, runLineRemixCommand } from "../adapters/line/remix-line-tool.mjs";
 import { parseMessengerCommand, runMessengerRemixCommand } from "../adapters/messenger/remix-messenger-tool.mjs";
 import { parseMatrixCommand, runMatrixRemixCommand } from "../adapters/matrix/remix-matrix-tool.mjs";
@@ -14,6 +15,7 @@ import { parseSlackCommand, runSlackRemixCommand } from "../adapters/slack/remix
 import { parseTelegramCommand, runTelegramRemixCommand } from "../adapters/telegram/remix-telegram-tool.mjs";
 import { parseTeamsCommand, runTeamsRemixCommand } from "../adapters/teams/remix-teams-tool.mjs";
 import { parseTwilioCommand, runTwilioRemixCommand } from "../adapters/twilio/remix-twilio-mms-tool.mjs";
+import { createRemixCameraAiSdkTools } from "../adapters/vercel-ai-sdk/remix-camera-ai-sdk-tools.mjs";
 import { parseWhatsAppCommand, runWhatsAppRemixCommand } from "../adapters/whatsapp/remix-whatsapp-tool.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -242,6 +244,22 @@ const targets = [
     demoFile: "demos/langflow/demo.md",
     setupCommand: "--target=langflow",
     markers: ["RemixCameraCompanionImages", "Output", "yes=true"],
+  },
+  {
+    id: "langchain",
+    title: "LangChain JS",
+    adapterFiles: ["adapters/langchain/README.md", "adapters/langchain/remix-camera-langchain-tools.mjs"],
+    demoFile: "demos/langchain/demo.md",
+    setupCommand: "--target=langchain",
+    markers: ["createRemixCameraLangChainTools", "returnDirect", "yes=true"],
+  },
+  {
+    id: "vercel-ai-sdk",
+    title: "Vercel AI SDK",
+    adapterFiles: ["adapters/vercel-ai-sdk/README.md", "adapters/vercel-ai-sdk/remix-camera-ai-sdk-tools.mjs"],
+    demoFile: "demos/vercel-ai-sdk/demo.md",
+    setupCommand: "--target=vercel-ai-sdk",
+    markers: ["createRemixCameraAiSdkTools", "inputSchema", "yes=true"],
   },
 ];
 
@@ -543,6 +561,18 @@ async function verifyHostAdapterDryRuns() {
         reason: "No bridge URL provided.",
       }),
     );
+    checks.push(
+      okCheck("LangChain adapter real dry-run", false, {
+        skipped: true,
+        reason: "No bridge URL provided.",
+      }),
+    );
+    checks.push(
+      okCheck("Vercel AI SDK adapter real dry-run", false, {
+        skipped: true,
+        reason: "No bridge URL provided.",
+      }),
+    );
     return checks;
   }
 
@@ -686,6 +716,36 @@ async function verifyHostAdapterDryRuns() {
   checks.push(
     okCheck("Matrix adapter real dry-run", matrix?.payload?.dryRun === true && /Preview ready/i.test(matrix.text), {
       command: matrix?.command,
+    }),
+  );
+
+  const langChainTools = createRemixCameraLangChainTools({
+    tool: (fn, config) => ({ ...config, invoke: fn }),
+    bridgeUrl,
+    profileId: process.env.REMIX_PROFILE_ID || "",
+    characterName: "Lily",
+    commands: ["send-selfie"],
+    includeGenerateTools: false,
+  });
+  const langChainText = await langChainTools[0].invoke(commandInputs["send-selfie"]);
+  checks.push(
+    okCheck("LangChain adapter real dry-run", /Preview ready/i.test(langChainText), {
+      command: "send-selfie",
+    }),
+  );
+
+  const aiSdkTools = createRemixCameraAiSdkTools({
+    tool: (definition) => definition,
+    bridgeUrl,
+    profileId: process.env.REMIX_PROFILE_ID || "",
+    characterName: "Lily",
+    commands: ["send-selfie"],
+    includeGenerateTools: false,
+  });
+  const aiSdk = await aiSdkTools.remix_camera_send_selfie_preview.execute(commandInputs["send-selfie"]);
+  checks.push(
+    okCheck("Vercel AI SDK adapter real dry-run", aiSdk?.payload?.dryRun === true && /Preview ready/i.test(aiSdk?.text || ""), {
+      command: "send-selfie",
     }),
   );
 

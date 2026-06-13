@@ -1,6 +1,6 @@
 # Remix.Camera Adapter Demo Verification
 
-Generated at: 2026-06-13T06:42:28.663Z
+Generated at: 2026-06-13T07:01:25.978Z
 Mode: bridge-dry-run
 Bridge URL: http://127.0.0.1:8787
 
@@ -32,8 +32,10 @@ Bridge URL: http://127.0.0.1:8787
 | TypingMind | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | Poe | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | Langflow | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
+| LangChain JS | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
+| Vercel AI SDK | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 
-Public demo ready targets: 1/24
+Public demo ready targets: 1/26
 
 ## Targets
 
@@ -298,6 +300,26 @@ Evidence: setup runbook and static adapter preflight. Public demo ready: no.
 - [x] marker present: Output
 - [x] marker present: yes=true
 
+### LangChain JS
+Evidence: setup runbook and static adapter preflight. Public demo ready: no.
+- [x] adapter exists: adapters/langchain/README.md
+- [x] adapter exists: adapters/langchain/remix-camera-langchain-tools.mjs
+- [x] demo runbook exists: demos/langchain/demo.md
+- [x] demo includes setup target
+- [x] marker present: createRemixCameraLangChainTools
+- [x] marker present: returnDirect
+- [x] marker present: yes=true
+
+### Vercel AI SDK
+Evidence: setup runbook and static adapter preflight. Public demo ready: no.
+- [x] adapter exists: adapters/vercel-ai-sdk/README.md
+- [x] adapter exists: adapters/vercel-ai-sdk/remix-camera-ai-sdk-tools.mjs
+- [x] demo runbook exists: demos/vercel-ai-sdk/demo.md
+- [x] demo includes setup target
+- [x] marker present: createRemixCameraAiSdkTools
+- [x] marker present: inputSchema
+- [x] marker present: yes=true
+
 ## Bridge Contracts
 
 - [x] bridge health (status 200; auth design_api_session)
@@ -325,3 +347,5 @@ Evidence: setup runbook and static adapter preflight. Public demo ready: no.
 - [x] Teams adapter real dry-run (command: send-selfie)
 - [x] Twilio adapter real dry-run (command: send-selfie)
 - [x] Matrix adapter real dry-run (command: send-selfie)
+- [x] LangChain adapter real dry-run (command: send-selfie)
+- [x] Vercel AI SDK adapter real dry-run (command: send-selfie)

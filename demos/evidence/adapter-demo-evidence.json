@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "generatedAt": "2026-06-13T06:42:28.663Z",
+  "generatedAt": "2026-06-13T07:01:25.978Z",
   "mode": "bridge-dry-run",
   "bridgeUrl": "http://127.0.0.1:8787",
   "targets": [
@@ -1260,13 +1260,109 @@
           "marker": "yes=true"
         }
       ]
+    },
+    {
+      "id": "langchain",
+      "title": "LangChain JS",
+      "demoEvidence": {
+        "status": "runbook-ready",
+        "publicDemoReady": false,
+        "evidenceLevel": "setup runbook and static adapter preflight",
+        "missingArtifacts": [],
+        "nextStep": "Run this target in the real host and add production demo evidence."
+      },
+      "checks": [
+        {
+          "name": "adapter exists: adapters/langchain/README.md",
+          "ok": true,
+          "path": "adapters/langchain/README.md"
+        },
+        {
+          "name": "adapter exists: adapters/langchain/remix-camera-langchain-tools.mjs",
+          "ok": true,
+          "path": "adapters/langchain/remix-camera-langchain-tools.mjs"
+        },
+        {
+          "name": "demo runbook exists: demos/langchain/demo.md",
+          "ok": true,
+          "path": "demos/langchain/demo.md"
+        },
+        {
+          "name": "demo includes setup target",
+          "ok": true,
+          "expected": "--target=langchain"
+        },
+        {
+          "name": "marker present: createRemixCameraLangChainTools",
+          "ok": true,
+          "marker": "createRemixCameraLangChainTools"
+        },
+        {
+          "name": "marker present: returnDirect",
+          "ok": true,
+          "marker": "returnDirect"
+        },
+        {
+          "name": "marker present: yes=true",
+          "ok": true,
+          "marker": "yes=true"
+        }
+      ]
+    },
+    {
+      "id": "vercel-ai-sdk",
+      "title": "Vercel AI SDK",
+      "demoEvidence": {
+        "status": "runbook-ready",
+        "publicDemoReady": false,
+        "evidenceLevel": "setup runbook and static adapter preflight",
+        "missingArtifacts": [],
+        "nextStep": "Run this target in the real host and add production demo evidence."
+      },
+      "checks": [
+        {
+          "name": "adapter exists: adapters/vercel-ai-sdk/README.md",
+          "ok": true,
+          "path": "adapters/vercel-ai-sdk/README.md"
+        },
+        {
+          "name": "adapter exists: adapters/vercel-ai-sdk/remix-camera-ai-sdk-tools.mjs",
+          "ok": true,
+          "path": "adapters/vercel-ai-sdk/remix-camera-ai-sdk-tools.mjs"
+        },
+        {
+          "name": "demo runbook exists: demos/vercel-ai-sdk/demo.md",
+          "ok": true,
+          "path": "demos/vercel-ai-sdk/demo.md"
+        },
+        {
+          "name": "demo includes setup target",
+          "ok": true,
+          "expected": "--target=vercel-ai-sdk"
+        },
+        {
+          "name": "marker present: createRemixCameraAiSdkTools",
+          "ok": true,
+          "marker": "createRemixCameraAiSdkTools"
+        },
+        {
+          "name": "marker present: inputSchema",
+          "ok": true,
+          "marker": "inputSchema"
+        },
+        {
+          "name": "marker present: yes=true",
+          "ok": true,
+          "marker": "yes=true"
+        }
+      ]
     }
   ],
   "demoSummary": {
-    "targetCount": 24,
+    "targetCount": 26,
     "publicDemoReadyCount": 1,
     "productionBridgeEvidenceCount": 1,
-    "runbookOnlyCount": 22
+    "runbookOnlyCount": 24
   },
   "bridgeChecks": [
     {
@@ -1388,6 +1484,16 @@
     },
     {
       "name": "Matrix adapter real dry-run",
+      "ok": true,
+      "command": "send-selfie"
+    },
+    {
+      "name": "LangChain adapter real dry-run",
+      "ok": true,
+      "command": "send-selfie"
+    },
+    {
+      "name": "Vercel AI SDK adapter real dry-run",
       "ok": true,
       "command": "send-selfie"
     }

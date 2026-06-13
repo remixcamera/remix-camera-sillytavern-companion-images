@@ -40,6 +40,8 @@ const SUPPORTED_TARGETS = new Set([
   "typingmind",
   "poe",
   "langflow",
+  "langchain",
+  "vercel-ai-sdk",
 ]);
 
 function printHelp() {
@@ -53,7 +55,7 @@ Usage:
   npx @remix-camera/sillytavern-setup [options]
 
 Options:
-  --target=sillytavern|mcp|risu|openwebui|librechat|lobechat|agnai|telegram|discord|whatsapp|slack|line|messenger|instagram|teams|twilio|matrix|dify|flowise|botpress|anythingllm|typingmind|poe|langflow
+  --target=sillytavern|mcp|risu|openwebui|librechat|lobechat|agnai|telegram|discord|whatsapp|slack|line|messenger|instagram|teams|twilio|matrix|dify|flowise|botpress|anythingllm|typingmind|poe|langflow|langchain|vercel-ai-sdk
   --sillytavern-dir=/path/to/SillyTavern  Use a specific local SillyTavern checkout
   --profile-id=profile_id                 Use a specific Remix.Camera character profile
   --character-name="Name"                 Override the Character Card name
@@ -537,6 +539,22 @@ function printTargetInstructions(target, { healthUrl, port, configPath }) {
       "Set Bridge URL to:",
       `  ${bridgeUrl}`,
       "Connect the component output to an Agent's tools. Keep preview=true until explicit confirmation.",
+    ],
+    langchain: [
+      "Add these Remix.Camera tools to an existing LangChain JS agent:",
+      `  ${path.join(adapterRoot, "langchain", "remix-camera-langchain-tools.mjs")}`,
+      "Example imports:",
+      "  import { createAgent, tool } from \"langchain\";",
+      "  import * as z from \"zod\";",
+      "The adapter exposes preview tools plus guarded generate tools that require yes=true.",
+    ],
+    "vercel-ai-sdk": [
+      "Add this Remix.Camera tool map to an existing Vercel AI SDK bot:",
+      `  ${path.join(adapterRoot, "vercel-ai-sdk", "remix-camera-ai-sdk-tools.mjs")}`,
+      "Example imports:",
+      "  import { streamText, tool } from \"ai\";",
+      "  import * as z from \"zod\";",
+      "The adapter exposes preview tools plus guarded generate tools that require yes=true.",
     ],
   };
   console.log("");
