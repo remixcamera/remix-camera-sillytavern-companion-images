@@ -1,6 +1,6 @@
 # Remix.Camera Adapter Demo Verification
 
-Generated at: 2026-06-13T08:18:03.519Z
+Generated at: 2026-06-13T08:38:43.928Z
 Mode: bridge-dry-run
 Bridge URL: http://127.0.0.1:8787
 
@@ -40,8 +40,10 @@ Bridge URL: http://127.0.0.1:8787
 | Zapier | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | Voiceflow | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | Manychat | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
+| Dialogflow CX | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
+| Rasa | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 
-Public demo ready targets: 1/32
+Public demo ready targets: 1/34
 
 ## Targets
 
@@ -390,6 +392,26 @@ Evidence: setup runbook and static adapter preflight. Public demo ready: no.
 - [x] marker present: External Request
 - [x] marker present: yes=true
 
+### Dialogflow CX
+Evidence: setup runbook and static adapter preflight. Public demo ready: no.
+- [x] adapter exists: adapters/dialogflow-cx/README.md
+- [x] adapter exists: adapters/dialogflow-cx/remix-camera-dialogflow-cx-webhook.mjs
+- [x] demo runbook exists: demos/dialogflow-cx/demo.md
+- [x] demo includes setup target
+- [x] marker present: Dialogflow CX webhook
+- [x] marker present: fulfillment_response
+- [x] marker present: yes=true
+
+### Rasa
+Evidence: setup runbook and static adapter preflight. Public demo ready: no.
+- [x] adapter exists: adapters/rasa/README.md
+- [x] adapter exists: adapters/rasa/remix_camera_rasa_actions.py
+- [x] demo runbook exists: demos/rasa/demo.md
+- [x] demo includes setup target
+- [x] marker present: action_remix_camera_companion_image
+- [x] marker present: dispatcher.utter_message
+- [x] marker present: yes=true
+
 ## Bridge Contracts
 
 - [x] bridge health (status 200; auth design_api_session)
@@ -425,3 +447,5 @@ Evidence: setup runbook and static adapter preflight. Public demo ready: no.
 - [x] Zapier adapter real dry-run (command: send-selfie)
 - [x] Voiceflow adapter real dry-run (command: send-selfie)
 - [x] Manychat adapter real dry-run (command: send-selfie)
+- [x] Dialogflow CX adapter real dry-run (command: send-selfie)
+- [x] Rasa adapter real dry-run (command: send-selfie)

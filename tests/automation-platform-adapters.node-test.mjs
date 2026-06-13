@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import { runRemixCameraDialogflowCxWebhook } from "../adapters/dialogflow-cx/remix-camera-dialogflow-cx-webhook.mjs";
 import { runRemixCameraManychatTool } from "../adapters/manychat/remix-camera-manychat-tool.mjs";
 import { runRemixCameraMakeTool } from "../adapters/make/remix-camera-make-tool.mjs";
 import { runRemixCameraN8nTool } from "../adapters/n8n/remix-camera-n8n-tool.mjs";
@@ -94,6 +95,55 @@ test("Manychat helper defaults to a no-spend dry-run preview", async () => {
   assert.equal(calls[0].body.characterName, "Lily");
   assert.match(result.text, /Preview ready: Excellent Lily Selfie/);
   assert.equal(result.dryRun, true);
+});
+
+test("Dialogflow CX webhook defaults to a no-spend dry-run preview", async () => {
+  const { calls, fetchImpl } = mockFetchRecorder({
+    ok: true,
+    dryRun: true,
+    promptTemplate: { packTitle: "Excellent Lily Selfie" },
+    prompt: "preview prompt",
+  });
+  const response = await runRemixCameraDialogflowCxWebhook(
+    {
+      fulfillmentInfo: { tag: "remix_camera_send_selfie_preview" },
+      text: "cozy couch",
+      sessionInfo: {
+        parameters: {
+          characterName: "Lily",
+        },
+      },
+    },
+    { bridgeUrl: "http://bridge.local", fetchImpl },
+  );
+
+  assert.equal(calls[0].url, "http://bridge.local/v1/tools/send-selfie/dry-run");
+  assert.equal(calls[0].body.yes, undefined);
+  assert.equal(calls[0].body.characterName, "Lily");
+  assert.match(response.fulfillment_response.messages[0].text.text[0], /Preview ready: Excellent Lily Selfie/);
+  assert.equal(response.session_info.parameters.remix_dry_run, true);
+});
+
+test("Dialogflow CX webhook requires yes=true before generation", async () => {
+  const { calls, fetchImpl } = mockFetchRecorder({ ok: true });
+  await assert.rejects(
+    () =>
+      runRemixCameraDialogflowCxWebhook(
+        {
+          fulfillmentInfo: { tag: "remix_camera_send_selfie_generate" },
+          sessionInfo: {
+            parameters: {
+              command: "send-selfie",
+              action: "generate",
+              prompt: "cozy couch",
+            },
+          },
+        },
+        { bridgeUrl: "http://bridge.local", fetchImpl },
+      ),
+    /yes=true/,
+  );
+  assert.equal(calls.length, 0);
 });
 
 test("Make action module JSON keeps generation behind action=generate and yes=true", () => {

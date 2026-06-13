@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "generatedAt": "2026-06-13T08:18:03.519Z",
+  "generatedAt": "2026-06-13T08:38:43.928Z",
   "mode": "bridge-dry-run",
   "bridgeUrl": "http://127.0.0.1:8787",
   "targets": [
@@ -1664,13 +1664,109 @@
           "marker": "yes=true"
         }
       ]
+    },
+    {
+      "id": "dialogflow-cx",
+      "title": "Dialogflow CX",
+      "demoEvidence": {
+        "status": "runbook-ready",
+        "publicDemoReady": false,
+        "evidenceLevel": "setup runbook and static adapter preflight",
+        "missingArtifacts": [],
+        "nextStep": "Run this target in the real host and add production demo evidence."
+      },
+      "checks": [
+        {
+          "name": "adapter exists: adapters/dialogflow-cx/README.md",
+          "ok": true,
+          "path": "adapters/dialogflow-cx/README.md"
+        },
+        {
+          "name": "adapter exists: adapters/dialogflow-cx/remix-camera-dialogflow-cx-webhook.mjs",
+          "ok": true,
+          "path": "adapters/dialogflow-cx/remix-camera-dialogflow-cx-webhook.mjs"
+        },
+        {
+          "name": "demo runbook exists: demos/dialogflow-cx/demo.md",
+          "ok": true,
+          "path": "demos/dialogflow-cx/demo.md"
+        },
+        {
+          "name": "demo includes setup target",
+          "ok": true,
+          "expected": "--target=dialogflow-cx"
+        },
+        {
+          "name": "marker present: Dialogflow CX webhook",
+          "ok": true,
+          "marker": "Dialogflow CX webhook"
+        },
+        {
+          "name": "marker present: fulfillment_response",
+          "ok": true,
+          "marker": "fulfillment_response"
+        },
+        {
+          "name": "marker present: yes=true",
+          "ok": true,
+          "marker": "yes=true"
+        }
+      ]
+    },
+    {
+      "id": "rasa",
+      "title": "Rasa",
+      "demoEvidence": {
+        "status": "runbook-ready",
+        "publicDemoReady": false,
+        "evidenceLevel": "setup runbook and static adapter preflight",
+        "missingArtifacts": [],
+        "nextStep": "Run this target in the real host and add production demo evidence."
+      },
+      "checks": [
+        {
+          "name": "adapter exists: adapters/rasa/README.md",
+          "ok": true,
+          "path": "adapters/rasa/README.md"
+        },
+        {
+          "name": "adapter exists: adapters/rasa/remix_camera_rasa_actions.py",
+          "ok": true,
+          "path": "adapters/rasa/remix_camera_rasa_actions.py"
+        },
+        {
+          "name": "demo runbook exists: demos/rasa/demo.md",
+          "ok": true,
+          "path": "demos/rasa/demo.md"
+        },
+        {
+          "name": "demo includes setup target",
+          "ok": true,
+          "expected": "--target=rasa"
+        },
+        {
+          "name": "marker present: action_remix_camera_companion_image",
+          "ok": true,
+          "marker": "action_remix_camera_companion_image"
+        },
+        {
+          "name": "marker present: dispatcher.utter_message",
+          "ok": true,
+          "marker": "dispatcher.utter_message"
+        },
+        {
+          "name": "marker present: yes=true",
+          "ok": true,
+          "marker": "yes=true"
+        }
+      ]
     }
   ],
   "demoSummary": {
-    "targetCount": 32,
+    "targetCount": 34,
     "publicDemoReadyCount": 1,
     "productionBridgeEvidenceCount": 1,
-    "runbookOnlyCount": 30
+    "runbookOnlyCount": 32
   },
   "bridgeChecks": [
     {
@@ -1832,6 +1928,16 @@
     },
     {
       "name": "Manychat adapter real dry-run",
+      "ok": true,
+      "command": "send-selfie"
+    },
+    {
+      "name": "Dialogflow CX adapter real dry-run",
+      "ok": true,
+      "command": "send-selfie"
+    },
+    {
+      "name": "Rasa adapter real dry-run",
       "ok": true,
       "command": "send-selfie"
     }

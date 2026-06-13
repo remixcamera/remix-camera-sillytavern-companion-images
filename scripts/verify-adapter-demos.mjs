@@ -1,10 +1,13 @@
 #!/usr/bin/env node
 
+import { execFile } from "node:child_process";
 import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import path from "node:path";
+import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
 import { COMPANION_COMMANDS } from "../lib/companion-tools.mjs";
+import { runRemixCameraDialogflowCxWebhook } from "../adapters/dialogflow-cx/remix-camera-dialogflow-cx-webhook.mjs";
 import { runDiscordRemixInteraction } from "../adapters/discord/remix-discord-tool.mjs";
 import { parseInstagramCommand, runInstagramRemixCommand } from "../adapters/instagram/remix-instagram-tool.mjs";
 import { createRemixCameraLangChainTools } from "../adapters/langchain/remix-camera-langchain-tools.mjs";
@@ -25,6 +28,7 @@ import { runRemixCameraVoiceflowTool } from "../adapters/voiceflow/remix-camera-
 import { parseWhatsAppCommand, runWhatsAppRemixCommand } from "../adapters/whatsapp/remix-whatsapp-tool.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const execFileAsync = promisify(execFile);
 const require = createRequire(import.meta.url);
 const zapierApp = require("../adapters/zapier/remix-camera-zapier-app/index.cjs");
 const packageRoot = path.resolve(__dirname, "..");
@@ -324,6 +328,22 @@ const targets = [
     demoFile: "demos/manychat/demo.md",
     setupCommand: "--target=manychat",
     markers: ["Manychat External Request", "External Request", "yes=true"],
+  },
+  {
+    id: "dialogflow-cx",
+    title: "Dialogflow CX",
+    adapterFiles: ["adapters/dialogflow-cx/README.md", "adapters/dialogflow-cx/remix-camera-dialogflow-cx-webhook.mjs"],
+    demoFile: "demos/dialogflow-cx/demo.md",
+    setupCommand: "--target=dialogflow-cx",
+    markers: ["Dialogflow CX webhook", "fulfillment_response", "yes=true"],
+  },
+  {
+    id: "rasa",
+    title: "Rasa",
+    adapterFiles: ["adapters/rasa/README.md", "adapters/rasa/remix_camera_rasa_actions.py"],
+    demoFile: "demos/rasa/demo.md",
+    setupCommand: "--target=rasa",
+    markers: ["action_remix_camera_companion_image", "dispatcher.utter_message", "yes=true"],
   },
 ];
 
@@ -673,6 +693,18 @@ async function verifyHostAdapterDryRuns() {
         reason: "No bridge URL provided.",
       }),
     );
+    checks.push(
+      okCheck("Dialogflow CX adapter real dry-run", false, {
+        skipped: true,
+        reason: "No bridge URL provided.",
+      }),
+    );
+    checks.push(
+      okCheck("Rasa adapter real dry-run", false, {
+        skipped: true,
+        reason: "No bridge URL provided.",
+      }),
+    );
     return checks;
   }
 
@@ -929,6 +961,54 @@ async function verifyHostAdapterDryRuns() {
   });
   checks.push(
     okCheck("Manychat adapter real dry-run", manychat?.payload?.dryRun === true && /Preview ready/i.test(manychat?.text || ""), {
+      command: "send-selfie",
+    }),
+  );
+
+  const dialogflowCx = await runRemixCameraDialogflowCxWebhook(
+    {
+      fulfillmentInfo: { tag: "remix_camera_send_selfie_preview" },
+      text: "cozy couch with lamp light",
+      sessionInfo: {
+        parameters: {
+          command: "send-selfie",
+          action: "dry-run",
+          characterName: "Lily",
+        },
+      },
+    },
+    {
+      bridgeUrl,
+      profileId: process.env.REMIX_PROFILE_ID || "",
+      characterName: "Lily",
+    },
+  );
+  checks.push(
+    okCheck(
+      "Dialogflow CX adapter real dry-run",
+      dialogflowCx?.session_info?.parameters?.remix_dry_run === true &&
+        /Preview ready/i.test(dialogflowCx?.fulfillment_response?.messages?.[0]?.text?.text?.[0] || ""),
+      {
+        command: "send-selfie",
+      },
+    ),
+  );
+
+  const rasaSource = `
+import json
+import sys
+sys.path.insert(0, ${JSON.stringify(path.join(packageRoot, "adapters", "rasa"))})
+from remix_camera_rasa_actions import run_remix_camera_rasa_tool
+result = run_remix_camera_rasa_tool({"command": "send-selfie", "prompt": "cozy couch with lamp light", "characterName": "Lily"}, bridge_url=${JSON.stringify(bridgeUrl)})
+print(json.dumps(result))
+`;
+  const rasaRun = await execFileAsync("python3", ["-c", rasaSource], {
+    timeout: 120000,
+    maxBuffer: 1024 * 1024,
+  });
+  const rasa = JSON.parse(rasaRun.stdout || "{}");
+  checks.push(
+    okCheck("Rasa adapter real dry-run", rasa?.dryRun === true && /Preview ready/i.test(rasa?.text || ""), {
       command: "send-selfie",
     }),
   );

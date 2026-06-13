@@ -48,6 +48,8 @@ const SUPPORTED_TARGETS = new Set([
   "zapier",
   "voiceflow",
   "manychat",
+  "dialogflow-cx",
+  "rasa",
 ]);
 
 function printHelp() {
@@ -61,7 +63,7 @@ Usage:
   npx @remix-camera/sillytavern-setup [options]
 
 Options:
-  --target=sillytavern|mcp|risu|openwebui|librechat|lobechat|agnai|telegram|discord|whatsapp|slack|line|messenger|instagram|teams|twilio|matrix|dify|flowise|botpress|anythingllm|typingmind|poe|langflow|langchain|vercel-ai-sdk|n8n|pipedream|make|zapier|voiceflow|manychat
+  --target=sillytavern|mcp|risu|openwebui|librechat|lobechat|agnai|telegram|discord|whatsapp|slack|line|messenger|instagram|teams|twilio|matrix|dify|flowise|botpress|anythingllm|typingmind|poe|langflow|langchain|vercel-ai-sdk|n8n|pipedream|make|zapier|voiceflow|manychat|dialogflow-cx|rasa
   --sillytavern-dir=/path/to/SillyTavern  Use a specific local SillyTavern checkout
   --profile-id=profile_id                 Use a specific Remix.Camera character profile
   --character-name="Name"                 Override the Character Card name
@@ -614,6 +616,22 @@ function printTargetInstructions(target, { healthUrl, port, configPath }) {
       "Set the request URL to a public HTTPS bridge URL. Manychat External Request does not allow plain HTTP URLs.",
       "Use action=dry-run first and require action=generate plus yes=true before spending credits.",
       "Map $.results[0].productionImageUrl into a Manychat custom field before sending an image message.",
+    ],
+    "dialogflow-cx": [
+      "Deploy an HTTPS webhook service that imports this handler:",
+      `  ${path.join(adapterRoot, "dialogflow-cx", "remix-camera-dialogflow-cx-webhook.mjs")}`,
+      "Set the Dialogflow CX webhook URL to that deployed service.",
+      "Pass command, action, prompt, characterName, and consent/reference parameters through sessionInfo.parameters.",
+      "Use action=dry-run first and require action=generate plus yes=true before spending credits.",
+      "The webhook returns fulfillment_response text plus remix_* session_info parameters.",
+    ],
+    rasa: [
+      "Copy this Rasa custom action into your Rasa project's actions/ folder:",
+      `  ${path.join(adapterRoot, "rasa", "remix_camera_rasa_actions.py")}`,
+      "Add action_remix_camera_companion_image to domain.yml and route image intents or flows to it.",
+      "Set REMIX_BRIDGE_URL for the Rasa action server if the bridge differs from:",
+      `  ${bridgeUrl}`,
+      "Use remix_action=dry-run first and require remix_action=generate plus remix_yes=true before spending credits.",
     ],
   };
   console.log("");
