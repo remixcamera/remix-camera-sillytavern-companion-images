@@ -20,6 +20,17 @@ const remix = createRemixSlackTool({
 const result = await remix.handleSlashCommand(slackSlashCommandPayload);
 ```
 
+For an existing bot that already owns acknowledgement and delivery, route first and disable automatic sending:
+
+```js
+if (remix.shouldHandleSlashCommand(slackSlashCommandPayload)) {
+  const details = await remix.handleSlashCommandDetailed(slackSlashCommandPayload, {
+    autoSend: false,
+  });
+  await yourBot.postImages(details.result.imageUrls);
+}
+```
+
 The tool parses slash-command text such as:
 
 ```text

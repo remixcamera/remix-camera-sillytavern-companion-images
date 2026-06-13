@@ -2,11 +2,15 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   buildBridgeInputFromMatrix,
+  createRemixMatrixTool,
   extractMatrixTextEvents,
+  isRemixMatrixCommand,
   parseMatrixCommand,
   runMatrixRemixCommand,
   sendMatrixImage,
   sendMatrixRemixResult,
+  shouldHandleMatrixSync,
+  shouldHandleMatrixTextEvent,
 } from "../adapters/matrix/remix-matrix-tool.mjs";
 
 test("Matrix parser maps prefixed and direct text commands to bridge commands", () => {
@@ -37,6 +41,33 @@ test("Matrix bridge input requires explicit yes for couple and private generatio
   const snap = buildBridgeInputFromMatrix(parseMatrixCommand("snap bedroom mirror"), {});
   assert.equal(snap.matureContent, true);
   assert.equal(snap.yes, undefined);
+});
+
+test("Matrix routing helpers identify commands and honor shared-room prefix settings", () => {
+  assert.equal(isRemixMatrixCommand("selfie cafe mirror"), true);
+  assert.equal(isRemixMatrixCommand("unknown cafe mirror"), false);
+  assert.equal(shouldHandleMatrixTextEvent({ sender: "@user:example", text: "!lily selfie couch" }, { requirePrefix: true }), true);
+  assert.equal(shouldHandleMatrixTextEvent({ sender: "@user:example", text: "selfie couch" }, { requirePrefix: true }), false);
+  assert.equal(shouldHandleMatrixTextEvent({ sender: "@bot:example", text: "!lily selfie couch" }, { ownUserId: "@bot:example" }), false);
+  assert.equal(
+    shouldHandleMatrixSync(
+      {
+        rooms: {
+          join: {
+            "!room:example": {
+              timeline: {
+                events: [
+                  { type: "m.room.message", sender: "@user:example", content: { msgtype: "m.text", body: "!lily selfie couch" } },
+                ],
+              },
+            },
+          },
+        },
+      },
+      { requirePrefix: true },
+    ),
+    true,
+  );
 });
 
 test("Matrix run returns instruction instead of spending when consent is missing", async () => {
@@ -153,4 +184,80 @@ test("Matrix sync extraction filters own messages and optional prefixes", () => 
       text: "!lily selfie couch",
     },
   ]);
+});
+
+test("Matrix detailed event handler can run without auto-sending for existing bots", async () => {
+  const tool = createRemixMatrixTool({
+    accessToken: "token",
+    bridgeUrl: "http://bridge.local",
+    fetchImpl: async () =>
+      Response.json({
+        ok: true,
+        results: [{ productionImageUrl: "https://cdn.example/remix.jpg" }],
+      }),
+  });
+
+  const details = await tool.handleTextEventDetailed(
+    {
+      roomId: "!room:example",
+      eventId: "$event_1",
+      sender: "@user:example",
+      text: "!lily selfie couch",
+    },
+    { autoSend: false },
+  );
+
+  assert.equal(details.handled, true);
+  assert.equal(details.roomId, "!room:example");
+  assert.equal(details.eventId, "$event_1");
+  assert.equal(details.sender, "@user:example");
+  assert.equal(details.parsed.command, "send-selfie");
+  assert.deepEqual(details.result.imageUrls, ["https://cdn.example/remix.jpg"]);
+  assert.deepEqual(details.sentMessages, []);
+});
+
+test("Matrix detailed event handler honors prefix and own-message guards", async () => {
+  const tool = createRemixMatrixTool({
+    ownUserId: "@bot:example",
+    requirePrefix: true,
+    bridgeUrl: "http://bridge.local",
+    fetchImpl: async () => {
+      throw new Error("bridge should not be called");
+    },
+  });
+
+  const missingPrefix = await tool.handleTextEventDetailed({
+    roomId: "!room:example",
+    eventId: "$event_1",
+    sender: "@user:example",
+    text: "selfie couch",
+  });
+  assert.equal(missingPrefix.handled, false);
+  assert.equal(missingPrefix.reason, "missing-prefix");
+
+  const ownMessage = await tool.handleTextEventDetailed({
+    roomId: "!room:example",
+    eventId: "$event_2",
+    sender: "@bot:example",
+    text: "!lily selfie couch",
+  });
+  assert.equal(ownMessage.handled, false);
+  assert.equal(ownMessage.reason, "own-message");
+});
+
+test("Matrix simple text event handler remains compatible when destructured", async () => {
+  const tool = createRemixMatrixTool({
+    bridgeUrl: "http://bridge.local",
+    fetchImpl: async () =>
+      Response.json({
+        ok: true,
+        results: [{ productionImageUrl: "https://cdn.example/remix.jpg" }],
+      }),
+  });
+  const { handleTextEvent } = tool;
+
+  const result = await handleTextEvent({ roomId: "!room:example", text: "selfie couch" }, { autoSend: false });
+
+  assert.equal(result.command, "send-selfie");
+  assert.deepEqual(result.imageUrls, ["https://cdn.example/remix.jpg"]);
 });

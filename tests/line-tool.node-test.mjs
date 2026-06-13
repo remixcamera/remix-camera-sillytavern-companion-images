@@ -3,11 +3,14 @@ import crypto from "node:crypto";
 import test from "node:test";
 import {
   buildBridgeInputFromLine,
+  createRemixLineTool,
   extractLineTextEvents,
+  isRemixLineCommand,
   lineMessagesForResult,
   parseLineCommand,
   runLineRemixCommand,
   sendLineRemixResult,
+  shouldHandleLineWebhook,
   verifyLineSignature,
 } from "../adapters/line/remix-line-tool.mjs";
 
@@ -39,6 +42,37 @@ test("LINE bridge input requires explicit yes for couple and private generation"
   const snap = buildBridgeInputFromLine(parseLineCommand("snap bedroom mirror"), {});
   assert.equal(snap.matureContent, true);
   assert.equal(snap.yes, undefined);
+});
+
+test("LINE routing helpers identify only Remix.Camera message text", () => {
+  assert.equal(isRemixLineCommand("selfie cafe mirror"), true);
+  assert.equal(isRemixLineCommand("unknown cafe mirror"), false);
+  assert.equal(
+    shouldHandleLineWebhook({
+      events: [
+        {
+          type: "message",
+          replyToken: "reply_1",
+          source: { type: "user", userId: "U1" },
+          message: { type: "text", text: "selfie couch" },
+        },
+      ],
+    }),
+    true,
+  );
+  assert.equal(
+    shouldHandleLineWebhook({
+      events: [
+        {
+          type: "message",
+          replyToken: "reply_1",
+          source: { type: "user", userId: "U1" },
+          message: { type: "text", text: "hello" },
+        },
+      ],
+    }),
+    false,
+  );
 });
 
 test("LINE run returns instruction instead of spending when consent is missing", async () => {
@@ -134,4 +168,51 @@ test("LINE webhook extraction returns text events", () => {
       webhookEventId: "event_1",
     },
   ]);
+});
+
+test("LINE detailed event handler can run without auto-sending for existing bots", async () => {
+  const tool = createRemixLineTool({
+    channelAccessToken: "token",
+    bridgeUrl: "http://bridge.local",
+    fetchImpl: async () =>
+      Response.json({
+        ok: true,
+        results: [{ productionImageUrl: "https://cdn.example/remix.jpg" }],
+      }),
+  });
+
+  const details = await tool.handleTextEventDetailed(
+    {
+      replyToken: "reply_1",
+      source: { type: "user", userId: "U1" },
+      webhookEventId: "event_1",
+      text: "selfie couch",
+    },
+    { autoSend: false },
+  );
+
+  assert.equal(details.handled, true);
+  assert.equal(details.replyToken, "reply_1");
+  assert.equal(details.to, "U1");
+  assert.equal(details.webhookEventId, "event_1");
+  assert.equal(details.parsed.command, "send-selfie");
+  assert.deepEqual(details.result.imageUrls, ["https://cdn.example/remix.jpg"]);
+  assert.deepEqual(details.sentMessages, []);
+});
+
+test("LINE simple text event handler remains compatible when destructured", async () => {
+  const tool = createRemixLineTool({
+    bridgeUrl: "http://bridge.local",
+    fetchImpl: async () =>
+      Response.json({
+        ok: true,
+        results: [{ productionImageUrl: "https://cdn.example/remix.jpg" }],
+      }),
+  });
+  const { handleTextEvent } = tool;
+
+  const result = await handleTextEvent({ replyToken: "reply_1", text: "selfie couch" }, { autoSend: false });
+
+  assert.equal(result.command, "send-selfie");
+  assert.deepEqual(result.imageUrls, ["https://cdn.example/remix.jpg"]);
 });

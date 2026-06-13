@@ -14,6 +14,29 @@ The reusable module is:
 adapters/whatsapp/remix-whatsapp-tool.mjs
 ```
 
+## Reusable Tool
+
+```js
+import { createRemixWhatsAppTool } from "./adapters/whatsapp/remix-whatsapp-tool.mjs";
+
+const remix = createRemixWhatsAppTool({
+  accessToken: process.env.WHATSAPP_ACCESS_TOKEN,
+  phoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID,
+  bridgeUrl: "http://127.0.0.1:8787",
+  profileId: process.env.REMIX_PROFILE_ID,
+  characterName: "Lily",
+});
+
+if (remix.shouldHandleWebhook(metaWebhookPayload)) {
+  const details = await remix.handleWebhookDetailed(metaWebhookPayload, {
+    autoSend: false,
+  });
+  // Send details[n].result from your own bot pipeline, or remove autoSend:false.
+}
+```
+
+Use `handleTextDetailed(message, { autoSend: false })` when your existing bot already has routing, logging, rate limits, or custom delivery. The simple `handleText()` and `handleWebhook()` helpers still run and send in one call for small proof servers.
+
 Lily proof-of-concept webhook:
 
 ```bash

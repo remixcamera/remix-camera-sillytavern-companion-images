@@ -113,6 +113,19 @@ export function parseMessengerCommand(text) {
   };
 }
 
+export function isRemixMessengerCommand(text) {
+  return parseMessengerCommand(text) !== null;
+}
+
+export function shouldHandleMessengerMessage(message) {
+  const text = typeof message?.text === "string" ? message.text : message?.message?.text;
+  return isRemixMessengerCommand(text || "");
+}
+
+export function shouldHandleMessengerWebhook(webhookPayload) {
+  return extractMessengerTextMessages(webhookPayload).some((message) => shouldHandleMessengerMessage(message));
+}
+
 export function buildBridgeInputFromMessenger(parsed, options = {}) {
   const text = parsed?.text || "";
   const hasYes = /\byes\b/i.test(text);
@@ -350,30 +363,74 @@ export function extractMessengerTextMessages(webhookPayload) {
 }
 
 export function createRemixMessengerTool(options = {}) {
+  const handleTextMessageDetailed = async (message, overrides = {}) => {
+    const text = typeof message?.text === "string" ? message.text : message?.message?.text || "";
+    const parsed = parseMessengerCommand(text);
+    if (!parsed) {
+      return {
+        handled: false,
+        reason: "unknown-command",
+        senderId: message?.senderId || message?.sender?.id,
+        recipientId: message?.recipientId || message?.recipient?.id,
+        messageId: message?.messageId || message?.message?.mid,
+        text,
+        parsed: null,
+        result: null,
+        sentMessages: [],
+      };
+    }
+
+    const merged = { ...options, ...overrides };
+    const recipientId = message?.senderId || message?.sender?.id || merged.recipientId;
+    const result = await runMessengerRemixCommand(parsed, merged);
+    const sentMessages =
+      merged.autoSend === false || !merged.pageAccessToken || !recipientId
+        ? []
+        : await sendMessengerRemixResult({
+            ...merged,
+            recipientId,
+            result,
+          });
+
+    return {
+      handled: true,
+      senderId: message?.senderId || message?.sender?.id,
+      recipientId,
+      messageId: message?.messageId || message?.message?.mid,
+      text,
+      parsed,
+      result,
+      sentMessages,
+    };
+  };
+
+  const handleWebhookDetailed = async (webhookPayload, overrides = {}) => {
+    const messages = extractMessengerTextMessages(webhookPayload);
+    const results = [];
+    for (const message of messages) {
+      results.push(await handleTextMessageDetailed(message, overrides));
+    }
+    return results;
+  };
+
   return {
     helpText: () => messengerHelpText(options.characterName),
     parseCommand: parseMessengerCommand,
+    isCommand: isRemixMessengerCommand,
+    shouldHandleMessage: shouldHandleMessengerMessage,
+    shouldHandleWebhook: shouldHandleMessengerWebhook,
     buildInput: (parsed) => buildBridgeInputFromMessenger(parsed, options),
     run: (parsed, overrides = {}) => runMessengerRemixCommand(parsed, { ...options, ...overrides }),
     send: (result, sendOptions = {}) => sendMessengerRemixResult({ ...options, ...sendOptions, result }),
+    handleTextMessageDetailed,
     async handleTextMessage(message, overrides = {}) {
-      const parsed = parseMessengerCommand(message?.text || "");
-      const result = await runMessengerRemixCommand(parsed, { ...options, ...overrides });
-      await sendMessengerRemixResult({
-        ...options,
-        ...overrides,
-        recipientId: message?.senderId,
-        result,
-      });
-      return result;
+      const details = await handleTextMessageDetailed(message, overrides);
+      return details.handled ? details.result : null;
     },
+    handleWebhookDetailed,
     async handleWebhook(webhookPayload, overrides = {}) {
-      const messages = extractMessengerTextMessages(webhookPayload);
-      const results = [];
-      for (const message of messages) {
-        results.push(await this.handleTextMessage(message, overrides));
-      }
-      return results;
+      const details = await handleWebhookDetailed(webhookPayload, overrides);
+      return details.filter((item) => item.handled).map((item) => item.result);
     },
   };
 }

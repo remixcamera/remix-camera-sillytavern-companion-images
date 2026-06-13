@@ -107,7 +107,7 @@ const targets = [
     adapterFiles: ["adapters/whatsapp/remix-whatsapp-tool.mjs", "adapters/whatsapp/lily-webhook-server.mjs"],
     demoFile: "demos/whatsapp/demo.md",
     setupCommand: "--target=whatsapp",
-    markers: ["createRemixWhatsAppTool", "WHATSAPP_PHONE_NUMBER_ID", "uploads local bridge images"],
+    markers: ["createRemixWhatsAppTool", "handleWebhookDetailed", "autoSend === false", "WHATSAPP_PHONE_NUMBER_ID", "uploads local bridge images"],
   },
   {
     id: "slack",
@@ -115,7 +115,7 @@ const targets = [
     adapterFiles: ["adapters/slack/remix-slack-tool.mjs", "adapters/slack/lily-slash-command-server.mjs"],
     demoFile: "demos/slack/demo.md",
     setupCommand: "--target=slack",
-    markers: ["createRemixSlackTool", "SLACK_SIGNING_SECRET", "uploaded files"],
+    markers: ["createRemixSlackTool", "handleSlashCommandDetailed", "autoSend === false", "SLACK_SIGNING_SECRET", "uploaded files"],
   },
   {
     id: "line",
@@ -123,7 +123,7 @@ const targets = [
     adapterFiles: ["adapters/line/remix-line-tool.mjs", "adapters/line/lily-webhook-server.mjs"],
     demoFile: "demos/line/demo.md",
     setupCommand: "--target=line",
-    markers: ["createRemixLineTool", "LINE_CHANNEL_SECRET", "productionImageUrl"],
+    markers: ["createRemixLineTool", "handleWebhookDetailed", "autoSend === false", "LINE_CHANNEL_SECRET", "productionImageUrl"],
   },
   {
     id: "messenger",
@@ -131,7 +131,7 @@ const targets = [
     adapterFiles: ["adapters/messenger/remix-messenger-tool.mjs", "adapters/messenger/lily-webhook-server.mjs"],
     demoFile: "demos/messenger/demo.md",
     setupCommand: "--target=messenger",
-    markers: ["createRemixMessengerTool", "MESSENGER_APP_SECRET", "productionImageUrl"],
+    markers: ["createRemixMessengerTool", "handleWebhookDetailed", "autoSend === false", "MESSENGER_APP_SECRET", "productionImageUrl"],
   },
   {
     id: "matrix",
@@ -139,7 +139,7 @@ const targets = [
     adapterFiles: ["adapters/matrix/remix-matrix-tool.mjs", "adapters/matrix/lily-sync-bot.mjs"],
     demoFile: "demos/matrix/demo.md",
     setupCommand: "--target=matrix",
-    markers: ["createRemixMatrixTool", "MATRIX_ACCESS_TOKEN", "m.image"],
+    markers: ["createRemixMatrixTool", "handleSyncDetailed", "autoSend === false", "MATRIX_ACCESS_TOKEN", "m.image"],
   },
   {
     id: "dify",

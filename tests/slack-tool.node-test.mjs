@@ -3,9 +3,12 @@ import crypto from "node:crypto";
 import test from "node:test";
 import {
   buildBridgeInputFromSlack,
+  createRemixSlackTool,
+  isRemixSlackCommand,
   parseSlackCommand,
   runSlackRemixCommand,
   sendSlackRemixResult,
+  shouldHandleSlackSlashCommand,
   verifySlackSignature,
 } from "../adapters/slack/remix-slack-tool.mjs";
 
@@ -37,6 +40,13 @@ test("Slack bridge input requires explicit yes for couple and private generation
   const snap = buildBridgeInputFromSlack(parseSlackCommand("snap bedroom mirror"), {});
   assert.equal(snap.matureContent, true);
   assert.equal(snap.yes, undefined);
+});
+
+test("Slack routing helpers identify only Remix.Camera slash-command text", () => {
+  assert.equal(isRemixSlackCommand("selfie cafe mirror"), true);
+  assert.equal(isRemixSlackCommand("unknown cafe mirror"), false);
+  assert.equal(shouldHandleSlackSlashCommand({ text: "preview selfie couch" }), true);
+  assert.equal(shouldHandleSlackSlashCommand({ text: "hello" }), false);
 });
 
 test("Slack run returns instruction instead of spending when consent is missing", async () => {
@@ -159,4 +169,52 @@ test("Slack sender uploads local bridge images before completing a file post", a
       "https://slack.com/api/files.completeUploadExternal",
     ],
   );
+});
+
+test("Slack detailed slash handler can run without auto-sending for existing bots", async () => {
+  const tool = createRemixSlackTool({
+    botToken: "xoxb-token",
+    bridgeUrl: "http://bridge.local",
+    fetchImpl: async () =>
+      Response.json({
+        ok: true,
+        results: [{ productionImageUrl: "https://cdn.example/remix.jpg" }],
+      }),
+  });
+
+  const details = await tool.handleSlashCommandDetailed(
+    {
+      team_id: "T123",
+      channel_id: "C123",
+      user_id: "U123",
+      response_url: "https://hooks.slack.test/response",
+      text: "selfie couch",
+    },
+    { autoSend: false },
+  );
+
+  assert.equal(details.handled, true);
+  assert.equal(details.teamId, "T123");
+  assert.equal(details.channelId, "C123");
+  assert.equal(details.userId, "U123");
+  assert.equal(details.parsed.command, "send-selfie");
+  assert.deepEqual(details.result.imageUrls, ["https://cdn.example/remix.jpg"]);
+  assert.deepEqual(details.sentMessages, []);
+});
+
+test("Slack simple slash handler remains compatible when destructured", async () => {
+  const tool = createRemixSlackTool({
+    bridgeUrl: "http://bridge.local",
+    fetchImpl: async () =>
+      Response.json({
+        ok: true,
+        results: [{ productionImageUrl: "https://cdn.example/remix.jpg" }],
+      }),
+  });
+  const { handleSlashCommand } = tool;
+
+  const result = await handleSlashCommand({ text: "selfie couch" }, { autoSend: false });
+
+  assert.equal(result.command, "send-selfie");
+  assert.deepEqual(result.imageUrls, ["https://cdn.example/remix.jpg"]);
 });

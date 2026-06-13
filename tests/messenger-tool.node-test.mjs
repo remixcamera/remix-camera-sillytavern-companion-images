@@ -3,10 +3,13 @@ import crypto from "node:crypto";
 import test from "node:test";
 import {
   buildBridgeInputFromMessenger,
+  createRemixMessengerTool,
   extractMessengerTextMessages,
+  isRemixMessengerCommand,
   parseMessengerCommand,
   runMessengerRemixCommand,
   sendMessengerRemixResult,
+  shouldHandleMessengerWebhook,
   verifyMessengerSignature,
 } from "../adapters/messenger/remix-messenger-tool.mjs";
 
@@ -38,6 +41,43 @@ test("Messenger bridge input requires explicit yes for couple and private genera
   const snap = buildBridgeInputFromMessenger(parseMessengerCommand("snap bedroom mirror"), {});
   assert.equal(snap.matureContent, true);
   assert.equal(snap.yes, undefined);
+});
+
+test("Messenger routing helpers identify only Remix.Camera message text", () => {
+  assert.equal(isRemixMessengerCommand("selfie cafe mirror"), true);
+  assert.equal(isRemixMessengerCommand("unknown cafe mirror"), false);
+  assert.equal(
+    shouldHandleMessengerWebhook({
+      entry: [
+        {
+          messaging: [
+            {
+              sender: { id: "user_1" },
+              recipient: { id: "page_1" },
+              message: { mid: "mid_1", text: "selfie couch" },
+            },
+          ],
+        },
+      ],
+    }),
+    true,
+  );
+  assert.equal(
+    shouldHandleMessengerWebhook({
+      entry: [
+        {
+          messaging: [
+            {
+              sender: { id: "user_1" },
+              recipient: { id: "page_1" },
+              message: { mid: "mid_1", text: "hello" },
+            },
+          ],
+        },
+      ],
+    }),
+    false,
+  );
 });
 
 test("Messenger run returns instruction instead of spending when consent is missing", async () => {
@@ -120,4 +160,51 @@ test("Messenger webhook extraction returns text messages", () => {
       messageId: "mid_1",
     },
   ]);
+});
+
+test("Messenger detailed message handler can run without auto-sending for existing bots", async () => {
+  const tool = createRemixMessengerTool({
+    pageAccessToken: "page_token",
+    bridgeUrl: "http://bridge.local",
+    fetchImpl: async () =>
+      Response.json({
+        ok: true,
+        results: [{ productionImageUrl: "https://cdn.example/remix.jpg" }],
+      }),
+  });
+
+  const details = await tool.handleTextMessageDetailed(
+    {
+      senderId: "user_1",
+      recipientId: "page_1",
+      messageId: "mid_1",
+      text: "selfie couch",
+    },
+    { autoSend: false },
+  );
+
+  assert.equal(details.handled, true);
+  assert.equal(details.senderId, "user_1");
+  assert.equal(details.recipientId, "user_1");
+  assert.equal(details.messageId, "mid_1");
+  assert.equal(details.parsed.command, "send-selfie");
+  assert.deepEqual(details.result.imageUrls, ["https://cdn.example/remix.jpg"]);
+  assert.deepEqual(details.sentMessages, []);
+});
+
+test("Messenger simple text handler remains compatible when destructured", async () => {
+  const tool = createRemixMessengerTool({
+    bridgeUrl: "http://bridge.local",
+    fetchImpl: async () =>
+      Response.json({
+        ok: true,
+        results: [{ productionImageUrl: "https://cdn.example/remix.jpg" }],
+      }),
+  });
+  const { handleTextMessage } = tool;
+
+  const result = await handleTextMessage({ senderId: "user_1", text: "selfie couch" }, { autoSend: false });
+
+  assert.equal(result.command, "send-selfie");
+  assert.deepEqual(result.imageUrls, ["https://cdn.example/remix.jpg"]);
 });

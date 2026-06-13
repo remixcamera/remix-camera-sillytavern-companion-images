@@ -22,6 +22,19 @@ const remix = createRemixMatrixTool({
 });
 ```
 
+For an existing Matrix bot, keep your own sync loop and delivery:
+
+```js
+if (remix.shouldHandleTextEvent(matrixEvent, { requirePrefix: true })) {
+  const details = await remix.handleTextEventDetailed(matrixEvent, {
+    autoSend: false,
+  });
+  await yourBot.sendImages(details.roomId, details.result.imageUrls);
+}
+```
+
+Use `handleSyncDetailed(syncPayload, { autoSend: false })` when you want the adapter to extract matching events but your bot still owns sending, auditing, or rate limits. The simple `handleTextEvent()` and `handleSync()` helpers still send automatically when credentials are configured.
+
 The tool parses direct-room messages such as:
 
 ```text
