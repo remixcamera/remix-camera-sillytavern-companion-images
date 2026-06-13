@@ -81,7 +81,7 @@ Adapter files:
 - RisuAI: `adapters/risu/remix-camera-companion-images.risu.js`
 - Open WebUI: `adapters/openwebui/remix_camera_companion_images.py`
 - LibreChat: `http://127.0.0.1:8787/librechat/openapi.json`
-- LobeChat: `http://127.0.0.1:8787/lobe/manifest.json`
+- LobeChat: `http://127.0.0.1:8787/lobe/manifest.json` with `*Preview` tools for dry-runs and guarded generate tools that require `yes=true`
 - Agnai: `adapters/agnai/remix-camera-agnai.user.js`
 - Telegram reusable tool: `adapters/telegram/remix-telegram-tool.mjs`
 - Telegram Lily proof of concept: `adapters/telegram/lily-bot.mjs`

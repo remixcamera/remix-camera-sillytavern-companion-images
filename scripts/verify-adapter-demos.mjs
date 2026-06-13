@@ -70,7 +70,7 @@ const targets = [
     adapterFiles: ["adapters/lobe/README.md"],
     demoFile: "demos/lobechat/demo.md",
     setupCommand: "--target=lobechat",
-    markers: ["/lobe/manifest.json", "yes=true"],
+    markers: ["/lobe/manifest.json", "Preview", "yes=true"],
   },
   {
     id: "agnai",
@@ -321,7 +321,18 @@ async function verifyBridgeContracts() {
   );
 
   const lobe = await requestBridge("/lobe/manifest.json");
-  checks.push(okCheck("Lobe manifest exposes all tools", Array.isArray(lobe?.payload?.api) && lobe.payload.api.length === COMPANION_COMMANDS.length, { status: lobe?.status }));
+  const lobeApis = Array.isArray(lobe?.payload?.api) ? lobe.payload.api : [];
+  const lobeHasAllTools = COMPANION_COMMANDS.every(
+    (command) =>
+      lobeApis.some((api) => api.name === `${command.toolName}Preview` && String(api.url || "").endsWith(`/v1/tools/${command.name}/dry-run`)) &&
+      lobeApis.some((api) => api.name === command.toolName && String(api.url || "").endsWith(`/v1/tools/${command.name}/generate`)),
+  );
+  checks.push(
+    okCheck("Lobe manifest exposes preview and generate tools", lobeHasAllTools, {
+      status: lobe?.status,
+      apiCount: lobeApis.length,
+    }),
+  );
 
   for (const command of COMPANION_COMMANDS) {
     const preview = await requestBridge(`/v1/tools/${command.name}/dry-run`, {
@@ -485,6 +496,7 @@ function renderMarkdownReport(evidence) {
     if (check.authMode) details.push(`auth ${check.authMode}`);
     if (check.promptTemplate) details.push(`template: ${check.promptTemplate}`);
     if (check.command) details.push(`command: ${check.command}`);
+    if (check.apiCount) details.push(`apis ${check.apiCount}`);
     return details.length ? ` (${details.join("; ")})` : "";
   };
   const lines = [
@@ -535,6 +547,7 @@ function renderHtmlReport(evidence) {
     if (check.authMode) details.push(`auth ${check.authMode}`);
     if (check.promptTemplate) details.push(`template: ${check.promptTemplate}`);
     if (check.command) details.push(`command: ${check.command}`);
+    if (check.apiCount) details.push(`apis ${check.apiCount}`);
     if (check.reason) details.push(check.reason);
     return details.length ? ` <small>${esc(details.join("; "))}</small>` : "";
   };

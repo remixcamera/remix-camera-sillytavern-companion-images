@@ -382,7 +382,7 @@ function printTargetInstructions(target, { healthUrl, port, configPath }) {
     lobechat: [
       "Install a LobeChat custom plugin with this manifest URL:",
       `  ${bridgeUrl}/lobe/manifest.json`,
-      "The manifest points each companion image tool at the local bridge.",
+      "The manifest exposes Preview tools for dry-runs plus guarded generate tools that require yes=true.",
     ],
     agnai: [
       "Install this userscript in Tampermonkey or a compatible userscript manager:",

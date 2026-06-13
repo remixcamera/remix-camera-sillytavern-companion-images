@@ -39,18 +39,21 @@ test("OpenAPI document exposes dry-run and guarded generate endpoints for every 
   }
 });
 
-test("Lobe manifest exposes one API tool per companion command", () => {
+test("Lobe manifest exposes preview and guarded generate APIs per companion command", () => {
   const manifest = createLobeManifest("http://127.0.0.1:8787");
 
   assert.equal(manifest.identifier, "remix-camera-companion-images");
-  assert.equal(manifest.api.length, COMPANION_COMMANDS.length);
-  assert.equal(manifest.api[0].url, "http://127.0.0.1:8787/v1/tools/send-selfie/generate");
-  assert.deepEqual(
-    manifest.api.map((item) => item.name),
-    COMPANION_COMMANDS.map((command) => command.toolName),
-  );
-  for (const api of manifest.api) {
-    assert.ok(api.parameters.required.includes("yes"));
+  assert.equal(manifest.api.length, COMPANION_COMMANDS.length * 2);
+  assert.equal(manifest.api[0].url, "http://127.0.0.1:8787/v1/tools/send-selfie/dry-run");
+  assert.equal(manifest.api[1].url, "http://127.0.0.1:8787/v1/tools/send-selfie/generate");
+  for (const command of COMPANION_COMMANDS) {
+    const preview = manifest.api.find((item) => item.name === `${command.toolName}Preview`);
+    const generate = manifest.api.find((item) => item.name === command.toolName);
+    assert.ok(preview, `${command.name} preview API exists`);
+    assert.ok(generate, `${command.name} generate API exists`);
+    assert.equal(preview.url, `http://127.0.0.1:8787/v1/tools/${command.name}/dry-run`);
+    assert.equal(generate.url, `http://127.0.0.1:8787/v1/tools/${command.name}/generate`);
+    assert.ok(!preview.parameters.required.includes("yes"));
+    assert.ok(generate.parameters.required.includes("yes"));
   }
 });
-
