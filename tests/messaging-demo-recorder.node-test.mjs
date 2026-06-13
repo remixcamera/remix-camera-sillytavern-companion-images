@@ -22,6 +22,16 @@ test("messaging recorder parses target-specific preview commands", () => {
   assert.equal(discord.parsed.action, "dry-run");
   assert.equal(discord.parsed.command, "date-night");
   assert.equal(discord.parsed.prompt, "quiet restaurant booth");
+
+  const instagram = parseTargetCommand("instagram", "preview daily morning coffee");
+  assert.equal(instagram.action, "dry-run");
+  assert.equal(instagram.command, "daily-life-snap");
+  assert.equal(instagram.text, "morning coffee");
+
+  const twilio = parseTargetCommand("twilio", "preview selfie cozy couch");
+  assert.equal(twilio.action, "dry-run");
+  assert.equal(twilio.command, "send-selfie");
+  assert.equal(twilio.text, "cozy couch");
 });
 
 test("messaging recorder counts planned generations before spending", () => {
@@ -29,6 +39,8 @@ test("messaging recorder counts planned generations before spending", () => {
   assert.equal(plannedGenerationCount("telegram", parseTargetCommand("telegram", "/selfie couch")), 1);
   assert.equal(plannedGenerationCount("slack", parseTargetCommand("slack", "vacation yes Amalfi coast")), 3);
   assert.equal(plannedGenerationCount("discord", parseTargetCommand("discord", "snap yes bedroom mirror")), 1);
+  assert.equal(plannedGenerationCount("instagram", parseTargetCommand("instagram", "vacation yes Amalfi coast")), 3);
+  assert.equal(plannedGenerationCount("twilio", parseTargetCommand("twilio", "selfie couch")), 1);
 });
 
 test("messaging recorder evidence records no-delivery dry-runs honestly", () => {
@@ -65,6 +77,47 @@ test("messaging recorder evidence records no-delivery dry-runs honestly", () => 
   assert.equal(evidence.hostDelivery.delivered, false);
   assert.equal(evidence.bridge.promptTemplate, "Realistic Bedroom Selfie Girl Phone Mirror");
   assert.match(evidence.text, /Preview ready/);
+});
+
+test("messaging recorder includes Instagram and Twilio delivery readiness without secret values", () => {
+  const originalInstagramToken = process.env.INSTAGRAM_ACCESS_TOKEN;
+  const originalInstagramRecipient = process.env.INSTAGRAM_RECIPIENT_ID;
+  const originalTwilioSid = process.env.TWILIO_ACCOUNT_SID;
+  const originalTwilioToken = process.env.TWILIO_AUTH_TOKEN;
+  const originalTwilioFrom = process.env.TWILIO_FROM;
+  const originalTwilioTo = process.env.TWILIO_TO;
+  try {
+    process.env.INSTAGRAM_ACCESS_TOKEN = "ig-secret-token";
+    delete process.env.INSTAGRAM_RECIPIENT_ID;
+    const instagram = deliveryReadiness("instagram");
+    assert.equal(instagram.status, "missing-host-delivery-credentials");
+    assert.deepEqual(instagram.requiredEnv, ["INSTAGRAM_ACCESS_TOKEN", "INSTAGRAM_RECIPIENT_ID"]);
+    assert.deepEqual(instagram.missingEnv, ["INSTAGRAM_RECIPIENT_ID"]);
+    assert.equal(Object.values(instagram).some((value) => String(value).includes("ig-secret-token")), false);
+
+    process.env.TWILIO_ACCOUNT_SID = "AC123";
+    process.env.TWILIO_AUTH_TOKEN = "twilio-secret-token";
+    process.env.TWILIO_FROM = "+15550000001";
+    process.env.TWILIO_TO = "+15550000002";
+    const twilio = deliveryReadiness("twilio");
+    assert.equal(twilio.status, "host-delivery-ready");
+    assert.deepEqual(twilio.requiredEnv, ["TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_FROM", "TWILIO_TO"]);
+    assert.deepEqual(twilio.missingEnv, []);
+    assert.equal(Object.values(twilio).some((value) => String(value).includes("twilio-secret-token")), false);
+  } finally {
+    if (originalInstagramToken === undefined) delete process.env.INSTAGRAM_ACCESS_TOKEN;
+    else process.env.INSTAGRAM_ACCESS_TOKEN = originalInstagramToken;
+    if (originalInstagramRecipient === undefined) delete process.env.INSTAGRAM_RECIPIENT_ID;
+    else process.env.INSTAGRAM_RECIPIENT_ID = originalInstagramRecipient;
+    if (originalTwilioSid === undefined) delete process.env.TWILIO_ACCOUNT_SID;
+    else process.env.TWILIO_ACCOUNT_SID = originalTwilioSid;
+    if (originalTwilioToken === undefined) delete process.env.TWILIO_AUTH_TOKEN;
+    else process.env.TWILIO_AUTH_TOKEN = originalTwilioToken;
+    if (originalTwilioFrom === undefined) delete process.env.TWILIO_FROM;
+    else process.env.TWILIO_FROM = originalTwilioFrom;
+    if (originalTwilioTo === undefined) delete process.env.TWILIO_TO;
+    else process.env.TWILIO_TO = originalTwilioTo;
+  }
 });
 
 test("messaging recorder reports delivery readiness without secret values", () => {

@@ -28,6 +28,9 @@ const SUPPORTED_TARGETS = new Set([
   "slack",
   "line",
   "messenger",
+  "instagram",
+  "teams",
+  "twilio",
   "matrix",
   "dify",
   "flowise",
@@ -49,7 +52,7 @@ Usage:
   npx @remix-camera/sillytavern-setup [options]
 
 Options:
-  --target=sillytavern|risu|openwebui|librechat|lobechat|agnai|telegram|discord|whatsapp|slack|line|messenger|matrix|dify|flowise|botpress|anythingllm|typingmind|poe|langflow
+  --target=sillytavern|risu|openwebui|librechat|lobechat|agnai|telegram|discord|whatsapp|slack|line|messenger|instagram|teams|twilio|matrix|dify|flowise|botpress|anythingllm|typingmind|poe|langflow
   --sillytavern-dir=/path/to/SillyTavern  Use a specific local SillyTavern checkout
   --profile-id=profile_id                 Use a specific Remix.Camera character profile
   --character-name="Name"                 Override the Character Card name
@@ -444,6 +447,28 @@ function printTargetInstructions(target, { healthUrl, port, configPath }) {
       `  MESSENGER_PAGE_ACCESS_TOKEN=... MESSENGER_APP_SECRET=... MESSENGER_VERIFY_TOKEN=... REMIX_CONFIG_FILE=${configPath} node ${path.join(adapterRoot, "messenger", "lily-webhook-server.mjs")}`,
       "Expose the webhook over HTTPS and set that URL in the Meta Messenger webhook settings.",
       "Messenger image attachments require public HTTPS URLs; the adapter uses productionImageUrl instead of posting 127.0.0.1 bridge URLs.",
+    ],
+    instagram: [
+      "Reusable Instagram Messaging API tool module:",
+      `  ${path.join(adapterRoot, "instagram", "remix-instagram-tool.mjs")}`,
+      "Import createRemixInstagramTool into your existing Instagram webhook server.",
+      `  INSTAGRAM_ACCESS_TOKEN=... INSTAGRAM_IG_ID=... REMIX_CONFIG_FILE=${configPath} node your-instagram-bot.mjs`,
+      "Expose the webhook over HTTPS and verify x-hub-signature-256 before processing messages.",
+      "Instagram image attachments require public HTTPS URLs; the adapter uses productionImageUrl instead of posting 127.0.0.1 bridge URLs.",
+    ],
+    teams: [
+      "Reusable Microsoft Teams tool module:",
+      `  ${path.join(adapterRoot, "teams", "remix-teams-tool.mjs")}`,
+      "Use createRemixTeamsMessageHandler(...) inside an existing Teams bot message handler.",
+      "Teams image activities use public HTTPS contentUrl attachments from productionImageUrl.",
+      "Teams bots cannot force-delete delivered private media; retention copy stays conservative.",
+    ],
+    twilio: [
+      "Reusable Twilio SMS/MMS tool module:",
+      `  ${path.join(adapterRoot, "twilio", "remix-twilio-mms-tool.mjs")}`,
+      "Import createRemixTwilioMmsTool into your existing Twilio inbound webhook server.",
+      `  TWILIO_ACCOUNT_SID=... TWILIO_AUTH_TOKEN=... TWILIO_FROM=... TWILIO_MESSAGING_SERVICE_SID=... REMIX_CONFIG_FILE=${configPath} node your-twilio-webhook.mjs`,
+      "Twilio MMS requires public HTTPS MediaUrl values; the adapter uses productionImageUrl instead of posting 127.0.0.1 bridge URLs.",
     ],
     matrix: [
       "Reusable Matrix bot tool module:",

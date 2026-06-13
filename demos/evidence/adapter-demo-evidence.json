@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "generatedAt": "2026-06-13T06:01:07.998Z",
+  "generatedAt": "2026-06-13T06:22:55.877Z",
   "mode": "bridge-dry-run",
   "bridgeUrl": "http://127.0.0.1:8787",
   "targets": [
@@ -641,6 +641,165 @@
       ]
     },
     {
+      "id": "instagram",
+      "title": "Instagram DMs",
+      "demoEvidence": {
+        "status": "runbook-ready",
+        "publicDemoReady": false,
+        "evidenceLevel": "setup runbook and static adapter preflight",
+        "missingArtifacts": [],
+        "nextStep": "Run this target in the real host and add production demo evidence."
+      },
+      "checks": [
+        {
+          "name": "adapter exists: adapters/instagram/remix-instagram-tool.mjs",
+          "ok": true,
+          "path": "adapters/instagram/remix-instagram-tool.mjs"
+        },
+        {
+          "name": "adapter exists: adapters/instagram/README.md",
+          "ok": true,
+          "path": "adapters/instagram/README.md"
+        },
+        {
+          "name": "demo runbook exists: demos/instagram/demo.md",
+          "ok": true,
+          "path": "demos/instagram/demo.md"
+        },
+        {
+          "name": "demo includes setup target",
+          "ok": true,
+          "expected": "--target=instagram"
+        },
+        {
+          "name": "marker present: createRemixInstagramTool",
+          "ok": true,
+          "marker": "createRemixInstagramTool"
+        },
+        {
+          "name": "marker present: verifyInstagramSignature",
+          "ok": true,
+          "marker": "verifyInstagramSignature"
+        },
+        {
+          "name": "marker present: autoSend === false",
+          "ok": true,
+          "marker": "autoSend === false"
+        },
+        {
+          "name": "marker present: productionImageUrl",
+          "ok": true,
+          "marker": "productionImageUrl"
+        }
+      ]
+    },
+    {
+      "id": "teams",
+      "title": "Microsoft Teams",
+      "demoEvidence": {
+        "status": "runbook-ready",
+        "publicDemoReady": false,
+        "evidenceLevel": "setup runbook and static adapter preflight",
+        "missingArtifacts": [],
+        "nextStep": "Run this target in the real host and add production demo evidence."
+      },
+      "checks": [
+        {
+          "name": "adapter exists: adapters/teams/remix-teams-tool.mjs",
+          "ok": true,
+          "path": "adapters/teams/remix-teams-tool.mjs"
+        },
+        {
+          "name": "adapter exists: adapters/teams/README.md",
+          "ok": true,
+          "path": "adapters/teams/README.md"
+        },
+        {
+          "name": "demo runbook exists: demos/teams/demo.md",
+          "ok": true,
+          "path": "demos/teams/demo.md"
+        },
+        {
+          "name": "demo includes setup target",
+          "ok": true,
+          "expected": "--target=teams"
+        },
+        {
+          "name": "marker present: createRemixTeamsMessageHandler",
+          "ok": true,
+          "marker": "createRemixTeamsMessageHandler"
+        },
+        {
+          "name": "marker present: context.sendActivity",
+          "ok": true,
+          "marker": "context.sendActivity"
+        },
+        {
+          "name": "marker present: contentUrl",
+          "ok": true,
+          "marker": "contentUrl"
+        },
+        {
+          "name": "marker present: autoSend === false",
+          "ok": true,
+          "marker": "autoSend === false"
+        }
+      ]
+    },
+    {
+      "id": "twilio",
+      "title": "Twilio SMS/MMS",
+      "demoEvidence": {
+        "status": "runbook-ready",
+        "publicDemoReady": false,
+        "evidenceLevel": "setup runbook and static adapter preflight",
+        "missingArtifacts": [],
+        "nextStep": "Run this target in the real host and add production demo evidence."
+      },
+      "checks": [
+        {
+          "name": "adapter exists: adapters/twilio/remix-twilio-mms-tool.mjs",
+          "ok": true,
+          "path": "adapters/twilio/remix-twilio-mms-tool.mjs"
+        },
+        {
+          "name": "adapter exists: adapters/twilio/README.md",
+          "ok": true,
+          "path": "adapters/twilio/README.md"
+        },
+        {
+          "name": "demo runbook exists: demos/twilio/demo.md",
+          "ok": true,
+          "path": "demos/twilio/demo.md"
+        },
+        {
+          "name": "demo includes setup target",
+          "ok": true,
+          "expected": "--target=twilio"
+        },
+        {
+          "name": "marker present: createRemixTwilioMmsTool",
+          "ok": true,
+          "marker": "createRemixTwilioMmsTool"
+        },
+        {
+          "name": "marker present: MediaUrl",
+          "ok": true,
+          "marker": "MediaUrl"
+        },
+        {
+          "name": "marker present: autoSend === false",
+          "ok": true,
+          "marker": "autoSend === false"
+        },
+        {
+          "name": "marker present: MessagingServiceSid",
+          "ok": true,
+          "marker": "MessagingServiceSid"
+        }
+      ]
+    },
+    {
       "id": "matrix",
       "title": "Matrix",
       "demoEvidence": {
@@ -1051,10 +1210,10 @@
     }
   ],
   "demoSummary": {
-    "targetCount": 20,
+    "targetCount": 23,
     "publicDemoReadyCount": 1,
     "productionBridgeEvidenceCount": 1,
-    "runbookOnlyCount": 18
+    "runbookOnlyCount": 21
   },
   "bridgeChecks": [
     {
@@ -1151,6 +1310,21 @@
     },
     {
       "name": "Messenger adapter real dry-run",
+      "ok": true,
+      "command": "send-selfie"
+    },
+    {
+      "name": "Instagram adapter real dry-run",
+      "ok": true,
+      "command": "send-selfie"
+    },
+    {
+      "name": "Teams adapter real dry-run",
+      "ok": true,
+      "command": "send-selfie"
+    },
+    {
+      "name": "Twilio adapter real dry-run",
       "ok": true,
       "command": "send-selfie"
     },
