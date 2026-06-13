@@ -50,6 +50,8 @@ const SUPPORTED_TARGETS = new Set([
   "manychat",
   "dialogflow-cx",
   "rasa",
+  "amazon-lex",
+  "watsonx-assistant",
 ]);
 
 function printHelp() {
@@ -63,7 +65,7 @@ Usage:
   npx @remix-camera/sillytavern-setup [options]
 
 Options:
-  --target=sillytavern|mcp|risu|openwebui|librechat|lobechat|agnai|telegram|discord|whatsapp|slack|line|messenger|instagram|teams|twilio|matrix|dify|flowise|botpress|anythingllm|typingmind|poe|langflow|langchain|vercel-ai-sdk|n8n|pipedream|make|zapier|voiceflow|manychat|dialogflow-cx|rasa
+  --target=sillytavern|mcp|risu|openwebui|librechat|lobechat|agnai|telegram|discord|whatsapp|slack|line|messenger|instagram|teams|twilio|matrix|dify|flowise|botpress|anythingllm|typingmind|poe|langflow|langchain|vercel-ai-sdk|n8n|pipedream|make|zapier|voiceflow|manychat|dialogflow-cx|rasa|amazon-lex|watsonx-assistant
   --sillytavern-dir=/path/to/SillyTavern  Use a specific local SillyTavern checkout
   --profile-id=profile_id                 Use a specific Remix.Camera character profile
   --character-name="Name"                 Override the Character Card name
@@ -632,6 +634,22 @@ function printTargetInstructions(target, { healthUrl, port, configPath }) {
       "Set REMIX_BRIDGE_URL for the Rasa action server if the bridge differs from:",
       `  ${bridgeUrl}`,
       "Use remix_action=dry-run first and require remix_action=generate plus remix_yes=true before spending credits.",
+    ],
+    "amazon-lex": [
+      "Bundle this Lambda handler into the Lambda function for your Amazon Lex V2 bot alias:",
+      `  ${path.join(adapterRoot, "amazon-lex", "remix-camera-lex-v2-lambda.mjs")}`,
+      "Configure a Lex V2 DialogCodeHook or FulfillmentCodeHook for the image intent.",
+      "Set REMIX_BRIDGE_URL for the Lambda function if the bridge differs from:",
+      `  ${bridgeUrl}`,
+      "Use remix_action=dry-run first and require remix_action=generate plus remix_yes=true before spending credits.",
+    ],
+    "watsonx-assistant": [
+      "Import this OpenAPI JSON as a watsonx Assistant custom extension:",
+      `  ${path.join(adapterRoot, "watsonx-assistant", "remix-camera-watsonx-extension.openapi.json")}`,
+      "First replace the server URL in that file with a public HTTPS bridge URL.",
+      "Optional Node helper for local tests or self-hosted runners:",
+      `  ${path.join(adapterRoot, "watsonx-assistant", "remix-camera-watsonx-tool.mjs")}`,
+      "Use action=dry-run first and require action=generate plus yes=true before spending credits.",
     ],
   };
   console.log("");

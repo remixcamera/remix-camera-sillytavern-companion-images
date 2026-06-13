@@ -45,6 +45,8 @@ Targets:
 - `manychat/`: Manychat External Request action demo.
 - `dialogflow-cx/`: Dialogflow CX webhook fulfillment demo.
 - `rasa/`: Rasa custom action demo.
+- `amazon-lex/`: Amazon Lex V2 Lambda code-hook demo.
+- `watsonx-assistant/`: IBM watsonx Assistant custom-extension demo.
 
 Do not publish generated demo recordings until the runbook has been executed against production Remix.Camera and the inserted images are real Remix.Camera outputs.
 

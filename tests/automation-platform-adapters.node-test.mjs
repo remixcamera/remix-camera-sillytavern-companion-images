@@ -2,12 +2,14 @@ import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import { runRemixCameraLexV2Lambda } from "../adapters/amazon-lex/remix-camera-lex-v2-lambda.mjs";
 import { runRemixCameraDialogflowCxWebhook } from "../adapters/dialogflow-cx/remix-camera-dialogflow-cx-webhook.mjs";
 import { runRemixCameraManychatTool } from "../adapters/manychat/remix-camera-manychat-tool.mjs";
 import { runRemixCameraMakeTool } from "../adapters/make/remix-camera-make-tool.mjs";
 import { runRemixCameraN8nTool } from "../adapters/n8n/remix-camera-n8n-tool.mjs";
 import pipedreamAction, { runRemixCameraPipedreamAction } from "../adapters/pipedream/remix-camera-pipedream-action.mjs";
 import { runRemixCameraVoiceflowTool } from "../adapters/voiceflow/remix-camera-voiceflow-tool.mjs";
+import { runRemixCameraWatsonxAssistantTool } from "../adapters/watsonx-assistant/remix-camera-watsonx-tool.mjs";
 
 const require = createRequire(import.meta.url);
 const zapierApp = require("../adapters/zapier/remix-camera-zapier-app/index.cjs");
@@ -146,6 +148,82 @@ test("Dialogflow CX webhook requires yes=true before generation", async () => {
   assert.equal(calls.length, 0);
 });
 
+test("Amazon Lex V2 Lambda defaults to a no-spend dry-run preview", async () => {
+  const { calls, fetchImpl } = mockFetchRecorder({
+    ok: true,
+    dryRun: true,
+    promptTemplate: { packTitle: "Excellent Lily Selfie" },
+    prompt: "preview prompt",
+  });
+  const response = await runRemixCameraLexV2Lambda(
+    {
+      inputTranscript: "cozy couch",
+      invocationLabel: "remix_camera_send_selfie_preview",
+      sessionState: {
+        intent: {
+          name: "RemixCameraImage",
+          slots: {
+            remix_character_name: { value: { interpretedValue: "Lily" } },
+          },
+        },
+        sessionAttributes: {},
+      },
+    },
+    { bridgeUrl: "http://bridge.local", fetchImpl },
+  );
+
+  assert.equal(calls[0].url, "http://bridge.local/v1/tools/send-selfie/dry-run");
+  assert.equal(calls[0].body.yes, undefined);
+  assert.equal(calls[0].body.characterName, "Lily");
+  assert.equal(response.sessionState.dialogAction.type, "Close");
+  assert.equal(response.sessionState.intent.state, "Fulfilled");
+  assert.match(response.messages[0].content, /Preview ready: Excellent Lily Selfie/);
+  assert.equal(response.sessionState.sessionAttributes.remix_dry_run, "true");
+});
+
+test("Amazon Lex V2 Lambda requires yes=true before generation", async () => {
+  const { calls, fetchImpl } = mockFetchRecorder({ ok: true });
+  await assert.rejects(
+    () =>
+      runRemixCameraLexV2Lambda(
+        {
+          inputTranscript: "cozy couch",
+          sessionState: {
+            intent: {
+              name: "RemixCameraImage",
+              slots: {
+                remix_command: { value: { interpretedValue: "send-selfie" } },
+                remix_action: { value: { interpretedValue: "generate" } },
+              },
+            },
+          },
+        },
+        { bridgeUrl: "http://bridge.local", fetchImpl },
+      ),
+    /yes=true/,
+  );
+  assert.equal(calls.length, 0);
+});
+
+test("watsonx Assistant helper defaults to a no-spend dry-run preview", async () => {
+  const { calls, fetchImpl } = mockFetchRecorder({
+    ok: true,
+    dryRun: true,
+    promptTemplate: { packTitle: "Excellent Lily Selfie" },
+    prompt: "preview prompt",
+  });
+  const result = await runRemixCameraWatsonxAssistantTool(
+    { command: "send-selfie", prompt: "cozy couch" },
+    { bridgeUrl: "http://bridge.local", fetchImpl, characterName: "Lily" },
+  );
+
+  assert.equal(calls[0].url, "http://bridge.local/v1/tools/send-selfie/dry-run");
+  assert.equal(calls[0].body.yes, undefined);
+  assert.equal(calls[0].body.characterName, "Lily");
+  assert.match(result.text, /Preview ready: Excellent Lily Selfie/);
+  assert.equal(result.dryRun, true);
+});
+
 test("Make action module JSON keeps generation behind action=generate and yes=true", () => {
   const moduleJson = JSON.parse(readFileSync(new URL("../adapters/make/remix-camera-make-action-module.json", import.meta.url), "utf8"));
   assert.equal(moduleJson.type, "action");
@@ -171,6 +249,16 @@ test("Manychat External Request JSON requires HTTPS and maps image URL", () => {
   assert.match(requestJson.url, /^https:\/\//);
   assert.ok(requestJson.customFieldMappings.some((mapping) => mapping.jsonPath === "$.results[0].productionImageUrl"));
   assert.ok(requestJson.guardrails.some((line) => /HTTPS/.test(line)));
+});
+
+test("watsonx Assistant OpenAPI extension is importable JSON and guarded", () => {
+  const openapi = JSON.parse(readFileSync(new URL("../adapters/watsonx-assistant/remix-camera-watsonx-extension.openapi.json", import.meta.url), "utf8"));
+  const operation = openapi.paths["/v1/tools/{command}/{action}"].post;
+  assert.equal(openapi.openapi, "3.0.3");
+  assert.match(openapi.servers[0].url, /^https:\/\//);
+  assert.equal(operation.operationId, "previewOrGenerateCompanionImage");
+  assert.equal(operation.requestBody.content["application/json"].schema.type, "object");
+  assert.ok(operation["x-remix-camera-guardrails"].some((line) => /yes=true/.test(line)));
 });
 
 test("n8n helper refuses requested generation without yes=true", async () => {

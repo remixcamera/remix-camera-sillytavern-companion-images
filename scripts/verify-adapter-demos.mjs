@@ -7,6 +7,7 @@ import path from "node:path";
 import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
 import { COMPANION_COMMANDS } from "../lib/companion-tools.mjs";
+import { runRemixCameraLexV2Lambda } from "../adapters/amazon-lex/remix-camera-lex-v2-lambda.mjs";
 import { runRemixCameraDialogflowCxWebhook } from "../adapters/dialogflow-cx/remix-camera-dialogflow-cx-webhook.mjs";
 import { runDiscordRemixInteraction } from "../adapters/discord/remix-discord-tool.mjs";
 import { parseInstagramCommand, runInstagramRemixCommand } from "../adapters/instagram/remix-instagram-tool.mjs";
@@ -25,6 +26,7 @@ import { parseTeamsCommand, runTeamsRemixCommand } from "../adapters/teams/remix
 import { parseTwilioCommand, runTwilioRemixCommand } from "../adapters/twilio/remix-twilio-mms-tool.mjs";
 import { createRemixCameraAiSdkTools } from "../adapters/vercel-ai-sdk/remix-camera-ai-sdk-tools.mjs";
 import { runRemixCameraVoiceflowTool } from "../adapters/voiceflow/remix-camera-voiceflow-tool.mjs";
+import { runRemixCameraWatsonxAssistantTool } from "../adapters/watsonx-assistant/remix-camera-watsonx-tool.mjs";
 import { parseWhatsAppCommand, runWhatsAppRemixCommand } from "../adapters/whatsapp/remix-whatsapp-tool.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -344,6 +346,26 @@ const targets = [
     demoFile: "demos/rasa/demo.md",
     setupCommand: "--target=rasa",
     markers: ["action_remix_camera_companion_image", "dispatcher.utter_message", "yes=true"],
+  },
+  {
+    id: "amazon-lex",
+    title: "Amazon Lex V2",
+    adapterFiles: ["adapters/amazon-lex/README.md", "adapters/amazon-lex/remix-camera-lex-v2-lambda.mjs"],
+    demoFile: "demos/amazon-lex/demo.md",
+    setupCommand: "--target=amazon-lex",
+    markers: ["Lex V2", "sessionState", "yes=true"],
+  },
+  {
+    id: "watsonx-assistant",
+    title: "IBM watsonx Assistant",
+    adapterFiles: [
+      "adapters/watsonx-assistant/README.md",
+      "adapters/watsonx-assistant/remix-camera-watsonx-extension.openapi.json",
+      "adapters/watsonx-assistant/remix-camera-watsonx-tool.mjs",
+    ],
+    demoFile: "demos/watsonx-assistant/demo.md",
+    setupCommand: "--target=watsonx-assistant",
+    markers: ["custom extension", "OpenAPI", "yes=true"],
   },
 ];
 
@@ -705,6 +727,18 @@ async function verifyHostAdapterDryRuns() {
         reason: "No bridge URL provided.",
       }),
     );
+    checks.push(
+      okCheck("Amazon Lex V2 adapter real dry-run", false, {
+        skipped: true,
+        reason: "No bridge URL provided.",
+      }),
+    );
+    checks.push(
+      okCheck("IBM watsonx Assistant adapter real dry-run", false, {
+        skipped: true,
+        reason: "No bridge URL provided.",
+      }),
+    );
     return checks;
   }
 
@@ -1009,6 +1043,48 @@ print(json.dumps(result))
   const rasa = JSON.parse(rasaRun.stdout || "{}");
   checks.push(
     okCheck("Rasa adapter real dry-run", rasa?.dryRun === true && /Preview ready/i.test(rasa?.text || ""), {
+      command: "send-selfie",
+    }),
+  );
+
+  const amazonLex = await runRemixCameraLexV2Lambda(
+    {
+      inputTranscript: "cozy couch with lamp light",
+      invocationLabel: "remix_camera_send_selfie_preview",
+      sessionState: {
+        intent: {
+          name: "RemixCameraImage",
+          slots: {
+            remix_character_name: { value: { interpretedValue: "Lily" } },
+          },
+        },
+        sessionAttributes: {},
+      },
+    },
+    {
+      bridgeUrl,
+      profileId: process.env.REMIX_PROFILE_ID || "",
+      characterName: "Lily",
+    },
+  );
+  checks.push(
+    okCheck(
+      "Amazon Lex V2 adapter real dry-run",
+      amazonLex?.sessionState?.sessionAttributes?.remix_dry_run === "true" &&
+        /Preview ready/i.test(amazonLex?.messages?.[0]?.content || ""),
+      {
+        command: "send-selfie",
+      },
+    ),
+  );
+
+  const watsonx = await runRemixCameraWatsonxAssistantTool(commandInputs["send-selfie"], {
+    bridgeUrl,
+    profileId: process.env.REMIX_PROFILE_ID || "",
+    characterName: "Lily",
+  });
+  checks.push(
+    okCheck("IBM watsonx Assistant adapter real dry-run", watsonx?.payload?.dryRun === true && /Preview ready/i.test(watsonx?.text || ""), {
       command: "send-selfie",
     }),
   );
