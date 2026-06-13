@@ -38,16 +38,15 @@ DISCORD_PUBLIC_KEY=... DISCORD_APPLICATION_ID=... node adapters/discord/lily-int
 Create no-spend bridge evidence for the Discord adapter:
 
 ```bash
-node scripts/record-messaging-demo.mjs --target=discord --output-dir=tmp/messaging-demo-evidence/discord
+npm run demo:messaging -- --target=discord --output-dir=tmp/messaging-demo-evidence/discord
 ```
 
 Create a real Discord-channel delivery proof using an incoming webhook:
 
 ```bash
 DISCORD_WEBHOOK_URL=... \
-node scripts/record-messaging-demo.mjs \
+npm run demo:messaging:deliver -- \
   --target=discord \
-  --deliver \
   --output-dir=demos/discord/live-production-$(date +%F)
 ```
 

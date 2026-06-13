@@ -35,7 +35,7 @@ Record the LINE chat, the webhook signature verification log, the local bridge d
 Create no-spend bridge evidence for the LINE adapter:
 
 ```bash
-node scripts/record-messaging-demo.mjs --target=line --output-dir=tmp/messaging-demo-evidence/line
+npm run demo:messaging -- --target=line --output-dir=tmp/messaging-demo-evidence/line
 ```
 
 Create a real LINE delivery proof:
@@ -43,9 +43,8 @@ Create a real LINE delivery proof:
 ```bash
 LINE_CHANNEL_ACCESS_TOKEN=... \
 LINE_TO=... \
-node scripts/record-messaging-demo.mjs \
+npm run demo:messaging:deliver -- \
   --target=line \
-  --deliver \
   --output-dir=demos/line/live-production-$(date +%F)
 ```
 

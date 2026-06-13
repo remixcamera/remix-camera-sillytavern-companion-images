@@ -46,7 +46,7 @@ For cloud-hosted Slack servers, expose the local bridge through a private authen
 Create no-spend bridge evidence for the Slack adapter:
 
 ```bash
-node scripts/record-messaging-demo.mjs --target=slack --output-dir=tmp/messaging-demo-evidence/slack
+npm run demo:messaging -- --target=slack --output-dir=tmp/messaging-demo-evidence/slack
 ```
 
 Create a real Slack delivery proof:
@@ -54,9 +54,8 @@ Create a real Slack delivery proof:
 ```bash
 SLACK_BOT_TOKEN=... \
 SLACK_CHANNEL_ID=... \
-node scripts/record-messaging-demo.mjs \
+npm run demo:messaging:deliver -- \
   --target=slack \
-  --deliver \
   --output-dir=demos/slack/live-production-$(date +%F)
 ```
 

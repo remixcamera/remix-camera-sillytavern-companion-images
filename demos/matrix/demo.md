@@ -34,7 +34,7 @@ Record the real Matrix room, `/sync` processing, media upload, bridge logs, and 
 Create no-spend bridge evidence for the Matrix adapter:
 
 ```bash
-node scripts/record-messaging-demo.mjs --target=matrix --output-dir=tmp/messaging-demo-evidence/matrix
+npm run demo:messaging -- --target=matrix --output-dir=tmp/messaging-demo-evidence/matrix
 ```
 
 Create a real Matrix room delivery proof:
@@ -43,9 +43,8 @@ Create a real Matrix room delivery proof:
 MATRIX_HOMESERVER_URL=... \
 MATRIX_ACCESS_TOKEN=... \
 MATRIX_ROOM_ID=... \
-node scripts/record-messaging-demo.mjs \
+npm run demo:messaging:deliver -- \
   --target=matrix \
-  --deliver \
   --output-dir=demos/matrix/live-production-$(date +%F)
 ```
 

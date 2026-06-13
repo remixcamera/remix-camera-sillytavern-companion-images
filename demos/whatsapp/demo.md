@@ -35,7 +35,7 @@ Record the Meta webhook request, the local bridge logs, and the resulting WhatsA
 Create no-spend bridge evidence for the WhatsApp adapter:
 
 ```bash
-node scripts/record-messaging-demo.mjs --target=whatsapp --output-dir=tmp/messaging-demo-evidence/whatsapp
+npm run demo:messaging -- --target=whatsapp --output-dir=tmp/messaging-demo-evidence/whatsapp
 ```
 
 Create a real WhatsApp delivery proof:
@@ -44,9 +44,8 @@ Create a real WhatsApp delivery proof:
 WHATSAPP_ACCESS_TOKEN=... \
 WHATSAPP_PHONE_NUMBER_ID=... \
 WHATSAPP_TO=... \
-node scripts/record-messaging-demo.mjs \
+npm run demo:messaging:deliver -- \
   --target=whatsapp \
-  --deliver \
   --output-dir=demos/whatsapp/live-production-$(date +%F)
 ```
 
