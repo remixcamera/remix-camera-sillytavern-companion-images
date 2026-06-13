@@ -26,6 +26,8 @@ Targets:
 - `viber/`: Viber Bot REST API tool plus Lily proof-of-concept webhook demo.
 - `vk/`: VK community bot Callback API or Long Poll demo.
 - `slack/`: Slack slash-command tool plus Lily proof-of-concept demo.
+- `mattermost/`: Mattermost slash-command, outgoing-webhook, and incoming-webhook demo.
+- `rocketchat/`: Rocket.Chat outgoing-integration, Apps-Engine command, and REST delivery demo.
 - `line/`: LINE Messaging API tool plus Lily proof-of-concept webhook demo.
 - `zalo/`: Zalo Official Account webhook and consultation-message demo.
 - `kakao/`: KakaoTalk Kakao i/Open Builder Skill demo.
@@ -102,7 +104,7 @@ The verifier does not fabricate generated image outputs. Real video demos should
 
 ## Messaging Host Demo Recorder
 
-Use the messaging recorder to create per-host, non-mocked demo evidence for Telegram, Discord, WhatsApp, Slack, LINE, Messenger, Instagram, Twilio, Matrix, and VK.
+Use the messaging recorder to create per-host, non-mocked demo evidence for Telegram, Discord, WhatsApp, Slack, Mattermost, Rocket.Chat, LINE, Messenger, Instagram, Twilio, Matrix, and VK.
 
 No-spend bridge evidence for every messaging adapter:
 
@@ -141,6 +143,8 @@ Delivery environment variables:
 | Discord | `DISCORD_WEBHOOK_URL` |
 | WhatsApp | `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_TO` |
 | Slack | `SLACK_BOT_TOKEN`, `SLACK_CHANNEL_ID` |
+| Mattermost | `MATTERMOST_WEBHOOK_URL` |
+| Rocket.Chat | `ROCKETCHAT_URL`, `ROCKETCHAT_AUTH_TOKEN`, `ROCKETCHAT_USER_ID`, `ROCKETCHAT_ROOM_ID` |
 | LINE | `LINE_CHANNEL_ACCESS_TOKEN`, `LINE_TO` |
 | Messenger | `MESSENGER_PAGE_ACCESS_TOKEN`, `MESSENGER_RECIPIENT_ID` |
 | Matrix | `MATRIX_HOMESERVER_URL`, `MATRIX_ACCESS_TOKEN`, `MATRIX_ROOM_ID` |

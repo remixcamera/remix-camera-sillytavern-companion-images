@@ -1,6 +1,6 @@
 # Remix.Camera Adapter Demo Verification
 
-Generated at: 2026-06-13T11:40:39.059Z
+Generated at: 2026-06-13T12:17:51.505Z
 Mode: bridge-dry-run
 Bridge URL: http://127.0.0.1:8787
 
@@ -23,6 +23,8 @@ Bridge URL: http://127.0.0.1:8787
 | Viber | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | VK community bots | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | Slack | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
+| Mattermost | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
+| Rocket.Chat | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | LINE | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | Zalo Official Account | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | KakaoTalk | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
@@ -55,7 +57,7 @@ Bridge URL: http://127.0.0.1:8787
 | Amazon Lex V2 | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | IBM watsonx Assistant | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 
-Public demo ready targets: 1/46
+Public demo ready targets: 1/48
 
 ## Targets
 
@@ -225,6 +227,28 @@ Evidence: setup runbook and static adapter preflight. Public demo ready: no.
 - [x] marker present: autoSend === false
 - [x] marker present: SLACK_SIGNING_SECRET
 - [x] marker present: uploaded files
+
+### Mattermost
+Evidence: setup runbook and static adapter preflight. Public demo ready: no.
+- [x] adapter exists: adapters/mattermost/remix-mattermost-tool.mjs
+- [x] adapter exists: adapters/mattermost/README.md
+- [x] demo runbook exists: demos/mattermost/demo.md
+- [x] demo includes setup target
+- [x] marker present: createRemixMattermostTool
+- [x] marker present: MATTERMOST_TOKEN
+- [x] marker present: incoming webhook
+- [x] marker present: productionImageUrl
+
+### Rocket.Chat
+Evidence: setup runbook and static adapter preflight. Public demo ready: no.
+- [x] adapter exists: adapters/rocketchat/remix-rocketchat-tool.mjs
+- [x] adapter exists: adapters/rocketchat/README.md
+- [x] demo runbook exists: demos/rocketchat/demo.md
+- [x] demo includes setup target
+- [x] marker present: createRemixRocketChatTool
+- [x] marker present: ROCKETCHAT_URL
+- [x] marker present: chat.postMessage
+- [x] marker present: productionImageUrl
 
 ### LINE
 Evidence: setup runbook and static adapter preflight. Public demo ready: no.
@@ -585,6 +609,8 @@ Evidence: setup runbook and static adapter preflight. Public demo ready: no.
 - [x] Viber adapter real dry-run (command: send-selfie)
 - [x] VK community bot adapter real dry-run (command: send-selfie)
 - [x] Slack adapter real dry-run (command: send-selfie)
+- [x] Mattermost adapter real dry-run (command: send-selfie)
+- [x] Rocket.Chat adapter real dry-run (command: send-selfie)
 - [x] LINE adapter real dry-run (command: send-selfie)
 - [x] Zalo Official Account adapter real dry-run (command: send-selfie)
 - [x] KakaoTalk adapter real dry-run (command: send-selfie)

@@ -15,6 +15,12 @@ import {
   sendLineRemixResult,
 } from "../adapters/line/remix-line-tool.mjs";
 import {
+  parseMattermostCommand,
+  runMattermostRemixCommand,
+  sendMattermostRemixResult,
+  sendMattermostText,
+} from "../adapters/mattermost/remix-mattermost-tool.mjs";
+import {
   parseInstagramCommand,
   runInstagramRemixCommand,
   sendInstagramRemixResult,
@@ -62,11 +68,17 @@ import {
   sendVkRemixResult,
   sendVkText,
 } from "../adapters/vk/remix-vk-tool.mjs";
+import {
+  parseRocketChatCommand,
+  runRocketChatRemixCommand,
+  sendRocketChatRemixResult,
+  sendRocketChatText,
+} from "../adapters/rocketchat/remix-rocketchat-tool.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const packageRoot = path.resolve(__dirname, "..");
 
-const MESSAGING_TARGETS = ["telegram", "discord", "whatsapp", "slack", "line", "messenger", "instagram", "twilio", "matrix", "vk"];
+const MESSAGING_TARGETS = ["telegram", "discord", "whatsapp", "slack", "mattermost", "rocketchat", "line", "messenger", "instagram", "twilio", "matrix", "vk"];
 
 const COMMAND_ALIASES = new Map([
   ["selfie", "send-selfie"],
@@ -99,6 +111,8 @@ const DEFAULT_COMMANDS = {
   discord: "preview selfie cozy couch with lamp light",
   whatsapp: "preview selfie cozy couch with lamp light",
   slack: "preview selfie cozy couch with lamp light",
+  mattermost: "preview selfie cozy couch with lamp light",
+  rocketchat: "preview selfie cozy couch with lamp light",
   line: "preview selfie cozy couch with lamp light",
   messenger: "preview selfie cozy couch with lamp light",
   instagram: "preview selfie cozy couch with lamp light",
@@ -112,6 +126,8 @@ const DELIVERY_ENV = {
   discord: ["DISCORD_WEBHOOK_URL"],
   whatsapp: ["WHATSAPP_ACCESS_TOKEN", "WHATSAPP_PHONE_NUMBER_ID", "WHATSAPP_TO"],
   slack: ["SLACK_BOT_TOKEN", "SLACK_CHANNEL_ID"],
+  mattermost: ["MATTERMOST_WEBHOOK_URL"],
+  rocketchat: ["ROCKETCHAT_URL", "ROCKETCHAT_AUTH_TOKEN", "ROCKETCHAT_USER_ID", "ROCKETCHAT_ROOM_ID"],
   line: ["LINE_CHANNEL_ACCESS_TOKEN", "LINE_TO"],
   messenger: ["MESSENGER_PAGE_ACCESS_TOKEN", "MESSENGER_RECIPIENT_ID"],
   instagram: ["INSTAGRAM_ACCESS_TOKEN", "INSTAGRAM_RECIPIENT_ID"],
@@ -228,6 +244,10 @@ export function parseTargetCommand(target, commandText) {
       return parseWhatsAppCommand(commandText);
     case "slack":
       return parseSlackCommand(commandText);
+    case "mattermost":
+      return parseMattermostCommand(commandText);
+    case "rocketchat":
+      return parseRocketChatCommand(commandText);
     case "line":
       return parseLineCommand(commandText);
     case "messenger":
@@ -308,6 +328,10 @@ export async function runTargetCommand({ target, parsedResult, options }) {
       return runWhatsAppRemixCommand(parsedResult, options);
     case "slack":
       return runSlackRemixCommand(parsedResult, options);
+    case "mattermost":
+      return runMattermostRemixCommand(parsedResult, options);
+    case "rocketchat":
+      return runRocketChatRemixCommand(parsedResult, options);
     case "line":
       return runLineRemixCommand(parsedResult, options);
     case "messenger":
@@ -452,6 +476,32 @@ async function deliverTargetResult({ target, result, commandText }) {
       return sendSlackRemixResult({
         botToken: process.env.SLACK_BOT_TOKEN,
         channelId: process.env.SLACK_CHANNEL_ID,
+        result,
+      });
+    case "mattermost":
+      await sendMattermostText({
+        webhookUrl: process.env.MATTERMOST_WEBHOOK_URL,
+        text: `Mattermost live demo command: ${commandText}`,
+      });
+      return sendMattermostRemixResult({
+        webhookUrl: process.env.MATTERMOST_WEBHOOK_URL,
+        result,
+      });
+    case "rocketchat":
+      await sendRocketChatText({
+        serverUrl: process.env.ROCKETCHAT_URL,
+        authToken: process.env.ROCKETCHAT_AUTH_TOKEN,
+        userId: process.env.ROCKETCHAT_USER_ID,
+        roomId: process.env.ROCKETCHAT_ROOM_ID,
+        channel: process.env.ROCKETCHAT_CHANNEL,
+        text: `Rocket.Chat live demo command: ${commandText}`,
+      });
+      return sendRocketChatRemixResult({
+        serverUrl: process.env.ROCKETCHAT_URL,
+        authToken: process.env.ROCKETCHAT_AUTH_TOKEN,
+        userId: process.env.ROCKETCHAT_USER_ID,
+        roomId: process.env.ROCKETCHAT_ROOM_ID,
+        channel: process.env.ROCKETCHAT_CHANNEL,
         result,
       });
     case "line":

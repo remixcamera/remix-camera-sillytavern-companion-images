@@ -37,6 +37,16 @@ test("messaging recorder parses target-specific preview commands", () => {
   assert.equal(vk.action, "dry-run");
   assert.equal(vk.command, "send-selfie");
   assert.equal(vk.text, "cozy couch");
+
+  const mattermost = parseTargetCommand("mattermost", "preview selfie cozy couch");
+  assert.equal(mattermost.action, "dry-run");
+  assert.equal(mattermost.command, "send-selfie");
+  assert.equal(mattermost.text, "cozy couch");
+
+  const rocketchat = parseTargetCommand("rocketchat", "preview selfie cozy couch");
+  assert.equal(rocketchat.action, "dry-run");
+  assert.equal(rocketchat.command, "send-selfie");
+  assert.equal(rocketchat.text, "cozy couch");
 });
 
 test("messaging recorder counts planned generations before spending", () => {
@@ -47,6 +57,8 @@ test("messaging recorder counts planned generations before spending", () => {
   assert.equal(plannedGenerationCount("instagram", parseTargetCommand("instagram", "vacation yes Amalfi coast")), 3);
   assert.equal(plannedGenerationCount("twilio", parseTargetCommand("twilio", "selfie couch")), 1);
   assert.equal(plannedGenerationCount("vk", parseTargetCommand("vk", "vacation yes Amalfi coast")), 3);
+  assert.equal(plannedGenerationCount("mattermost", parseTargetCommand("mattermost", "vacation yes Amalfi coast")), 3);
+  assert.equal(plannedGenerationCount("rocketchat", parseTargetCommand("rocketchat", "snap yes bedroom mirror")), 1);
 });
 
 test("messaging recorder evidence records no-delivery dry-runs honestly", () => {
@@ -94,6 +106,11 @@ test("messaging recorder includes Instagram and Twilio delivery readiness withou
   const originalTwilioTo = process.env.TWILIO_TO;
   const originalVkToken = process.env.VK_ACCESS_TOKEN;
   const originalVkPeerId = process.env.VK_PEER_ID;
+  const originalMattermostWebhook = process.env.MATTERMOST_WEBHOOK_URL;
+  const originalRocketChatUrl = process.env.ROCKETCHAT_URL;
+  const originalRocketChatToken = process.env.ROCKETCHAT_AUTH_TOKEN;
+  const originalRocketChatUserId = process.env.ROCKETCHAT_USER_ID;
+  const originalRocketChatRoomId = process.env.ROCKETCHAT_ROOM_ID;
   try {
     process.env.INSTAGRAM_ACCESS_TOKEN = "ig-secret-token";
     delete process.env.INSTAGRAM_RECIPIENT_ID;
@@ -120,6 +137,23 @@ test("messaging recorder includes Instagram and Twilio delivery readiness withou
     assert.deepEqual(vk.requiredEnv, ["VK_ACCESS_TOKEN", "VK_PEER_ID"]);
     assert.deepEqual(vk.missingEnv, ["VK_PEER_ID"]);
     assert.equal(Object.values(vk).some((value) => String(value).includes("vk-secret-token")), false);
+
+    process.env.MATTERMOST_WEBHOOK_URL = "https://mattermost.test/hooks/secret-webhook";
+    const mattermost = deliveryReadiness("mattermost");
+    assert.equal(mattermost.status, "host-delivery-ready");
+    assert.deepEqual(mattermost.requiredEnv, ["MATTERMOST_WEBHOOK_URL"]);
+    assert.deepEqual(mattermost.missingEnv, []);
+    assert.equal(Object.values(mattermost).some((value) => String(value).includes("secret-webhook")), false);
+
+    process.env.ROCKETCHAT_URL = "https://chat.example.com";
+    process.env.ROCKETCHAT_AUTH_TOKEN = "rocket-secret-token";
+    process.env.ROCKETCHAT_USER_ID = "user-id";
+    delete process.env.ROCKETCHAT_ROOM_ID;
+    const rocketchat = deliveryReadiness("rocketchat");
+    assert.equal(rocketchat.status, "missing-host-delivery-credentials");
+    assert.deepEqual(rocketchat.requiredEnv, ["ROCKETCHAT_URL", "ROCKETCHAT_AUTH_TOKEN", "ROCKETCHAT_USER_ID", "ROCKETCHAT_ROOM_ID"]);
+    assert.deepEqual(rocketchat.missingEnv, ["ROCKETCHAT_ROOM_ID"]);
+    assert.equal(Object.values(rocketchat).some((value) => String(value).includes("rocket-secret-token")), false);
   } finally {
     if (originalInstagramToken === undefined) delete process.env.INSTAGRAM_ACCESS_TOKEN;
     else process.env.INSTAGRAM_ACCESS_TOKEN = originalInstagramToken;
@@ -137,6 +171,16 @@ test("messaging recorder includes Instagram and Twilio delivery readiness withou
     else process.env.VK_ACCESS_TOKEN = originalVkToken;
     if (originalVkPeerId === undefined) delete process.env.VK_PEER_ID;
     else process.env.VK_PEER_ID = originalVkPeerId;
+    if (originalMattermostWebhook === undefined) delete process.env.MATTERMOST_WEBHOOK_URL;
+    else process.env.MATTERMOST_WEBHOOK_URL = originalMattermostWebhook;
+    if (originalRocketChatUrl === undefined) delete process.env.ROCKETCHAT_URL;
+    else process.env.ROCKETCHAT_URL = originalRocketChatUrl;
+    if (originalRocketChatToken === undefined) delete process.env.ROCKETCHAT_AUTH_TOKEN;
+    else process.env.ROCKETCHAT_AUTH_TOKEN = originalRocketChatToken;
+    if (originalRocketChatUserId === undefined) delete process.env.ROCKETCHAT_USER_ID;
+    else process.env.ROCKETCHAT_USER_ID = originalRocketChatUserId;
+    if (originalRocketChatRoomId === undefined) delete process.env.ROCKETCHAT_ROOM_ID;
+    else process.env.ROCKETCHAT_ROOM_ID = originalRocketChatRoomId;
   }
 });
 
