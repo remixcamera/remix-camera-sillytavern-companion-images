@@ -1,8 +1,13 @@
 import assert from "node:assert/strict";
+import { createRequire } from "node:module";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import { runRemixCameraMakeTool } from "../adapters/make/remix-camera-make-tool.mjs";
 import { runRemixCameraN8nTool } from "../adapters/n8n/remix-camera-n8n-tool.mjs";
 import pipedreamAction, { runRemixCameraPipedreamAction } from "../adapters/pipedream/remix-camera-pipedream-action.mjs";
+
+const require = createRequire(import.meta.url);
+const zapierApp = require("../adapters/zapier/remix-camera-zapier-app/index.cjs");
 
 function mockFetchRecorder(payload = {}) {
   const calls = [];
@@ -30,6 +35,34 @@ test("n8n helper defaults to a no-spend dry-run preview", async () => {
   assert.equal(calls[0].body.characterName, "Lily");
   assert.match(result.text, /Preview ready: Excellent Lily Selfie/);
   assert.equal(result.dryRun, true);
+});
+
+test("Make helper defaults to a no-spend dry-run preview", async () => {
+  const { calls, fetchImpl } = mockFetchRecorder({
+    ok: true,
+    dryRun: true,
+    promptTemplate: { packTitle: "Excellent Lily Selfie" },
+    prompt: "preview prompt",
+  });
+  const result = await runRemixCameraMakeTool(
+    { command: "send-selfie", prompt: "cozy couch" },
+    { bridgeUrl: "http://bridge.local", fetchImpl, characterName: "Lily" },
+  );
+
+  assert.equal(calls[0].url, "http://bridge.local/v1/tools/send-selfie/dry-run");
+  assert.equal(calls[0].body.yes, undefined);
+  assert.equal(calls[0].body.characterName, "Lily");
+  assert.match(result.text, /Preview ready: Excellent Lily Selfie/);
+  assert.equal(result.dryRun, true);
+});
+
+test("Make action module JSON keeps generation behind action=generate and yes=true", () => {
+  const moduleJson = JSON.parse(readFileSync(new URL("../adapters/make/remix-camera-make-action-module.json", import.meta.url), "utf8"));
+  assert.equal(moduleJson.type, "action");
+  assert.match(moduleJson.communication.url, /parameters\.action/);
+  assert.match(moduleJson.communication.url, /parameters\.yes/);
+  assert.equal(moduleJson.communication.method, "POST");
+  assert.equal(moduleJson.communication.body.yes.includes("parameters.yes"), true);
 });
 
 test("n8n helper refuses requested generation without yes=true", async () => {
@@ -104,6 +137,61 @@ test("Pipedream component exports a usable action surface", async () => {
   assert.equal(calls[0].url, "http://bridge.local/v1/tools/daily-life-snap/dry-run");
   assert.match(result.text, /Preview ready: Daily Snap Template/);
   assert.equal(summaries[0].name, "$summary");
+});
+
+test("Zapier CLI action defaults to dry-run and maps bridge output", async () => {
+  const requests = [];
+  const result = await zapierApp._test.perform(
+    {
+      request: async (options) => {
+        requests.push(options);
+        return {
+          json: {
+            ok: true,
+            dryRun: true,
+            promptTemplate: { packTitle: "Excellent Lily Selfie" },
+            prompt: "preview prompt",
+          },
+        };
+      },
+    },
+    {
+      inputData: {
+        bridgeUrl: "http://bridge.local",
+        command: "send-selfie",
+        prompt: "cozy couch",
+        action: "dry-run",
+        yes: true,
+      },
+      authData: {
+        characterName: "Lily",
+      },
+    },
+  );
+
+  assert.equal(requests[0].url, "http://bridge.local/v1/tools/send-selfie/dry-run");
+  assert.equal(JSON.parse(requests[0].body).yes, undefined);
+  assert.equal(result.dryRun, true);
+  assert.match(result.text, /Preview ready: Excellent Lily Selfie/);
+});
+
+test("Zapier CLI action refuses generate without yes=true", async () => {
+  await assert.rejects(
+    () =>
+      zapierApp._test.perform(
+        { request: async () => ({ json: {} }) },
+        {
+          inputData: {
+            bridgeUrl: "http://bridge.local",
+            command: "send-selfie",
+            prompt: "cozy couch",
+            action: "generate",
+            yes: false,
+          },
+        },
+      ),
+    /yes=true/,
+  );
 });
 
 test("n8n workflow JSON contains the guarded bridge call pipeline", () => {

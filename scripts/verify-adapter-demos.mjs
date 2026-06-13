@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
+import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { COMPANION_COMMANDS } from "../lib/companion-tools.mjs";
@@ -11,6 +12,7 @@ import { parseLineCommand, runLineRemixCommand } from "../adapters/line/remix-li
 import { parseMessengerCommand, runMessengerRemixCommand } from "../adapters/messenger/remix-messenger-tool.mjs";
 import { parseMatrixCommand, runMatrixRemixCommand } from "../adapters/matrix/remix-matrix-tool.mjs";
 import { handleMcpRequest, normalizeMcpToolName } from "../adapters/mcp/remix-camera-mcp-server.mjs";
+import { runRemixCameraMakeTool } from "../adapters/make/remix-camera-make-tool.mjs";
 import { runRemixCameraN8nTool } from "../adapters/n8n/remix-camera-n8n-tool.mjs";
 import { runRemixCameraPipedreamAction } from "../adapters/pipedream/remix-camera-pipedream-action.mjs";
 import { parseSlackCommand, runSlackRemixCommand } from "../adapters/slack/remix-slack-tool.mjs";
@@ -21,6 +23,8 @@ import { createRemixCameraAiSdkTools } from "../adapters/vercel-ai-sdk/remix-cam
 import { parseWhatsAppCommand, runWhatsAppRemixCommand } from "../adapters/whatsapp/remix-whatsapp-tool.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const require = createRequire(import.meta.url);
+const zapierApp = require("../adapters/zapier/remix-camera-zapier-app/index.cjs");
 const packageRoot = path.resolve(__dirname, "..");
 const args = new Map(
   process.argv
@@ -278,6 +282,22 @@ const targets = [
     demoFile: "demos/pipedream/demo.md",
     setupCommand: "--target=pipedream",
     markers: ["remix_camera_companion_image", "Pipedream", "yes=true"],
+  },
+  {
+    id: "make",
+    title: "Make",
+    adapterFiles: ["adapters/make/README.md", "adapters/make/remix-camera-make-action-module.json", "adapters/make/remix-camera-make-tool.mjs"],
+    demoFile: "demos/make/demo.md",
+    setupCommand: "--target=make",
+    markers: ["Preview or Generate Companion Image", "Make Custom Apps", "yes=true"],
+  },
+  {
+    id: "zapier",
+    title: "Zapier",
+    adapterFiles: ["adapters/zapier/README.md", "adapters/zapier/remix-camera-zapier-app/index.cjs"],
+    demoFile: "demos/zapier/demo.md",
+    setupCommand: "--target=zapier",
+    markers: ["Preview or Generate Companion Image", "Zapier Platform CLI", "yes=true"],
   },
 ];
 
@@ -603,6 +623,18 @@ async function verifyHostAdapterDryRuns() {
         reason: "No bridge URL provided.",
       }),
     );
+    checks.push(
+      okCheck("Make adapter real dry-run", false, {
+        skipped: true,
+        reason: "No bridge URL provided.",
+      }),
+    );
+    checks.push(
+      okCheck("Zapier adapter real dry-run", false, {
+        skipped: true,
+        reason: "No bridge URL provided.",
+      }),
+    );
     return checks;
   }
 
@@ -797,6 +829,46 @@ async function verifyHostAdapterDryRuns() {
   });
   checks.push(
     okCheck("Pipedream adapter real dry-run", pipedream?.payload?.dryRun === true && /Preview ready/i.test(pipedream?.text || ""), {
+      command: "send-selfie",
+    }),
+  );
+
+  const make = await runRemixCameraMakeTool(commandInputs["send-selfie"], {
+    bridgeUrl,
+    profileId: process.env.REMIX_PROFILE_ID || "",
+    characterName: "Lily",
+  });
+  checks.push(
+    okCheck("Make adapter real dry-run", make?.payload?.dryRun === true && /Preview ready/i.test(make?.text || ""), {
+      command: "send-selfie",
+    }),
+  );
+
+  const zapier = await zapierApp._test.perform(
+    {
+      request: async (options) => {
+        const response = await fetch(options.url, {
+          method: options.method || "GET",
+          headers: options.headers,
+          body: options.body,
+        });
+        return {
+          json: await response.json().catch(() => ({})),
+          status: response.status,
+        };
+      },
+    },
+    {
+      inputData: {
+        ...commandInputs["send-selfie"],
+        bridgeUrl,
+        command: "send-selfie",
+        action: "dry-run",
+      },
+    },
+  );
+  checks.push(
+    okCheck("Zapier adapter real dry-run", zapier?.dryRun === true && /Preview ready/i.test(zapier?.text || ""), {
       command: "send-selfie",
     }),
   );

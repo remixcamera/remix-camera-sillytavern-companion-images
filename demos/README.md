@@ -39,6 +39,8 @@ Targets:
 - `vercel-ai-sdk/`: Vercel AI SDK tool map demo for `generateText`, `streamText`, or agents.
 - `n8n/`: n8n workflow and Code node helper demo.
 - `pipedream/`: Pipedream Node.js action demo.
+- `make/`: Make Custom Apps action-module demo.
+- `zapier/`: Zapier Platform CLI action demo.
 
 Do not publish generated demo recordings until the runbook has been executed against production Remix.Camera and the inserted images are real Remix.Camera outputs.
 

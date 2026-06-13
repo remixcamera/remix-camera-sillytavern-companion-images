@@ -1,6 +1,6 @@
 # Remix.Camera Adapter Demo Verification
 
-Generated at: 2026-06-13T07:28:03.540Z
+Generated at: 2026-06-13T07:52:27.910Z
 Mode: bridge-dry-run
 Bridge URL: http://127.0.0.1:8787
 
@@ -36,8 +36,10 @@ Bridge URL: http://127.0.0.1:8787
 | Vercel AI SDK | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | n8n | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | Pipedream | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
+| Make | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
+| Zapier | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 
-Public demo ready targets: 1/28
+Public demo ready targets: 1/30
 
 ## Targets
 
@@ -343,6 +345,27 @@ Evidence: setup runbook and static adapter preflight. Public demo ready: no.
 - [x] marker present: Pipedream
 - [x] marker present: yes=true
 
+### Make
+Evidence: setup runbook and static adapter preflight. Public demo ready: no.
+- [x] adapter exists: adapters/make/README.md
+- [x] adapter exists: adapters/make/remix-camera-make-action-module.json
+- [x] adapter exists: adapters/make/remix-camera-make-tool.mjs
+- [x] demo runbook exists: demos/make/demo.md
+- [x] demo includes setup target
+- [x] marker present: Preview or Generate Companion Image
+- [x] marker present: Make Custom Apps
+- [x] marker present: yes=true
+
+### Zapier
+Evidence: setup runbook and static adapter preflight. Public demo ready: no.
+- [x] adapter exists: adapters/zapier/README.md
+- [x] adapter exists: adapters/zapier/remix-camera-zapier-app/index.cjs
+- [x] demo runbook exists: demos/zapier/demo.md
+- [x] demo includes setup target
+- [x] marker present: Preview or Generate Companion Image
+- [x] marker present: Zapier Platform CLI
+- [x] marker present: yes=true
+
 ## Bridge Contracts
 
 - [x] bridge health (status 200; auth design_api_session)
@@ -374,3 +397,5 @@ Evidence: setup runbook and static adapter preflight. Public demo ready: no.
 - [x] Vercel AI SDK adapter real dry-run (command: send-selfie)
 - [x] n8n adapter real dry-run (command: send-selfie)
 - [x] Pipedream adapter real dry-run (command: send-selfie)
+- [x] Make adapter real dry-run (command: send-selfie)
+- [x] Zapier adapter real dry-run (command: send-selfie)
