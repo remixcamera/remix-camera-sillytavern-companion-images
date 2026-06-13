@@ -1,0 +1,63 @@
+{
+  "name": "remix_camera_companion_image",
+  "description": "Preview or generate Remix.Camera companion images for selfies, chat-context snaps, outfits, couple photos, vacation sets, date photos, daily-life snaps, and private snaps. Preview first unless the user explicitly confirms generation.",
+  "parameters": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "command": {
+        "type": "string",
+        "enum": [
+          "send-selfie",
+          "auto-selfie-from-chat",
+          "outfit-try-on",
+          "couple-photo",
+          "couples-vacation",
+          "date-night",
+          "daily-life-snap",
+          "private-snap"
+        ],
+        "description": "Companion image command."
+      },
+      "prompt": {
+        "type": "string",
+        "description": "Short scene, mood, or user request."
+      },
+      "chatText": {
+        "type": "string",
+        "description": "Recent chat context."
+      },
+      "sourceImageUrl": {
+        "type": "string",
+        "description": "Source image URL for outfit/reference workflows."
+      },
+      "userReferenceImageUrl": {
+        "type": "string",
+        "description": "User reference photo URL for couple workflows."
+      },
+      "userConsent": {
+        "type": "string",
+        "description": "Affirmative consent for user-in-image workflows. Use yes only when explicit."
+      },
+      "theme": {
+        "type": "string",
+        "description": "Theme for couples-vacation sets."
+      },
+      "yes": {
+        "type": "boolean",
+        "description": "Set true only after explicit confirmation to spend a generation."
+      },
+      "confirm": {
+        "type": "boolean",
+        "description": "Alias for yes."
+      },
+      "preview": {
+        "type": "boolean",
+        "description": "Set true to force a dry-run preview."
+      }
+    },
+    "required": [
+      "command"
+    ]
+  }
+}

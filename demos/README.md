@@ -27,6 +27,10 @@ Targets:
 - `dify/`: Dify OpenAPI custom tool demo.
 - `flowise/`: Flowise Custom Tool demo.
 - `botpress/`: Botpress Execute Code card or Action demo.
+- `anythingllm/`: AnythingLLM custom agent skill demo.
+- `typingmind/`: TypingMind plugin function demo.
+- `poe/`: Poe server bot demo.
+- `langflow/`: Langflow custom component demo.
 
 Do not publish generated demo recordings until the runbook has been executed against production Remix.Camera and the inserted images are real Remix.Camera outputs.
 
@@ -107,9 +111,9 @@ Delivery environment variables:
 
 Do not use `--deliver` for public demo evidence unless the message lands in the real host. If delivery credentials are absent, the recorder labels the output as bridge-only evidence rather than host delivery.
 
-## Current Production Dry-Run Evidence
+## Current Adapter Evidence
 
-The committed production dry-run snapshot lives here:
+The committed static adapter/demo preflight snapshot lives here:
 
 ```text
 demos/evidence/adapter-demo-evidence.md
@@ -117,7 +121,13 @@ demos/evidence/adapter-demo-evidence.json
 demos/evidence/adapter-demo-evidence.html
 ```
 
-Refresh it from a paired bridge without spending credits:
+Refresh it as static preflight:
+
+```bash
+npm run demo:verify -- --output-dir=demos/evidence
+```
+
+Refresh it from a paired bridge without spending credits when you want real Remix.Camera dry-run preview evidence:
 
 ```bash
 REMIX_BRIDGE_URL=http://127.0.0.1:8787 npm run demo:verify -- --output-dir=demos/evidence

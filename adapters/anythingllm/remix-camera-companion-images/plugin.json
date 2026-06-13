@@ -1,0 +1,113 @@
+{
+  "active": true,
+  "hubId": "remix-camera-companion-images",
+  "name": "Remix.Camera Companion Images",
+  "schema": "skill-1.0.0",
+  "version": "0.4.0",
+  "description": "Preview or generate companion images through a local Remix.Camera bridge.",
+  "author": "Remix.Camera",
+  "author_url": "https://remix.camera",
+  "license": "UNLICENSED",
+  "setup_args": {
+    "REMIX_BRIDGE_URL": {
+      "type": "string",
+      "required": false,
+      "input": {
+        "type": "text",
+        "default": "http://127.0.0.1:8787",
+        "placeholder": "http://127.0.0.1:8787",
+        "hint": "Local Remix.Camera bridge URL."
+      }
+    },
+    "REMIX_PROFILE_ID": {
+      "type": "string",
+      "required": false,
+      "input": {
+        "type": "text",
+        "default": "",
+        "placeholder": "profile_id",
+        "hint": "Optional Remix.Camera profile ID override."
+      }
+    },
+    "REMIX_CHARACTER_NAME": {
+      "type": "string",
+      "required": false,
+      "input": {
+        "type": "text",
+        "default": "Lily",
+        "placeholder": "Lily",
+        "hint": "Companion name used in returned chat markdown."
+      }
+    },
+    "REMIX_CHARACTER_VISUAL_IDENTITY": {
+      "type": "string",
+      "required": false,
+      "input": {
+        "type": "textarea",
+        "default": "",
+        "placeholder": "Clearly adult companion with a consistent Remix.Camera visual profile.",
+        "hint": "Optional stable visual identity for prompt adaptation."
+      }
+    }
+  },
+  "examples": [
+    {
+      "prompt": "Preview a cozy couch selfie for Lily.",
+      "call": "{\"command\":\"send-selfie\",\"prompt\":\"cozy couch with warm lamp light\",\"preview\":true}"
+    },
+    {
+      "prompt": "Generate a date-night image after I confirm.",
+      "call": "{\"command\":\"date-night\",\"prompt\":\"quiet restaurant booth\",\"yes\":true}"
+    },
+    {
+      "prompt": "Preview a couple vacation set with my uploaded reference.",
+      "call": "{\"command\":\"couples-vacation\",\"theme\":\"Amalfi coast weekend\",\"userConsent\":\"yes\",\"preview\":true}"
+    }
+  ],
+  "entrypoint": {
+    "file": "handler.js",
+    "params": {
+      "command": {
+        "description": "Companion image command such as send-selfie, auto-selfie-from-chat, outfit-try-on, couple-photo, couples-vacation, date-night, daily-life-snap, or private-snap.",
+        "type": "string"
+      },
+      "prompt": {
+        "description": "Short image request or scene description.",
+        "type": "string"
+      },
+      "chatText": {
+        "description": "Recent chat context for auto-selfie or daily-life snaps.",
+        "type": "string"
+      },
+      "sourceImageUrl": {
+        "description": "Public source image URL for outfit or source-image workflows.",
+        "type": "string"
+      },
+      "userReferenceImageUrl": {
+        "description": "Public user reference photo URL for couple workflows.",
+        "type": "string"
+      },
+      "userConsent": {
+        "description": "Affirmative consent for user-in-image workflows. Use yes only when explicit.",
+        "type": "string"
+      },
+      "theme": {
+        "description": "Theme for couples-vacation sets.",
+        "type": "string"
+      },
+      "yes": {
+        "description": "Set true only after explicit confirmation to spend a generation.",
+        "type": "boolean"
+      },
+      "confirm": {
+        "description": "Alias for yes.",
+        "type": "boolean"
+      },
+      "preview": {
+        "description": "Set true to force a dry-run preview.",
+        "type": "boolean"
+      }
+    }
+  },
+  "imported": true
+}

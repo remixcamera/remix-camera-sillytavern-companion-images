@@ -1,8 +1,8 @@
 {
   "ok": true,
-  "generatedAt": "2026-06-12T17:28:05.087Z",
-  "mode": "bridge-dry-run",
-  "bridgeUrl": "http://127.0.0.1:8796",
+  "generatedAt": "2026-06-13T05:03:21.977Z",
+  "mode": "static-adapter-demo-preflight",
+  "bridgeUrl": null,
   "targets": [
     {
       "id": "sillytavern",
@@ -193,6 +193,11 @@
           "marker": "/lobe/manifest.json"
         },
         {
+          "name": "marker present: Preview",
+          "ok": true,
+          "marker": "Preview"
+        },
+        {
           "name": "marker present: yes=true",
           "ok": true,
           "marker": "yes=true"
@@ -316,6 +321,11 @@
           "expected": "--target=discord"
         },
         {
+          "name": "marker present: createRemixDiscordTool",
+          "ok": true,
+          "marker": "createRemixDiscordTool"
+        },
+        {
           "name": "marker present: verifyDiscordSignature",
           "ok": true,
           "marker": "verifyDiscordSignature"
@@ -362,6 +372,16 @@
           "marker": "createRemixWhatsAppTool"
         },
         {
+          "name": "marker present: handleWebhookDetailed",
+          "ok": true,
+          "marker": "handleWebhookDetailed"
+        },
+        {
+          "name": "marker present: autoSend === false",
+          "ok": true,
+          "marker": "autoSend === false"
+        },
+        {
           "name": "marker present: WHATSAPP_PHONE_NUMBER_ID",
           "ok": true,
           "marker": "WHATSAPP_PHONE_NUMBER_ID"
@@ -401,6 +421,16 @@
           "name": "marker present: createRemixSlackTool",
           "ok": true,
           "marker": "createRemixSlackTool"
+        },
+        {
+          "name": "marker present: handleSlashCommandDetailed",
+          "ok": true,
+          "marker": "handleSlashCommandDetailed"
+        },
+        {
+          "name": "marker present: autoSend === false",
+          "ok": true,
+          "marker": "autoSend === false"
         },
         {
           "name": "marker present: SLACK_SIGNING_SECRET",
@@ -444,6 +474,16 @@
           "marker": "createRemixLineTool"
         },
         {
+          "name": "marker present: handleWebhookDetailed",
+          "ok": true,
+          "marker": "handleWebhookDetailed"
+        },
+        {
+          "name": "marker present: autoSend === false",
+          "ok": true,
+          "marker": "autoSend === false"
+        },
+        {
           "name": "marker present: LINE_CHANNEL_SECRET",
           "ok": true,
           "marker": "LINE_CHANNEL_SECRET"
@@ -485,6 +525,16 @@
           "marker": "createRemixMessengerTool"
         },
         {
+          "name": "marker present: handleWebhookDetailed",
+          "ok": true,
+          "marker": "handleWebhookDetailed"
+        },
+        {
+          "name": "marker present: autoSend === false",
+          "ok": true,
+          "marker": "autoSend === false"
+        },
+        {
           "name": "marker present: MESSENGER_APP_SECRET",
           "ok": true,
           "marker": "MESSENGER_APP_SECRET"
@@ -524,6 +574,16 @@
           "name": "marker present: createRemixMatrixTool",
           "ok": true,
           "marker": "createRemixMatrixTool"
+        },
+        {
+          "name": "marker present: handleSyncDetailed",
+          "ok": true,
+          "marker": "handleSyncDetailed"
+        },
+        {
+          "name": "marker present: autoSend === false",
+          "ok": true,
+          "marker": "autoSend === false"
         },
         {
           "name": "marker present: MATRIX_ACCESS_TOKEN",
@@ -611,6 +671,11 @@
           "name": "marker present: preview=true",
           "ok": true,
           "marker": "preview=true"
+        },
+        {
+          "name": "marker present: confirm=true",
+          "ok": true,
+          "marker": "confirm=true"
         }
       ]
     },
@@ -652,111 +717,239 @@
           "name": "marker present: yes=true",
           "ok": true,
           "marker": "yes=true"
+        },
+        {
+          "name": "marker present: confirm=true",
+          "ok": true,
+          "marker": "confirm=true"
+        }
+      ]
+    },
+    {
+      "id": "anythingllm",
+      "title": "AnythingLLM",
+      "checks": [
+        {
+          "name": "adapter exists: adapters/anythingllm/README.md",
+          "ok": true,
+          "path": "adapters/anythingllm/README.md"
+        },
+        {
+          "name": "adapter exists: adapters/anythingllm/remix-camera-companion-images/plugin.json",
+          "ok": true,
+          "path": "adapters/anythingllm/remix-camera-companion-images/plugin.json"
+        },
+        {
+          "name": "adapter exists: adapters/anythingllm/remix-camera-companion-images/handler.js",
+          "ok": true,
+          "path": "adapters/anythingllm/remix-camera-companion-images/handler.js"
+        },
+        {
+          "name": "demo runbook exists: demos/anythingllm/demo.md",
+          "ok": true,
+          "path": "demos/anythingllm/demo.md"
+        },
+        {
+          "name": "demo includes setup target",
+          "ok": true,
+          "expected": "--target=anythingllm"
+        },
+        {
+          "name": "marker present: module.exports.runtime",
+          "ok": true,
+          "marker": "module.exports.runtime"
+        },
+        {
+          "name": "marker present: REMIX_BRIDGE_URL",
+          "ok": true,
+          "marker": "REMIX_BRIDGE_URL"
+        },
+        {
+          "name": "marker present: yes=true",
+          "ok": true,
+          "marker": "yes=true"
+        }
+      ]
+    },
+    {
+      "id": "typingmind",
+      "title": "TypingMind",
+      "checks": [
+        {
+          "name": "adapter exists: adapters/typingmind/README.md",
+          "ok": true,
+          "path": "adapters/typingmind/README.md"
+        },
+        {
+          "name": "adapter exists: adapters/typingmind/function-spec.json",
+          "ok": true,
+          "path": "adapters/typingmind/function-spec.json"
+        },
+        {
+          "name": "adapter exists: adapters/typingmind/remix-camera-plugin.js",
+          "ok": true,
+          "path": "adapters/typingmind/remix-camera-plugin.js"
+        },
+        {
+          "name": "demo runbook exists: demos/typingmind/demo.md",
+          "ok": true,
+          "path": "demos/typingmind/demo.md"
+        },
+        {
+          "name": "demo includes setup target",
+          "ok": true,
+          "expected": "--target=typingmind"
+        },
+        {
+          "name": "marker present: remix_camera_companion_image",
+          "ok": true,
+          "marker": "remix_camera_companion_image"
+        },
+        {
+          "name": "marker present: OpenAI Function Spec",
+          "ok": true,
+          "marker": "OpenAI Function Spec"
+        },
+        {
+          "name": "marker present: yes=true",
+          "ok": true,
+          "marker": "yes=true"
+        }
+      ]
+    },
+    {
+      "id": "poe",
+      "title": "Poe",
+      "checks": [
+        {
+          "name": "adapter exists: adapters/poe/README.md",
+          "ok": true,
+          "path": "adapters/poe/README.md"
+        },
+        {
+          "name": "adapter exists: adapters/poe/remix_camera_poe_bot.py",
+          "ok": true,
+          "path": "adapters/poe/remix_camera_poe_bot.py"
+        },
+        {
+          "name": "demo runbook exists: demos/poe/demo.md",
+          "ok": true,
+          "path": "demos/poe/demo.md"
+        },
+        {
+          "name": "demo includes setup target",
+          "ok": true,
+          "expected": "--target=poe"
+        },
+        {
+          "name": "marker present: fastapi_poe",
+          "ok": true,
+          "marker": "fastapi_poe"
+        },
+        {
+          "name": "marker present: PartialResponse",
+          "ok": true,
+          "marker": "PartialResponse"
+        },
+        {
+          "name": "marker present: yes=true",
+          "ok": true,
+          "marker": "yes=true"
+        }
+      ]
+    },
+    {
+      "id": "langflow",
+      "title": "Langflow",
+      "checks": [
+        {
+          "name": "adapter exists: adapters/langflow/README.md",
+          "ok": true,
+          "path": "adapters/langflow/README.md"
+        },
+        {
+          "name": "adapter exists: adapters/langflow/remix_camera_component.py",
+          "ok": true,
+          "path": "adapters/langflow/remix_camera_component.py"
+        },
+        {
+          "name": "demo runbook exists: demos/langflow/demo.md",
+          "ok": true,
+          "path": "demos/langflow/demo.md"
+        },
+        {
+          "name": "demo includes setup target",
+          "ok": true,
+          "expected": "--target=langflow"
+        },
+        {
+          "name": "marker present: RemixCameraCompanionImages",
+          "ok": true,
+          "marker": "RemixCameraCompanionImages"
+        },
+        {
+          "name": "marker present: Output",
+          "ok": true,
+          "marker": "Output"
+        },
+        {
+          "name": "marker present: yes=true",
+          "ok": true,
+          "marker": "yes=true"
         }
       ]
     }
   ],
   "bridgeChecks": [
     {
-      "name": "bridge health",
-      "ok": true,
-      "status": 200,
-      "authMode": "design_api_session"
-    },
-    {
-      "name": "OpenAPI exposes all generate endpoints",
-      "ok": true,
-      "status": 200
-    },
-    {
-      "name": "Lobe manifest exposes all tools",
-      "ok": true,
-      "status": 200
-    },
-    {
-      "name": "bridge dry-run: send-selfie",
-      "ok": true,
-      "status": 200,
-      "promptTemplate": "Realistic Bedroom Selfie Girl Phone Mirror"
-    },
-    {
-      "name": "bridge dry-run: auto-selfie-from-chat",
-      "ok": true,
-      "status": 200,
-      "promptTemplate": "Candid Mirror Selfie Squating"
-    },
-    {
-      "name": "bridge dry-run: outfit-try-on",
-      "ok": true,
-      "status": 200,
-      "promptTemplate": "Bedroom Mirror Selfie White Tank Yellow Skirt Braid"
-    },
-    {
-      "name": "bridge dry-run: couple-photo",
-      "ok": true,
-      "status": 200,
-      "promptTemplate": "Realistic Couple Mirror Selfie Black Outfit"
-    },
-    {
-      "name": "bridge dry-run: couples-vacation",
-      "ok": true,
-      "status": 200,
-      "promptTemplate": "Romantic Tropical Beach Couple Golden Hour Kiss"
-    },
-    {
-      "name": "bridge dry-run: date-night",
-      "ok": true,
-      "status": 200,
-      "promptTemplate": "Realistic Couple Restaurant Terrace Evening Warm Light"
-    },
-    {
-      "name": "bridge dry-run: daily-life-snap",
-      "ok": true,
-      "status": 200,
-      "promptTemplate": "Knit Sweater Iced Coffee Cafe Candid"
-    },
-    {
-      "name": "bridge dry-run: private-snap",
-      "ok": true,
-      "status": 200,
-      "promptTemplate": "Adult Woman Cozy Bedroom Mirror Selfie"
+      "name": "bridge dry-run previews",
+      "ok": false,
+      "skipped": true,
+      "reason": "Set REMIX_BRIDGE_URL or pass --bridge-url=http://127.0.0.1:8787 to run real dry-run previews."
     }
   ],
   "hostAdapterChecks": [
     {
       "name": "Telegram adapter real dry-run",
-      "ok": true,
-      "command": "send-selfie"
+      "ok": false,
+      "skipped": true,
+      "reason": "No bridge URL provided."
     },
     {
       "name": "Discord adapter real dry-run",
-      "ok": true,
-      "command": "send-selfie"
+      "ok": false,
+      "skipped": true,
+      "reason": "No bridge URL provided."
     },
     {
       "name": "WhatsApp adapter real dry-run",
-      "ok": true,
-      "command": "send-selfie"
+      "ok": false,
+      "skipped": true,
+      "reason": "No bridge URL provided."
     },
     {
       "name": "Slack adapter real dry-run",
-      "ok": true,
-      "command": "send-selfie"
+      "ok": false,
+      "skipped": true,
+      "reason": "No bridge URL provided."
     },
     {
       "name": "LINE adapter real dry-run",
-      "ok": true,
-      "command": "send-selfie"
+      "ok": false,
+      "skipped": true,
+      "reason": "No bridge URL provided."
     },
     {
       "name": "Messenger adapter real dry-run",
-      "ok": true,
-      "command": "send-selfie"
+      "ok": false,
+      "skipped": true,
+      "reason": "No bridge URL provided."
     },
     {
       "name": "Matrix adapter real dry-run",
-      "ok": true,
-      "command": "send-selfie"
+      "ok": false,
+      "skipped": true,
+      "reason": "No bridge URL provided."
     }
   ],
   "outputs": {
