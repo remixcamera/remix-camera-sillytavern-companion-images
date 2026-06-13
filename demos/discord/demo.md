@@ -18,6 +18,24 @@ Run Lily interactions server:
 DISCORD_PUBLIC_KEY=... DISCORD_APPLICATION_ID=... node adapters/discord/lily-interactions-server.mjs
 ```
 
+Integrate into an existing Discord bot:
+
+```js
+import { createRemixDiscordTool } from "./adapters/discord/remix-discord-tool.mjs";
+
+const remix = createRemixDiscordTool({
+  applicationId: process.env.DISCORD_APPLICATION_ID,
+  bridgeUrl: "http://127.0.0.1:8787",
+  profileId: process.env.REMIX_PROFILE_ID,
+  characterName: "Lily",
+});
+
+if (remix.shouldHandleInteraction(interaction)) {
+  const details = await remix.handleInteractionDetailed(interaction, { autoSend: false });
+  await existingBot.sendImages(interaction, details.result.imageUrls);
+}
+```
+
 ## Demo Flow
 
 1. In Discord, run `/preview tool:send-selfie prompt:cozy couch with lamp light`.
@@ -31,6 +49,7 @@ DISCORD_PUBLIC_KEY=... DISCORD_APPLICATION_ID=... node adapters/discord/lily-int
 - Discord signatures are verified before any work runs.
 - The response is deferred, then Remix.Camera results are sent as webhook follow-ups.
 - Local bridge image URLs are uploaded as files.
+- Existing bots can use `shouldHandleInteraction()` and `handleInteractionDetailed()` instead of the Lily proof server.
 - Couple/private commands require explicit `yes`.
 
 ## Executable Evidence

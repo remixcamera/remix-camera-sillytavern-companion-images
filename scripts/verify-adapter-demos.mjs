@@ -99,7 +99,7 @@ const targets = [
     adapterFiles: ["adapters/discord/remix-discord-tool.mjs", "adapters/discord/lily-interactions-server.mjs"],
     demoFile: "demos/discord/demo.md",
     setupCommand: "--target=discord",
-    markers: ["verifyDiscordSignature", "sendDiscordWebhookResult", "yes:true"],
+    markers: ["createRemixDiscordTool", "verifyDiscordSignature", "sendDiscordWebhookResult", "yes:true"],
   },
   {
     id: "whatsapp",

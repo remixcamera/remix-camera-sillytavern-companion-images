@@ -33,3 +33,21 @@ Expose this server over HTTPS and set the Discord application's Interactions End
 
 The server verifies Discord Ed25519 signatures, defers slash-command responses, calls the local Remix.Camera bridge, then sends follow-up messages with uploaded image files when the bridge returns local image URLs.
 
+## Existing Bot Integration
+
+```js
+import { createRemixDiscordTool } from "./adapters/discord/remix-discord-tool.mjs";
+
+const remix = createRemixDiscordTool({
+  applicationId: process.env.DISCORD_APPLICATION_ID,
+  bridgeUrl: "http://127.0.0.1:8787",
+  profileId: process.env.REMIX_PROFILE_ID,
+  characterName: "Lily",
+});
+
+if (remix.shouldHandleInteraction(interaction)) {
+  await remix.handleInteractionDetailed(interaction);
+}
+```
+
+Use `handleInteractionDetailed(interaction, { autoSend: false })` when your bot framework already handles deferred replies or file uploads. The detailed result includes the parsed Remix.Camera command, generated image URLs, and any Discord webhook message records returned by auto-send.
