@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "generatedAt": "2026-06-13T11:15:41.508Z",
+  "generatedAt": "2026-06-13T11:40:39.059Z",
   "mode": "bridge-dry-run",
   "bridgeUrl": "http://127.0.0.1:8787",
   "targets": [
@@ -690,6 +690,64 @@
           "name": "marker present: public HTTPS image URLs",
           "ok": true,
           "marker": "public HTTPS image URLs"
+        }
+      ]
+    },
+    {
+      "id": "vk",
+      "title": "VK community bots",
+      "demoEvidence": {
+        "status": "runbook-ready",
+        "publicDemoReady": false,
+        "evidenceLevel": "setup runbook and static adapter preflight",
+        "missingArtifacts": [],
+        "nextStep": "Run this target in the real host and add production demo evidence."
+      },
+      "checks": [
+        {
+          "name": "adapter exists: adapters/vk/remix-vk-tool.mjs",
+          "ok": true,
+          "path": "adapters/vk/remix-vk-tool.mjs"
+        },
+        {
+          "name": "adapter exists: adapters/vk/README.md",
+          "ok": true,
+          "path": "adapters/vk/README.md"
+        },
+        {
+          "name": "demo runbook exists: demos/vk/demo.md",
+          "ok": true,
+          "path": "demos/vk/demo.md"
+        },
+        {
+          "name": "demo includes setup target",
+          "ok": true,
+          "expected": "--target=vk"
+        },
+        {
+          "name": "marker present: createRemixVkTool",
+          "ok": true,
+          "marker": "createRemixVkTool"
+        },
+        {
+          "name": "marker present: message_new",
+          "ok": true,
+          "marker": "message_new"
+        },
+        {
+          "name": "marker present: VK_ACCESS_TOKEN",
+          "ok": true,
+          "marker": "VK_ACCESS_TOKEN"
+        },
+        {
+          "name": "marker present: messages.send",
+          "ok": true,
+          "marker": "messages.send"
+        },
+        {
+          "name": "marker present: productionImageUrl",
+          "ok": true,
+          "marker": "productionImageUrl"
         }
       ]
     },
@@ -2356,10 +2414,10 @@
     }
   ],
   "demoSummary": {
-    "targetCount": 45,
+    "targetCount": 46,
     "publicDemoReadyCount": 1,
     "productionBridgeEvidenceCount": 1,
-    "runbookOnlyCount": 43
+    "runbookOnlyCount": 44
   },
   "bridgeChecks": [
     {
@@ -2446,9 +2504,9 @@
     },
     {
       "name": "ChatGPT Actions adapter real dry-run",
-      "ok": true,
-      "command": "send-selfie",
-      "status": 200
+      "ok": false,
+      "skipped": true,
+      "reason": "Set REMIX_ACTION_API_KEY on the bridge and verifier to test the authenticated ChatGPT Actions route."
     },
     {
       "name": "Discord adapter real dry-run",
@@ -2467,6 +2525,11 @@
     },
     {
       "name": "Viber adapter real dry-run",
+      "ok": true,
+      "command": "send-selfie"
+    },
+    {
+      "name": "VK community bot adapter real dry-run",
       "ok": true,
       "command": "send-selfie"
     },

@@ -32,6 +32,11 @@ test("messaging recorder parses target-specific preview commands", () => {
   assert.equal(twilio.action, "dry-run");
   assert.equal(twilio.command, "send-selfie");
   assert.equal(twilio.text, "cozy couch");
+
+  const vk = parseTargetCommand("vk", "preview selfie cozy couch");
+  assert.equal(vk.action, "dry-run");
+  assert.equal(vk.command, "send-selfie");
+  assert.equal(vk.text, "cozy couch");
 });
 
 test("messaging recorder counts planned generations before spending", () => {
@@ -41,6 +46,7 @@ test("messaging recorder counts planned generations before spending", () => {
   assert.equal(plannedGenerationCount("discord", parseTargetCommand("discord", "snap yes bedroom mirror")), 1);
   assert.equal(plannedGenerationCount("instagram", parseTargetCommand("instagram", "vacation yes Amalfi coast")), 3);
   assert.equal(plannedGenerationCount("twilio", parseTargetCommand("twilio", "selfie couch")), 1);
+  assert.equal(plannedGenerationCount("vk", parseTargetCommand("vk", "vacation yes Amalfi coast")), 3);
 });
 
 test("messaging recorder evidence records no-delivery dry-runs honestly", () => {
@@ -86,6 +92,8 @@ test("messaging recorder includes Instagram and Twilio delivery readiness withou
   const originalTwilioToken = process.env.TWILIO_AUTH_TOKEN;
   const originalTwilioFrom = process.env.TWILIO_FROM;
   const originalTwilioTo = process.env.TWILIO_TO;
+  const originalVkToken = process.env.VK_ACCESS_TOKEN;
+  const originalVkPeerId = process.env.VK_PEER_ID;
   try {
     process.env.INSTAGRAM_ACCESS_TOKEN = "ig-secret-token";
     delete process.env.INSTAGRAM_RECIPIENT_ID;
@@ -104,6 +112,14 @@ test("messaging recorder includes Instagram and Twilio delivery readiness withou
     assert.deepEqual(twilio.requiredEnv, ["TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_FROM", "TWILIO_TO"]);
     assert.deepEqual(twilio.missingEnv, []);
     assert.equal(Object.values(twilio).some((value) => String(value).includes("twilio-secret-token")), false);
+
+    process.env.VK_ACCESS_TOKEN = "vk-secret-token";
+    delete process.env.VK_PEER_ID;
+    const vk = deliveryReadiness("vk");
+    assert.equal(vk.status, "missing-host-delivery-credentials");
+    assert.deepEqual(vk.requiredEnv, ["VK_ACCESS_TOKEN", "VK_PEER_ID"]);
+    assert.deepEqual(vk.missingEnv, ["VK_PEER_ID"]);
+    assert.equal(Object.values(vk).some((value) => String(value).includes("vk-secret-token")), false);
   } finally {
     if (originalInstagramToken === undefined) delete process.env.INSTAGRAM_ACCESS_TOKEN;
     else process.env.INSTAGRAM_ACCESS_TOKEN = originalInstagramToken;
@@ -117,6 +133,10 @@ test("messaging recorder includes Instagram and Twilio delivery readiness withou
     else process.env.TWILIO_FROM = originalTwilioFrom;
     if (originalTwilioTo === undefined) delete process.env.TWILIO_TO;
     else process.env.TWILIO_TO = originalTwilioTo;
+    if (originalVkToken === undefined) delete process.env.VK_ACCESS_TOKEN;
+    else process.env.VK_ACCESS_TOKEN = originalVkToken;
+    if (originalVkPeerId === undefined) delete process.env.VK_PEER_ID;
+    else process.env.VK_PEER_ID = originalVkPeerId;
   }
 });
 

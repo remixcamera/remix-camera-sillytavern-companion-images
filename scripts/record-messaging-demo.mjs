@@ -56,11 +56,17 @@ import {
   sendWhatsAppRemixResult,
   sendWhatsAppText,
 } from "../adapters/whatsapp/remix-whatsapp-tool.mjs";
+import {
+  parseVkCommand,
+  runVkRemixCommand,
+  sendVkRemixResult,
+  sendVkText,
+} from "../adapters/vk/remix-vk-tool.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const packageRoot = path.resolve(__dirname, "..");
 
-const MESSAGING_TARGETS = ["telegram", "discord", "whatsapp", "slack", "line", "messenger", "instagram", "twilio", "matrix"];
+const MESSAGING_TARGETS = ["telegram", "discord", "whatsapp", "slack", "line", "messenger", "instagram", "twilio", "matrix", "vk"];
 
 const COMMAND_ALIASES = new Map([
   ["selfie", "send-selfie"],
@@ -98,6 +104,7 @@ const DEFAULT_COMMANDS = {
   instagram: "preview selfie cozy couch with lamp light",
   twilio: "preview selfie cozy couch with lamp light",
   matrix: "!lily preview selfie cozy couch with lamp light",
+  vk: "preview selfie cozy couch with lamp light",
 };
 
 const DELIVERY_ENV = {
@@ -110,6 +117,7 @@ const DELIVERY_ENV = {
   instagram: ["INSTAGRAM_ACCESS_TOKEN", "INSTAGRAM_RECIPIENT_ID"],
   twilio: ["TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_FROM", "TWILIO_TO"],
   matrix: ["MATRIX_HOMESERVER_URL", "MATRIX_ACCESS_TOKEN", "MATRIX_ROOM_ID"],
+  vk: ["VK_ACCESS_TOKEN", "VK_PEER_ID"],
 };
 
 function parseArgs(argv = process.argv.slice(2)) {
@@ -230,6 +238,8 @@ export function parseTargetCommand(target, commandText) {
       return parseTwilioCommand(commandText);
     case "matrix":
       return parseMatrixCommand(commandText);
+    case "vk":
+      return parseVkCommand(commandText);
     default:
       throw new Error(`Unsupported target: ${target}`);
   }
@@ -308,6 +318,8 @@ export async function runTargetCommand({ target, parsedResult, options }) {
       return runTwilioRemixCommand(parsedResult, options);
     case "matrix":
       return runMatrixRemixCommand(parsedResult, options);
+    case "vk":
+      return runVkRemixCommand(parsedResult, options);
     default:
       throw new Error(`Unsupported target: ${target}`);
   }
@@ -501,6 +513,18 @@ async function deliverTargetResult({ target, result, commandText }) {
         accessToken: process.env.MATRIX_ACCESS_TOKEN,
         roomId: process.env.MATRIX_ROOM_ID,
         result,
+      });
+    case "vk":
+      await sendVkText({
+        accessToken: process.env.VK_ACCESS_TOKEN,
+        peerId: process.env.VK_PEER_ID,
+        message: `VK live demo command: ${commandText}`,
+      });
+      return sendVkRemixResult({
+        accessToken: process.env.VK_ACCESS_TOKEN,
+        peerId: process.env.VK_PEER_ID,
+        result,
+        attachImages: process.env.VK_ATTACH_IMAGES === "true",
       });
     default:
       throw new Error(`Unsupported target: ${target}`);
