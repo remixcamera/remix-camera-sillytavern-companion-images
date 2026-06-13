@@ -103,6 +103,15 @@ Adapter files:
 
 See `adapters/README.md` and `demos/README.md` for target-specific demo runbooks.
 
+Popular hosted companion apps are tracked separately from supported adapters:
+
+- Character.AI: popular consumer companion app, but not a production adapter target until there is an official API, plugin, or partner integration surface.
+- JanitorAI: popular roleplay host that can connect to outside model APIs, but this package does not yet have a first-party tool callback surface inside JanitorAI itself.
+- Chub/Venus: strong character-card and API-provider ecosystem; use Remix.Camera character setup plus SillyTavern/Risu/Open WebUI today, and treat direct Chub/Venus chat insertion as pending a supported host surface.
+- SpicyChat, CrushOn, Kindroid, Nomi, Candy, Backyard AI, and similar hosted apps: watchlist targets. Support should be added only through official import/export, bot, webhook, tool, or browser-extension surfaces that can be tested without scraping or fake screenshots.
+
+Do not label a host as supported until the package can run through that host's real UI, API, webhook, OpenAPI action, custom tool, or bot interface and produce non-mocked evidence.
+
 For messaging targets, the reusable demo recorder can produce honest evidence without faking host output:
 
 ```bash
