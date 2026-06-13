@@ -48,6 +48,8 @@ const SUPPORTED_TARGETS = new Set([
   "zapier",
   "voiceflow",
   "manychat",
+  "nomi",
+  "kindroid",
   "bot-framework",
   "dialogflow-es",
   "dialogflow-cx",
@@ -67,7 +69,7 @@ Usage:
   npx @remix-camera/sillytavern-setup [options]
 
 Options:
-  --target=sillytavern|mcp|risu|openwebui|librechat|lobechat|agnai|telegram|discord|whatsapp|slack|line|messenger|instagram|teams|twilio|matrix|dify|flowise|botpress|anythingllm|typingmind|poe|langflow|langchain|vercel-ai-sdk|n8n|pipedream|make|zapier|voiceflow|manychat|bot-framework|dialogflow-es|dialogflow-cx|rasa|amazon-lex|watsonx-assistant
+  --target=sillytavern|mcp|risu|openwebui|librechat|lobechat|agnai|telegram|discord|whatsapp|slack|line|messenger|instagram|teams|twilio|matrix|dify|flowise|botpress|anythingllm|typingmind|poe|langflow|langchain|vercel-ai-sdk|n8n|pipedream|make|zapier|voiceflow|manychat|nomi|kindroid|bot-framework|dialogflow-es|dialogflow-cx|rasa|amazon-lex|watsonx-assistant
   --sillytavern-dir=/path/to/SillyTavern  Use a specific local SillyTavern checkout
   --profile-id=profile_id                 Use a specific Remix.Camera character profile
   --character-name="Name"                 Override the Character Card name
@@ -620,6 +622,22 @@ function printTargetInstructions(target, { healthUrl, port, configPath }) {
       "Set the request URL to a public HTTPS bridge URL. Manychat External Request does not allow plain HTTP URLs.",
       "Use action=dry-run first and require action=generate plus yes=true before spending credits.",
       "Map $.results[0].productionImageUrl into a Manychat custom field before sending an image message.",
+    ],
+    nomi: [
+      "Import this Nomi sidecar helper into an external bot that already uses the official Nomi API:",
+      `  ${path.join(adapterRoot, "nomi", "remix-camera-nomi-tool.mjs")}`,
+      "Set NOMI_API_KEY and NOMI_UUID, or NOMI_ROOM_UUID plus NOMI_REQUEST_NOMI_UUID for room mode.",
+      "Use callNomi=true when the wrapper should call Nomi for companion text before adding Remix.Camera image payloads.",
+      "Nomi's public API chat endpoints are text/JSON surfaces; your wrapping bot sends the returned image payloads.",
+      "Use action=dry-run first and require action=generate plus yes=true before spending credits.",
+    ],
+    kindroid: [
+      "Import this Kindroid sidecar helper into an external bot that already uses the official Kindroid API:",
+      `  ${path.join(adapterRoot, "kindroid", "remix-camera-kindroid-tool.mjs")}`,
+      "Set KINDROID_API_KEY and KINDROID_AI_ID for single AI mode, KINDROID_GROUP_ID for group mode, or KINDROID_SHARE_CODE for the Discord bot endpoint.",
+      "Use callKindroid=true when the wrapper should call Kindroid for companion text before adding Remix.Camera image payloads.",
+      "Kindroid's public API returns text; your wrapping bot sends the returned image payloads.",
+      "Use action=dry-run first and require action=generate plus yes=true before spending credits.",
     ],
     "bot-framework": [
       "Import this generic Bot Framework activity handler into an existing Azure Bot Service/Bot Builder bot:",

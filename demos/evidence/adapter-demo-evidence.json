@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "generatedAt": "2026-06-13T09:24:13.405Z",
+  "generatedAt": "2026-06-13T09:49:20.345Z",
   "mode": "bridge-dry-run",
   "bridgeUrl": "http://127.0.0.1:8787",
   "targets": [
@@ -1666,6 +1666,102 @@
       ]
     },
     {
+      "id": "nomi",
+      "title": "Nomi",
+      "demoEvidence": {
+        "status": "runbook-ready",
+        "publicDemoReady": false,
+        "evidenceLevel": "setup runbook and static adapter preflight",
+        "missingArtifacts": [],
+        "nextStep": "Run this target in the real host and add production demo evidence."
+      },
+      "checks": [
+        {
+          "name": "adapter exists: adapters/nomi/README.md",
+          "ok": true,
+          "path": "adapters/nomi/README.md"
+        },
+        {
+          "name": "adapter exists: adapters/nomi/remix-camera-nomi-tool.mjs",
+          "ok": true,
+          "path": "adapters/nomi/remix-camera-nomi-tool.mjs"
+        },
+        {
+          "name": "demo runbook exists: demos/nomi/demo.md",
+          "ok": true,
+          "path": "demos/nomi/demo.md"
+        },
+        {
+          "name": "demo includes setup target",
+          "ok": true,
+          "expected": "--target=nomi"
+        },
+        {
+          "name": "marker present: official Nomi API",
+          "ok": true,
+          "marker": "official Nomi API"
+        },
+        {
+          "name": "marker present: external-bot-sidecar",
+          "ok": true,
+          "marker": "external-bot-sidecar"
+        },
+        {
+          "name": "marker present: yes: true",
+          "ok": true,
+          "marker": "yes: true"
+        }
+      ]
+    },
+    {
+      "id": "kindroid",
+      "title": "Kindroid",
+      "demoEvidence": {
+        "status": "runbook-ready",
+        "publicDemoReady": false,
+        "evidenceLevel": "setup runbook and static adapter preflight",
+        "missingArtifacts": [],
+        "nextStep": "Run this target in the real host and add production demo evidence."
+      },
+      "checks": [
+        {
+          "name": "adapter exists: adapters/kindroid/README.md",
+          "ok": true,
+          "path": "adapters/kindroid/README.md"
+        },
+        {
+          "name": "adapter exists: adapters/kindroid/remix-camera-kindroid-tool.mjs",
+          "ok": true,
+          "path": "adapters/kindroid/remix-camera-kindroid-tool.mjs"
+        },
+        {
+          "name": "demo runbook exists: demos/kindroid/demo.md",
+          "ok": true,
+          "path": "demos/kindroid/demo.md"
+        },
+        {
+          "name": "demo includes setup target",
+          "ok": true,
+          "expected": "--target=kindroid"
+        },
+        {
+          "name": "marker present: official Kindroid API",
+          "ok": true,
+          "marker": "official Kindroid API"
+        },
+        {
+          "name": "marker present: X-Kindroid-Requester",
+          "ok": true,
+          "marker": "X-Kindroid-Requester"
+        },
+        {
+          "name": "marker present: yes: true",
+          "ok": true,
+          "marker": "yes: true"
+        }
+      ]
+    },
+    {
       "id": "bot-framework",
       "title": "Microsoft Bot Framework",
       "demoEvidence": {
@@ -1960,10 +2056,10 @@
     }
   ],
   "demoSummary": {
-    "targetCount": 38,
+    "targetCount": 40,
     "publicDemoReadyCount": 1,
     "productionBridgeEvidenceCount": 1,
-    "runbookOnlyCount": 36
+    "runbookOnlyCount": 38
   },
   "bridgeChecks": [
     {
@@ -2127,6 +2223,18 @@
       "name": "Manychat adapter real dry-run",
       "ok": true,
       "command": "send-selfie"
+    },
+    {
+      "name": "Nomi adapter real dry-run",
+      "ok": true,
+      "command": "send-selfie",
+      "mediaDelivery": "external-bot-sidecar"
+    },
+    {
+      "name": "Kindroid adapter real dry-run",
+      "ok": true,
+      "command": "send-selfie",
+      "mediaDelivery": "external-bot-sidecar"
     },
     {
       "name": "Microsoft Bot Framework adapter real dry-run",

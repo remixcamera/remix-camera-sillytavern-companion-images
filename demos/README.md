@@ -43,6 +43,8 @@ Targets:
 - `zapier/`: Zapier Platform CLI action demo.
 - `voiceflow/`: Voiceflow API tool and Workflow API step demo.
 - `manychat/`: Manychat External Request action demo.
+- `nomi/`: Nomi official API sidecar demo for external bots.
+- `kindroid/`: Kindroid official API sidecar demo for single AI, group, and Discord-bot wrappers.
 - `bot-framework/`: Microsoft Bot Framework activity handler demo.
 - `dialogflow-es/`: Dialogflow ES webhook fulfillment demo.
 - `dialogflow-cx/`: Dialogflow CX webhook fulfillment demo.
@@ -56,7 +58,7 @@ Do not publish generated demo recordings until the runbook has been executed aga
 
 A host is demo-ready only when the evidence is recorded through that host's real UI, API, webhook, OpenAPI action, custom tool, or bot interface. Local bridge transcripts are useful engineering evidence, but they must stay labeled as bridge-only unless a real host received the message or image.
 
-Popular hosted apps such as Character.AI, JanitorAI, Chub/Venus, SpicyChat, CrushOn, Kindroid, Nomi, Candy, and Backyard AI are watchlist targets until they expose a reliable integration surface we can test directly. Do not record browser automation, scraped requests, or local harness output as if it were a production host demo.
+Popular hosted apps such as Character.AI, JanitorAI, Chub/Venus, SpicyChat, CrushOn, Candy, and Backyard AI are watchlist targets until they expose a reliable integration surface we can test directly. Nomi and Kindroid are supported as official API sidecars for external wrapping bots; do not describe that as native media injection inside their first-party apps. Do not record browser automation, scraped requests, or local harness output as if it were a production host demo.
 
 ## Evidence Ladder
 
