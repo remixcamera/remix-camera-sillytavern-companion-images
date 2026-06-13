@@ -1,0 +1,128 @@
+{
+  "name": "previewOrGenerateCompanionImage",
+  "label": "Preview or Generate Companion Image",
+  "type": "action",
+  "description": "Creates one Remix.Camera companion image preview or, after explicit confirmation, spends credits to generate the image.",
+  "expect": [
+    {
+      "name": "bridgeUrl",
+      "type": "url",
+      "label": "Bridge URL",
+      "required": true,
+      "default": "http://127.0.0.1:8787"
+    },
+    {
+      "name": "command",
+      "type": "select",
+      "label": "Image command",
+      "required": true,
+      "default": "send-selfie",
+      "options": [
+        { "label": "Send selfie", "value": "send-selfie" },
+        { "label": "Auto selfie from chat", "value": "auto-selfie-from-chat" },
+        { "label": "Outfit try-on", "value": "outfit-try-on" },
+        { "label": "Couple photo", "value": "couple-photo" },
+        { "label": "Couples vacation", "value": "couples-vacation" },
+        { "label": "Date night", "value": "date-night" },
+        { "label": "Daily life snap", "value": "daily-life-snap" },
+        { "label": "Private snap", "value": "private-snap" }
+      ]
+    },
+    {
+      "name": "action",
+      "type": "select",
+      "label": "Action",
+      "required": true,
+      "default": "dry-run",
+      "options": [
+        { "label": "Preview only", "value": "dry-run" },
+        { "label": "Generate image", "value": "generate" }
+      ]
+    },
+    {
+      "name": "yes",
+      "type": "boolean",
+      "label": "Confirm generation",
+      "required": true,
+      "default": false
+    },
+    {
+      "name": "prompt",
+      "type": "text",
+      "label": "Prompt or chat context",
+      "multiline": true
+    },
+    {
+      "name": "characterName",
+      "type": "text",
+      "label": "Character name",
+      "default": "Lily"
+    },
+    {
+      "name": "profileId",
+      "type": "text",
+      "label": "Remix.Camera profile ID"
+    },
+    {
+      "name": "sourceImageUrl",
+      "type": "url",
+      "label": "Source image URL"
+    },
+    {
+      "name": "userReferenceImageUrl",
+      "type": "url",
+      "label": "User reference image URL"
+    },
+    {
+      "name": "userConsent",
+      "type": "text",
+      "label": "User consent"
+    },
+    {
+      "name": "matureContent",
+      "type": "boolean",
+      "label": "Mature content",
+      "default": false
+    }
+  ],
+  "communication": {
+    "url": "{{parameters.bridgeUrl}}/v1/tools/{{parameters.command}}/{{if(and(equals(parameters.action; \"generate\"); parameters.yes); \"generate\"; \"dry-run\")}}",
+    "method": "POST",
+    "headers": {
+      "Content-Type": "application/json",
+      "Accept": "application/json"
+    },
+    "body": {
+      "profileId": "{{parameters.profileId}}",
+      "characterName": "{{parameters.characterName}}",
+      "chatText": "{{parameters.prompt}}",
+      "mood": "{{parameters.prompt}}",
+      "location": "{{parameters.prompt}}",
+      "sourceImageUrl": "{{parameters.sourceImageUrl}}",
+      "userReferenceImageUrl": "{{parameters.userReferenceImageUrl}}",
+      "userConsent": "{{parameters.userConsent}}",
+      "matureContent": "{{parameters.matureContent}}",
+      "yes": "{{if(and(equals(parameters.action; \"generate\"); parameters.yes); true; empty)}}"
+    },
+    "type": "json",
+    "response": {
+      "output": {
+        "text": "{{if(body.dryRun; concat(\"Preview ready: \"; ifempty(body.promptTemplate.packTitle; body.promptTemplate.packId); \"\\n\\n\"; body.prompt); ifempty(body.markdown; body.prompt))}}",
+        "dryRun": "{{body.dryRun}}",
+        "imageUrl": "{{if(length(body.results) > 0; ifempty(body.results[1].productionImageUrl; body.results[1].imageUrl); empty)}}",
+        "payload": "{{body}}"
+      }
+    }
+  },
+  "interface": [
+    { "name": "text", "type": "text", "label": "Chat response" },
+    { "name": "dryRun", "type": "boolean", "label": "Dry run" },
+    { "name": "imageUrl", "type": "url", "label": "First image URL" }
+  ],
+  "samples": {
+    "text": "Preview ready: Excellent Lily Selfie",
+    "dryRun": true,
+    "imageUrl": ""
+  }
+}
+

@@ -44,6 +44,8 @@ const SUPPORTED_TARGETS = new Set([
   "vercel-ai-sdk",
   "n8n",
   "pipedream",
+  "make",
+  "zapier",
 ]);
 
 function printHelp() {
@@ -57,7 +59,7 @@ Usage:
   npx @remix-camera/sillytavern-setup [options]
 
 Options:
-  --target=sillytavern|mcp|risu|openwebui|librechat|lobechat|agnai|telegram|discord|whatsapp|slack|line|messenger|instagram|teams|twilio|matrix|dify|flowise|botpress|anythingllm|typingmind|poe|langflow|langchain|vercel-ai-sdk|n8n|pipedream
+  --target=sillytavern|mcp|risu|openwebui|librechat|lobechat|agnai|telegram|discord|whatsapp|slack|line|messenger|instagram|teams|twilio|matrix|dify|flowise|botpress|anythingllm|typingmind|poe|langflow|langchain|vercel-ai-sdk|n8n|pipedream|make|zapier
   --sillytavern-dir=/path/to/SillyTavern  Use a specific local SillyTavern checkout
   --profile-id=profile_id                 Use a specific Remix.Camera character profile
   --character-name="Name"                 Override the Character Card name
@@ -571,6 +573,25 @@ function printTargetInstructions(target, { healthUrl, port, configPath }) {
       `  ${path.join(adapterRoot, "pipedream", "remix-camera-pipedream-action.mjs")}`,
       "Set Bridge URL to:",
       `  ${bridgeUrl}`,
+      "The action defaults to dry-run and requires action=generate plus yes=true before spending credits.",
+    ],
+    make: [
+      "Create a Make Custom Apps action module from this JSON spec:",
+      `  ${path.join(adapterRoot, "make", "remix-camera-make-action-module.json")}`,
+      "Optional Node helper for local tests or self-hosted Make-like runners:",
+      `  ${path.join(adapterRoot, "make", "remix-camera-make-tool.mjs")}`,
+      "Set Bridge URL to a URL Make can reach:",
+      `  ${bridgeUrl}`,
+      "Make cloud scenarios need a public HTTPS bridge URL or secure tunnel; they cannot call your laptop's 127.0.0.1 directly.",
+      "The action defaults to dry-run and requires action=generate plus yes=true before spending credits.",
+    ],
+    zapier: [
+      "Use this Zapier Platform CLI app definition:",
+      `  ${path.join(adapterRoot, "zapier", "remix-camera-zapier-app", "index.cjs")}`,
+      "Configure the create action named Preview or Generate Companion Image.",
+      "Set Bridge URL to a URL Zapier can reach:",
+      `  ${bridgeUrl}`,
+      "Zapier cloud Zaps need a public HTTPS bridge URL or secure tunnel; they cannot call your laptop's 127.0.0.1 directly.",
       "The action defaults to dry-run and requires action=generate plus yes=true before spending credits.",
     ],
   };

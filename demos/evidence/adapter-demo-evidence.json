@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "generatedAt": "2026-06-13T07:28:03.540Z",
+  "generatedAt": "2026-06-13T07:52:27.910Z",
   "mode": "bridge-dry-run",
   "bridgeUrl": "http://127.0.0.1:8787",
   "targets": [
@@ -1457,13 +1457,114 @@
           "marker": "yes=true"
         }
       ]
+    },
+    {
+      "id": "make",
+      "title": "Make",
+      "demoEvidence": {
+        "status": "runbook-ready",
+        "publicDemoReady": false,
+        "evidenceLevel": "setup runbook and static adapter preflight",
+        "missingArtifacts": [],
+        "nextStep": "Run this target in the real host and add production demo evidence."
+      },
+      "checks": [
+        {
+          "name": "adapter exists: adapters/make/README.md",
+          "ok": true,
+          "path": "adapters/make/README.md"
+        },
+        {
+          "name": "adapter exists: adapters/make/remix-camera-make-action-module.json",
+          "ok": true,
+          "path": "adapters/make/remix-camera-make-action-module.json"
+        },
+        {
+          "name": "adapter exists: adapters/make/remix-camera-make-tool.mjs",
+          "ok": true,
+          "path": "adapters/make/remix-camera-make-tool.mjs"
+        },
+        {
+          "name": "demo runbook exists: demos/make/demo.md",
+          "ok": true,
+          "path": "demos/make/demo.md"
+        },
+        {
+          "name": "demo includes setup target",
+          "ok": true,
+          "expected": "--target=make"
+        },
+        {
+          "name": "marker present: Preview or Generate Companion Image",
+          "ok": true,
+          "marker": "Preview or Generate Companion Image"
+        },
+        {
+          "name": "marker present: Make Custom Apps",
+          "ok": true,
+          "marker": "Make Custom Apps"
+        },
+        {
+          "name": "marker present: yes=true",
+          "ok": true,
+          "marker": "yes=true"
+        }
+      ]
+    },
+    {
+      "id": "zapier",
+      "title": "Zapier",
+      "demoEvidence": {
+        "status": "runbook-ready",
+        "publicDemoReady": false,
+        "evidenceLevel": "setup runbook and static adapter preflight",
+        "missingArtifacts": [],
+        "nextStep": "Run this target in the real host and add production demo evidence."
+      },
+      "checks": [
+        {
+          "name": "adapter exists: adapters/zapier/README.md",
+          "ok": true,
+          "path": "adapters/zapier/README.md"
+        },
+        {
+          "name": "adapter exists: adapters/zapier/remix-camera-zapier-app/index.cjs",
+          "ok": true,
+          "path": "adapters/zapier/remix-camera-zapier-app/index.cjs"
+        },
+        {
+          "name": "demo runbook exists: demos/zapier/demo.md",
+          "ok": true,
+          "path": "demos/zapier/demo.md"
+        },
+        {
+          "name": "demo includes setup target",
+          "ok": true,
+          "expected": "--target=zapier"
+        },
+        {
+          "name": "marker present: Preview or Generate Companion Image",
+          "ok": true,
+          "marker": "Preview or Generate Companion Image"
+        },
+        {
+          "name": "marker present: Zapier Platform CLI",
+          "ok": true,
+          "marker": "Zapier Platform CLI"
+        },
+        {
+          "name": "marker present: yes=true",
+          "ok": true,
+          "marker": "yes=true"
+        }
+      ]
     }
   ],
   "demoSummary": {
-    "targetCount": 28,
+    "targetCount": 30,
     "publicDemoReadyCount": 1,
     "productionBridgeEvidenceCount": 1,
-    "runbookOnlyCount": 26
+    "runbookOnlyCount": 28
   },
   "bridgeChecks": [
     {
@@ -1605,6 +1706,16 @@
     },
     {
       "name": "Pipedream adapter real dry-run",
+      "ok": true,
+      "command": "send-selfie"
+    },
+    {
+      "name": "Make adapter real dry-run",
+      "ok": true,
+      "command": "send-selfie"
+    },
+    {
+      "name": "Zapier adapter real dry-run",
       "ok": true,
       "command": "send-selfie"
     }
