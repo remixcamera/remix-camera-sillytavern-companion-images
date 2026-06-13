@@ -1,0 +1,94 @@
+{
+  "name": "remix_camera_companion_image",
+  "label": "Remix.Camera Companion Image",
+  "type": "api_tool",
+  "description": "Preview or generate Remix.Camera companion images from a Voiceflow playbook or workflow.",
+  "method": "POST",
+  "url": "{bridgeUrl}/v1/tools/{command}/{action}",
+  "headers": {
+    "Content-Type": "application/json",
+    "Accept": "application/json"
+  },
+  "inputVariables": [
+    {
+      "name": "bridgeUrl",
+      "type": "text",
+      "description": "Public HTTPS Remix.Camera bridge URL. Use a secure tunnel for local testing."
+    },
+    {
+      "name": "command",
+      "type": "text",
+      "description": "Image command such as send-selfie, daily-life-snap, couple-photo, or private-snap."
+    },
+    {
+      "name": "action",
+      "type": "text",
+      "description": "Use dry-run for previews. Use generate only after explicit user confirmation."
+    },
+    {
+      "name": "yes",
+      "type": "boolean",
+      "description": "Must be true before the bridge spends Remix.Camera generation credits."
+    },
+    {
+      "name": "prompt",
+      "type": "text",
+      "description": "Recent chat context or user request."
+    },
+    {
+      "name": "characterName",
+      "type": "text",
+      "description": "Companion character name."
+    },
+    {
+      "name": "profileId",
+      "type": "text",
+      "description": "Remix.Camera character profile ID."
+    },
+    {
+      "name": "sourceImageUrl",
+      "type": "text",
+      "description": "Optional source image URL for outfit or scene remixes."
+    },
+    {
+      "name": "userReferenceImageUrl",
+      "type": "text",
+      "description": "Optional user-owned reference photo URL for couple images."
+    },
+    {
+      "name": "userConsent",
+      "type": "text",
+      "description": "Required consent text for couple and multi-person image commands."
+    },
+    {
+      "name": "matureContent",
+      "type": "boolean",
+      "description": "True only for opted-in mature/private snap flows."
+    }
+  ],
+  "rawJsonBody": {
+    "profileId": "{profileId}",
+    "characterName": "{characterName}",
+    "chatText": "{prompt}",
+    "mood": "{prompt}",
+    "location": "{prompt}",
+    "sourceImageUrl": "{sourceImageUrl}",
+    "userReferenceImageUrl": "{userReferenceImageUrl}",
+    "userConsent": "{userConsent}",
+    "matureContent": "{matureContent}",
+    "yes": "{yes}"
+  },
+  "captureResponse": {
+    "text": "text",
+    "dryRun": "dryRun",
+    "imageUrl": "results.0.productionImageUrl",
+    "payload": "$"
+  },
+  "guardrails": [
+    "Default action to dry-run.",
+    "Only set action to generate when the user explicitly asked for a real generated image.",
+    "Only set yes to true for generate actions.",
+    "For Voiceflow Cloud, bridgeUrl must be reachable over HTTPS."
+  ]
+}
+

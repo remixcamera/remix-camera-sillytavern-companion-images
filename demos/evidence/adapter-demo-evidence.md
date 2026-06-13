@@ -1,6 +1,6 @@
 # Remix.Camera Adapter Demo Verification
 
-Generated at: 2026-06-13T07:52:27.910Z
+Generated at: 2026-06-13T08:18:03.519Z
 Mode: bridge-dry-run
 Bridge URL: http://127.0.0.1:8787
 
@@ -38,8 +38,10 @@ Bridge URL: http://127.0.0.1:8787
 | Pipedream | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | Make | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | Zapier | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
+| Voiceflow | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
+| Manychat | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 
-Public demo ready targets: 1/30
+Public demo ready targets: 1/32
 
 ## Targets
 
@@ -366,6 +368,28 @@ Evidence: setup runbook and static adapter preflight. Public demo ready: no.
 - [x] marker present: Zapier Platform CLI
 - [x] marker present: yes=true
 
+### Voiceflow
+Evidence: setup runbook and static adapter preflight. Public demo ready: no.
+- [x] adapter exists: adapters/voiceflow/README.md
+- [x] adapter exists: adapters/voiceflow/remix-camera-voiceflow-api-tool.json
+- [x] adapter exists: adapters/voiceflow/remix-camera-voiceflow-tool.mjs
+- [x] demo runbook exists: demos/voiceflow/demo.md
+- [x] demo includes setup target
+- [x] marker present: Remix.Camera Companion Image
+- [x] marker present: Voiceflow API tool
+- [x] marker present: yes=true
+
+### Manychat
+Evidence: setup runbook and static adapter preflight. Public demo ready: no.
+- [x] adapter exists: adapters/manychat/README.md
+- [x] adapter exists: adapters/manychat/remix-camera-manychat-external-request.json
+- [x] adapter exists: adapters/manychat/remix-camera-manychat-tool.mjs
+- [x] demo runbook exists: demos/manychat/demo.md
+- [x] demo includes setup target
+- [x] marker present: Manychat External Request
+- [x] marker present: External Request
+- [x] marker present: yes=true
+
 ## Bridge Contracts
 
 - [x] bridge health (status 200; auth design_api_session)
@@ -399,3 +423,5 @@ Evidence: setup runbook and static adapter preflight. Public demo ready: no.
 - [x] Pipedream adapter real dry-run (command: send-selfie)
 - [x] Make adapter real dry-run (command: send-selfie)
 - [x] Zapier adapter real dry-run (command: send-selfie)
+- [x] Voiceflow adapter real dry-run (command: send-selfie)
+- [x] Manychat adapter real dry-run (command: send-selfie)
