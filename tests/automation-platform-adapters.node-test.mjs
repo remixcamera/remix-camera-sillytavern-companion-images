@@ -9,6 +9,8 @@ import { runRemixCameraDialogflowEsWebhook } from "../adapters/dialogflow-es/rem
 import { runRemixCameraManychatTool } from "../adapters/manychat/remix-camera-manychat-tool.mjs";
 import { runRemixCameraMakeTool } from "../adapters/make/remix-camera-make-tool.mjs";
 import { runRemixCameraN8nTool } from "../adapters/n8n/remix-camera-n8n-tool.mjs";
+import { runRemixCameraKindroidTurn } from "../adapters/kindroid/remix-camera-kindroid-tool.mjs";
+import { runRemixCameraNomiTurn } from "../adapters/nomi/remix-camera-nomi-tool.mjs";
 import pipedreamAction, { runRemixCameraPipedreamAction } from "../adapters/pipedream/remix-camera-pipedream-action.mjs";
 import { runRemixCameraVoiceflowTool } from "../adapters/voiceflow/remix-camera-voiceflow-tool.mjs";
 import { runRemixCameraWatsonxAssistantTool } from "../adapters/watsonx-assistant/remix-camera-watsonx-tool.mjs";
@@ -20,6 +22,27 @@ function mockFetchRecorder(payload = {}) {
   const calls = [];
   const fetchImpl = async (url, options) => {
     calls.push({ url: String(url), body: JSON.parse(options.body) });
+    return Response.json(payload);
+  };
+  return { calls, fetchImpl };
+}
+
+function mockFetchSequence(payloads = []) {
+  const calls = [];
+  let index = 0;
+  const fetchImpl = async (url, options = {}) => {
+    const body = options.body ? JSON.parse(options.body) : null;
+    calls.push({
+      url: String(url),
+      headers: options.headers || {},
+      body,
+    });
+    const payload = payloads[index++] ?? payloads[payloads.length - 1] ?? {};
+    if (typeof payload === "string") {
+      return new Response(payload, {
+        headers: { "Content-Type": "text/plain" },
+      });
+    }
     return Response.json(payload);
   };
   return { calls, fetchImpl };
@@ -99,6 +122,71 @@ test("Manychat helper defaults to a no-spend dry-run preview", async () => {
   assert.equal(calls[0].body.characterName, "Lily");
   assert.match(result.text, /Preview ready: Excellent Lily Selfie/);
   assert.equal(result.dryRun, true);
+});
+
+test("Nomi sidecar calls official chat endpoint then returns a no-spend Remix preview", async () => {
+  const { calls, fetchImpl } = mockFetchSequence([
+    { replyMessage: { text: "I can send you the couch angle." } },
+    {
+      ok: true,
+      dryRun: true,
+      promptTemplate: { packTitle: "Excellent Lily Selfie" },
+      prompt: "preview prompt",
+    },
+  ]);
+  const result = await runRemixCameraNomiTurn(
+    {
+      callNomi: true,
+      nomiApiKey: "nomi_test_key",
+      nomiUuid: "nomi-123",
+      userMessage: "send me a cozy couch selfie",
+      characterName: "Lily",
+    },
+    { bridgeUrl: "http://bridge.local", fetchImpl },
+  );
+
+  assert.equal(calls[0].url, "https://api.nomi.ai/v1/nomis/nomi-123/chat");
+  assert.equal(calls[0].headers.Authorization, "Bearer nomi_test_key");
+  assert.deepEqual(calls[0].body, { messageText: "send me a cozy couch selfie" });
+  assert.equal(calls[1].url, "http://bridge.local/v1/tools/send-selfie/dry-run");
+  assert.equal(calls[1].body.yes, undefined);
+  assert.equal(result.messages[0].text, "I can send you the couch angle.");
+  assert.match(result.text, /Preview ready: Excellent Lily Selfie/);
+  assert.equal(result.nativeMediaSupport, false);
+});
+
+test("Kindroid sidecar calls official Discord bot endpoint then returns a no-spend Remix preview", async () => {
+  const { calls, fetchImpl } = mockFetchSequence([
+    "Okay, I found the cafe light.",
+    {
+      ok: true,
+      dryRun: true,
+      promptTemplate: { packTitle: "Excellent Lily Selfie" },
+      prompt: "preview prompt",
+    },
+  ]);
+  const result = await runRemixCameraKindroidTurn(
+    {
+      callKindroid: true,
+      kindroidApiKey: "kn_test_key",
+      kindroidMode: "discord-bot",
+      shareCode: "abcde",
+      conversation: [{ username: "adam", text: "send a cafe selfie", timestamp: "2026-06-13T12:00:00.000Z" }],
+      characterName: "Lily",
+    },
+    { bridgeUrl: "http://bridge.local", fetchImpl },
+  );
+
+  assert.equal(calls[0].url, "https://api.kindroid.ai/v1/discord-bot");
+  assert.equal(calls[0].headers.Authorization, "Bearer kn_test_key");
+  assert.equal(calls[0].headers["X-Kindroid-Requester"], "YWRhbQ");
+  assert.equal(calls[0].body.share_code, "abcde");
+  assert.equal(calls[0].body.enable_filter, true);
+  assert.equal(calls[1].url, "http://bridge.local/v1/tools/send-selfie/dry-run");
+  assert.equal(calls[1].body.yes, undefined);
+  assert.equal(result.messages[0].text, "Okay, I found the cafe light.");
+  assert.match(result.text, /Preview ready: Excellent Lily Selfie/);
+  assert.equal(result.nativeMediaSupport, false);
 });
 
 test("Dialogflow CX webhook defaults to a no-spend dry-run preview", async () => {
@@ -371,6 +459,32 @@ test("n8n helper refuses requested generation without yes=true", async () => {
   const { calls, fetchImpl } = mockFetchRecorder({ ok: true });
   await assert.rejects(
     () => runRemixCameraN8nTool({ command: "send-selfie", prompt: "cozy couch", action: "generate" }, { bridgeUrl: "http://bridge.local", fetchImpl }),
+    /yes=true/,
+  );
+  assert.equal(calls.length, 0);
+});
+
+test("Nomi sidecar refuses requested generation without yes=true", async () => {
+  const { calls, fetchImpl } = mockFetchRecorder({ ok: true });
+  await assert.rejects(
+    () =>
+      runRemixCameraNomiTurn(
+        { command: "send-selfie", prompt: "cozy couch", action: "generate", callNomi: false },
+        { bridgeUrl: "http://bridge.local", fetchImpl },
+      ),
+    /yes=true/,
+  );
+  assert.equal(calls.length, 0);
+});
+
+test("Kindroid sidecar refuses requested generation without yes=true", async () => {
+  const { calls, fetchImpl } = mockFetchRecorder({ ok: true });
+  await assert.rejects(
+    () =>
+      runRemixCameraKindroidTurn(
+        { command: "send-selfie", prompt: "cozy couch", action: "generate", callKindroid: false },
+        { bridgeUrl: "http://bridge.local", fetchImpl },
+      ),
     /yes=true/,
   );
   assert.equal(calls.length, 0);

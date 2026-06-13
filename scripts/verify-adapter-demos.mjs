@@ -21,6 +21,8 @@ import { handleMcpRequest, normalizeMcpToolName } from "../adapters/mcp/remix-ca
 import { runRemixCameraMakeTool } from "../adapters/make/remix-camera-make-tool.mjs";
 import { runRemixCameraManychatTool } from "../adapters/manychat/remix-camera-manychat-tool.mjs";
 import { runRemixCameraN8nTool } from "../adapters/n8n/remix-camera-n8n-tool.mjs";
+import { runRemixCameraKindroidTurn } from "../adapters/kindroid/remix-camera-kindroid-tool.mjs";
+import { runRemixCameraNomiTurn } from "../adapters/nomi/remix-camera-nomi-tool.mjs";
 import { runRemixCameraPipedreamAction } from "../adapters/pipedream/remix-camera-pipedream-action.mjs";
 import { parseSlackCommand, runSlackRemixCommand } from "../adapters/slack/remix-slack-tool.mjs";
 import { parseTelegramCommand, runTelegramRemixCommand } from "../adapters/telegram/remix-telegram-tool.mjs";
@@ -332,6 +334,22 @@ const targets = [
     demoFile: "demos/manychat/demo.md",
     setupCommand: "--target=manychat",
     markers: ["Manychat External Request", "External Request", "yes=true"],
+  },
+  {
+    id: "nomi",
+    title: "Nomi",
+    adapterFiles: ["adapters/nomi/README.md", "adapters/nomi/remix-camera-nomi-tool.mjs"],
+    demoFile: "demos/nomi/demo.md",
+    setupCommand: "--target=nomi",
+    markers: ["official Nomi API", "external-bot-sidecar", "yes: true"],
+  },
+  {
+    id: "kindroid",
+    title: "Kindroid",
+    adapterFiles: ["adapters/kindroid/README.md", "adapters/kindroid/remix-camera-kindroid-tool.mjs"],
+    demoFile: "demos/kindroid/demo.md",
+    setupCommand: "--target=kindroid",
+    markers: ["official Kindroid API", "X-Kindroid-Requester", "yes: true"],
   },
   {
     id: "bot-framework",
@@ -734,6 +752,18 @@ async function verifyHostAdapterDryRuns() {
       }),
     );
     checks.push(
+      okCheck("Nomi adapter real dry-run", false, {
+        skipped: true,
+        reason: "No bridge URL provided.",
+      }),
+    );
+    checks.push(
+      okCheck("Kindroid adapter real dry-run", false, {
+        skipped: true,
+        reason: "No bridge URL provided.",
+      }),
+    );
+    checks.push(
       okCheck("Microsoft Bot Framework adapter real dry-run", false, {
         skipped: true,
         reason: "No bridge URL provided.",
@@ -1026,6 +1056,42 @@ async function verifyHostAdapterDryRuns() {
   checks.push(
     okCheck("Manychat adapter real dry-run", manychat?.payload?.dryRun === true && /Preview ready/i.test(manychat?.text || ""), {
       command: "send-selfie",
+    }),
+  );
+
+  const nomi = await runRemixCameraNomiTurn(
+    {
+      ...commandInputs["send-selfie"],
+      callNomi: false,
+    },
+    {
+      bridgeUrl,
+      profileId: process.env.REMIX_PROFILE_ID || "",
+      characterName: "Lily",
+    },
+  );
+  checks.push(
+    okCheck("Nomi adapter real dry-run", nomi?.payload?.dryRun === true && /Preview ready/i.test(nomi?.text || ""), {
+      command: "send-selfie",
+      mediaDelivery: nomi?.mediaDelivery,
+    }),
+  );
+
+  const kindroid = await runRemixCameraKindroidTurn(
+    {
+      ...commandInputs["send-selfie"],
+      callKindroid: false,
+    },
+    {
+      bridgeUrl,
+      profileId: process.env.REMIX_PROFILE_ID || "",
+      characterName: "Lily",
+    },
+  );
+  checks.push(
+    okCheck("Kindroid adapter real dry-run", kindroid?.payload?.dryRun === true && /Preview ready/i.test(kindroid?.text || ""), {
+      command: "send-selfie",
+      mediaDelivery: kindroid?.mediaDelivery,
     }),
   );
 

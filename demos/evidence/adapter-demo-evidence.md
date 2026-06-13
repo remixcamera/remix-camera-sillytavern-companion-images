@@ -1,6 +1,6 @@
 # Remix.Camera Adapter Demo Verification
 
-Generated at: 2026-06-13T09:24:13.405Z
+Generated at: 2026-06-13T09:49:20.345Z
 Mode: bridge-dry-run
 Bridge URL: http://127.0.0.1:8787
 
@@ -40,6 +40,8 @@ Bridge URL: http://127.0.0.1:8787
 | Zapier | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | Voiceflow | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | Manychat | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
+| Nomi | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
+| Kindroid | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | Microsoft Bot Framework | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | Dialogflow ES | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | Dialogflow CX | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
@@ -47,7 +49,7 @@ Bridge URL: http://127.0.0.1:8787
 | Amazon Lex V2 | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | IBM watsonx Assistant | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 
-Public demo ready targets: 1/38
+Public demo ready targets: 1/40
 
 ## Targets
 
@@ -396,6 +398,26 @@ Evidence: setup runbook and static adapter preflight. Public demo ready: no.
 - [x] marker present: External Request
 - [x] marker present: yes=true
 
+### Nomi
+Evidence: setup runbook and static adapter preflight. Public demo ready: no.
+- [x] adapter exists: adapters/nomi/README.md
+- [x] adapter exists: adapters/nomi/remix-camera-nomi-tool.mjs
+- [x] demo runbook exists: demos/nomi/demo.md
+- [x] demo includes setup target
+- [x] marker present: official Nomi API
+- [x] marker present: external-bot-sidecar
+- [x] marker present: yes: true
+
+### Kindroid
+Evidence: setup runbook and static adapter preflight. Public demo ready: no.
+- [x] adapter exists: adapters/kindroid/README.md
+- [x] adapter exists: adapters/kindroid/remix-camera-kindroid-tool.mjs
+- [x] demo runbook exists: demos/kindroid/demo.md
+- [x] demo includes setup target
+- [x] marker present: official Kindroid API
+- [x] marker present: X-Kindroid-Requester
+- [x] marker present: yes: true
+
 ### Microsoft Bot Framework
 Evidence: setup runbook and static adapter preflight. Public demo ready: no.
 - [x] adapter exists: adapters/bot-framework/README.md
@@ -492,6 +514,8 @@ Evidence: setup runbook and static adapter preflight. Public demo ready: no.
 - [x] Zapier adapter real dry-run (command: send-selfie)
 - [x] Voiceflow adapter real dry-run (command: send-selfie)
 - [x] Manychat adapter real dry-run (command: send-selfie)
+- [x] Nomi adapter real dry-run (command: send-selfie)
+- [x] Kindroid adapter real dry-run (command: send-selfie)
 - [x] Microsoft Bot Framework adapter real dry-run (command: send-selfie)
 - [x] Dialogflow ES adapter real dry-run (command: send-selfie)
 - [x] Dialogflow CX adapter real dry-run (command: send-selfie)
