@@ -9,7 +9,7 @@ The integration has two parts:
 - `bridge/`: a local Node.js bridge that stores `REMIX_SESSION_TOKEN` server-side and calls the Remix.Camera API.
 - `extension/`: a SillyTavern extension that adds image buttons and optional function tools for a character.
 - `characters/`: importable Character Card V2 examples with Remix.Camera visual metadata.
-- `adapters/`: wrappers for RisuAI, Open WebUI, LibreChat, LobeChat, Agnai, Telegram, Discord, WhatsApp, Slack, LINE, Messenger, Instagram DMs, Microsoft Teams, Twilio SMS/MMS, Matrix, Dify, Flowise, Botpress, AnythingLLM, TypingMind, Poe, and Langflow.
+- `adapters/`: wrappers for MCP clients, RisuAI, Open WebUI, LibreChat, LobeChat, Agnai, Telegram, Discord, WhatsApp, Slack, LINE, Messenger, Instagram DMs, Microsoft Teams, Twilio SMS/MMS, Matrix, Dify, Flowise, Botpress, AnythingLLM, TypingMind, Poe, and Langflow.
 
 ## What It Enables
 
@@ -60,6 +60,7 @@ The same package can pair Remix.Camera and print target-specific install steps f
 
 ```bash
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=risu
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=mcp
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=openwebui
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=librechat
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=lobechat
@@ -85,6 +86,7 @@ npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=
 
 Adapter files:
 
+- MCP clients: `adapters/mcp/remix-camera-mcp-server.mjs`
 - RisuAI: `adapters/risu/remix-camera-companion-images.risu.js`
 - Open WebUI: `adapters/openwebui/remix_camera_companion_images.py`
 - LibreChat: `http://127.0.0.1:8787/librechat/openapi.json`
@@ -123,7 +125,7 @@ Popular hosted companion apps are tracked separately from supported adapters:
 - Character.AI: popular consumer companion app, but not a production adapter target until there is an official API, plugin, or partner integration surface.
 - JanitorAI: popular roleplay host that can connect to outside model APIs, but this package does not yet have a first-party tool callback surface inside JanitorAI itself.
 - Chub/Venus: strong character-card and API-provider ecosystem; use Remix.Camera character setup plus SillyTavern/Risu/Open WebUI today, and treat direct Chub/Venus chat insertion as pending a supported host surface.
-- AnythingLLM, TypingMind, Poe, and Langflow: supported through official custom skill, plugin, server-bot, or custom component surfaces.
+- MCP clients, AnythingLLM, TypingMind, Poe, and Langflow: supported through local stdio MCP, official custom skill, plugin, server-bot, or custom component surfaces.
 - SpicyChat, CrushOn, Kindroid, Nomi, Candy, Backyard AI, and similar hosted apps: watchlist targets. Support should be added only through official import/export, bot, webhook, tool, or browser-extension surfaces that can be tested without scraping or fake screenshots. Nomi and Kindroid can be bridged later through their official APIs, but they are not yet direct chat-surface adapters in this package.
 
 Do not label a host as supported until the package can run through that host's real UI, API, webhook, OpenAPI action, custom tool, or bot interface and produce non-mocked evidence.

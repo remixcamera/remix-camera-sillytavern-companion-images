@@ -9,6 +9,7 @@ import { parseInstagramCommand, runInstagramRemixCommand } from "../adapters/ins
 import { parseLineCommand, runLineRemixCommand } from "../adapters/line/remix-line-tool.mjs";
 import { parseMessengerCommand, runMessengerRemixCommand } from "../adapters/messenger/remix-messenger-tool.mjs";
 import { parseMatrixCommand, runMatrixRemixCommand } from "../adapters/matrix/remix-matrix-tool.mjs";
+import { handleMcpRequest, normalizeMcpToolName } from "../adapters/mcp/remix-camera-mcp-server.mjs";
 import { parseSlackCommand, runSlackRemixCommand } from "../adapters/slack/remix-slack-tool.mjs";
 import { parseTelegramCommand, runTelegramRemixCommand } from "../adapters/telegram/remix-telegram-tool.mjs";
 import { parseTeamsCommand, runTeamsRemixCommand } from "../adapters/teams/remix-teams-tool.mjs";
@@ -43,6 +44,14 @@ const targets = [
     demoFile: "demos/sillytavern/demo.md",
     setupCommand: "--target=sillytavern",
     markers: ["Health Check", "Preview Prompt", "real image messages"],
+  },
+  {
+    id: "mcp",
+    title: "MCP Clients",
+    adapterFiles: ["adapters/mcp/remix-camera-mcp-server.mjs", "adapters/mcp/README.md"],
+    demoFile: "demos/mcp/demo.md",
+    setupCommand: "--target=mcp",
+    markers: ["tools/list", "tools/call", "remix_camera_send_selfie_preview", "yes=true"],
   },
   {
     id: "risu",
@@ -475,6 +484,12 @@ async function verifyHostAdapterDryRuns() {
       }),
     );
     checks.push(
+      okCheck("MCP adapter real dry-run", false, {
+        skipped: true,
+        reason: "No bridge URL provided.",
+      }),
+    );
+    checks.push(
       okCheck("Discord adapter real dry-run", false, {
         skipped: true,
         reason: "No bridge URL provided.",
@@ -539,6 +554,28 @@ async function verifyHostAdapterDryRuns() {
   checks.push(
     okCheck("Telegram adapter real dry-run", telegram?.payload?.dryRun === true && /Preview ready/i.test(telegram.text), {
       command: telegram?.command,
+    }),
+  );
+
+  const mcp = await handleMcpRequest(
+    {
+      jsonrpc: "2.0",
+      id: "mcp-preview",
+      method: "tools/call",
+      params: {
+        name: normalizeMcpToolName("send-selfie", "dry-run"),
+        arguments: commandInputs["send-selfie"],
+      },
+    },
+    {
+      bridgeUrl,
+      profileId: process.env.REMIX_PROFILE_ID || "",
+      characterName: "Lily",
+    },
+  );
+  checks.push(
+    okCheck("MCP adapter real dry-run", mcp?.result?.structuredContent?.payload?.dryRun === true && /Preview ready/i.test(mcp?.result?.content?.[0]?.text || ""), {
+      command: "send-selfie",
     }),
   );
 
