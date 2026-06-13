@@ -43,6 +43,8 @@ Targets:
 - `zapier/`: Zapier Platform CLI action demo.
 - `voiceflow/`: Voiceflow API tool and Workflow API step demo.
 - `manychat/`: Manychat External Request action demo.
+- `dialogflow-cx/`: Dialogflow CX webhook fulfillment demo.
+- `rasa/`: Rasa custom action demo.
 
 Do not publish generated demo recordings until the runbook has been executed against production Remix.Camera and the inserted images are real Remix.Camera outputs.
 
