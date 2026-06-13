@@ -21,8 +21,10 @@ Targets:
 - `telegram/evidence-production-2026-06-12/`: production bridge dry-run evidence for the reusable Telegram tool; real Telegram send path is documented but awaits Bot API credentials.
 - `discord/`: Discord slash-command tool plus Lily proof-of-concept demo.
 - `whatsapp/`: WhatsApp Cloud API tool plus Lily proof-of-concept webhook demo.
+- `viber/`: Viber Bot REST API tool plus Lily proof-of-concept webhook demo.
 - `slack/`: Slack slash-command tool plus Lily proof-of-concept demo.
 - `line/`: LINE Messaging API tool plus Lily proof-of-concept webhook demo.
+- `kakao/`: KakaoTalk Kakao i/Open Builder Skill demo.
 - `messenger/`: Messenger Platform tool plus Lily proof-of-concept webhook demo.
 - `instagram/`: Instagram Messaging API tool demo.
 - `teams/`: Microsoft Teams/Bot Framework message handler demo.

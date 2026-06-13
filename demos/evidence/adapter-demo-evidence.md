@@ -1,6 +1,6 @@
 # Remix.Camera Adapter Demo Verification
 
-Generated at: 2026-06-13T09:49:20.345Z
+Generated at: 2026-06-13T10:24:59.652Z
 Mode: bridge-dry-run
 Bridge URL: http://127.0.0.1:8787
 
@@ -18,8 +18,10 @@ Bridge URL: http://127.0.0.1:8787
 | Telegram | production bridge evidence | no | Record a real host-delivery demo after platform credentials are present. |
 | Discord | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | WhatsApp | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
+| Viber | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | Slack | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | LINE | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
+| KakaoTalk | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | Messenger | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | Instagram DMs | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | Microsoft Teams | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
@@ -49,7 +51,7 @@ Bridge URL: http://127.0.0.1:8787
 | Amazon Lex V2 | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | IBM watsonx Assistant | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 
-Public demo ready targets: 1/40
+Public demo ready targets: 1/42
 
 ## Targets
 
@@ -160,6 +162,19 @@ Evidence: setup runbook and static adapter preflight. Public demo ready: no.
 - [x] marker present: WHATSAPP_PHONE_NUMBER_ID
 - [x] marker present: uploads local bridge images
 
+### Viber
+Evidence: setup runbook and static adapter preflight. Public demo ready: no.
+- [x] adapter exists: adapters/viber/remix-viber-tool.mjs
+- [x] adapter exists: adapters/viber/lily-webhook-server.mjs
+- [x] adapter exists: adapters/viber/README.md
+- [x] demo runbook exists: demos/viber/demo.md
+- [x] demo includes setup target
+- [x] marker present: createRemixViberTool
+- [x] marker present: handleWebhookDetailed
+- [x] marker present: x-viber-content-signature
+- [x] marker present: send_message
+- [x] marker present: public HTTPS image URLs
+
 ### Slack
 Evidence: setup runbook and static adapter preflight. Public demo ready: no.
 - [x] adapter exists: adapters/slack/remix-slack-tool.mjs
@@ -183,6 +198,19 @@ Evidence: setup runbook and static adapter preflight. Public demo ready: no.
 - [x] marker present: autoSend === false
 - [x] marker present: LINE_CHANNEL_SECRET
 - [x] marker present: productionImageUrl
+
+### KakaoTalk
+Evidence: setup runbook and static adapter preflight. Public demo ready: no.
+- [x] adapter exists: adapters/kakao/remix-kakao-skill.mjs
+- [x] adapter exists: adapters/kakao/lily-skill-server.mjs
+- [x] adapter exists: adapters/kakao/README.md
+- [x] demo runbook exists: demos/kakao/demo.md
+- [x] demo includes setup target
+- [x] marker present: createRemixKakaoSkill
+- [x] marker present: simpleImage
+- [x] marker present: version: "2.0"
+- [x] marker present: Kakao i/Open Builder
+- [x] marker present: public image URLs
 
 ### Messenger
 Evidence: setup runbook and static adapter preflight. Public demo ready: no.
@@ -499,8 +527,10 @@ Evidence: setup runbook and static adapter preflight. Public demo ready: no.
 - [x] MCP adapter real dry-run (command: send-selfie)
 - [x] Discord adapter real dry-run (command: send-selfie)
 - [x] WhatsApp adapter real dry-run (command: send-selfie)
+- [x] Viber adapter real dry-run (command: send-selfie)
 - [x] Slack adapter real dry-run (command: send-selfie)
 - [x] LINE adapter real dry-run (command: send-selfie)
+- [x] KakaoTalk adapter real dry-run (command: send-selfie)
 - [x] Messenger adapter real dry-run (command: send-selfie)
 - [x] Instagram adapter real dry-run (command: send-selfie)
 - [x] Teams adapter real dry-run (command: send-selfie)

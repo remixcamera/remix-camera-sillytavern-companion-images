@@ -13,6 +13,7 @@ import { runRemixCameraDialogflowCxWebhook } from "../adapters/dialogflow-cx/rem
 import { runRemixCameraDialogflowEsWebhook } from "../adapters/dialogflow-es/remix-camera-dialogflow-es-webhook.mjs";
 import { runDiscordRemixInteraction } from "../adapters/discord/remix-discord-tool.mjs";
 import { parseInstagramCommand, runInstagramRemixCommand } from "../adapters/instagram/remix-instagram-tool.mjs";
+import { runKakaoRemixSkill } from "../adapters/kakao/remix-kakao-skill.mjs";
 import { createRemixCameraLangChainTools } from "../adapters/langchain/remix-camera-langchain-tools.mjs";
 import { parseLineCommand, runLineRemixCommand } from "../adapters/line/remix-line-tool.mjs";
 import { parseMessengerCommand, runMessengerRemixCommand } from "../adapters/messenger/remix-messenger-tool.mjs";
@@ -29,6 +30,7 @@ import { parseTelegramCommand, runTelegramRemixCommand } from "../adapters/teleg
 import { parseTeamsCommand, runTeamsRemixCommand } from "../adapters/teams/remix-teams-tool.mjs";
 import { parseTwilioCommand, runTwilioRemixCommand } from "../adapters/twilio/remix-twilio-mms-tool.mjs";
 import { createRemixCameraAiSdkTools } from "../adapters/vercel-ai-sdk/remix-camera-ai-sdk-tools.mjs";
+import { parseViberCommand, runViberRemixCommand } from "../adapters/viber/remix-viber-tool.mjs";
 import { runRemixCameraVoiceflowTool } from "../adapters/voiceflow/remix-camera-voiceflow-tool.mjs";
 import { runRemixCameraWatsonxAssistantTool } from "../adapters/watsonx-assistant/remix-camera-watsonx-tool.mjs";
 import { parseWhatsAppCommand, runWhatsAppRemixCommand } from "../adapters/whatsapp/remix-whatsapp-tool.mjs";
@@ -148,6 +150,14 @@ const targets = [
     markers: ["createRemixWhatsAppTool", "handleWebhookDetailed", "autoSend === false", "WHATSAPP_PHONE_NUMBER_ID", "uploads local bridge images"],
   },
   {
+    id: "viber",
+    title: "Viber",
+    adapterFiles: ["adapters/viber/remix-viber-tool.mjs", "adapters/viber/lily-webhook-server.mjs", "adapters/viber/README.md"],
+    demoFile: "demos/viber/demo.md",
+    setupCommand: "--target=viber",
+    markers: ["createRemixViberTool", "handleWebhookDetailed", "x-viber-content-signature", "send_message", "public HTTPS image URLs"],
+  },
+  {
     id: "slack",
     title: "Slack",
     adapterFiles: ["adapters/slack/remix-slack-tool.mjs", "adapters/slack/lily-slash-command-server.mjs"],
@@ -162,6 +172,14 @@ const targets = [
     demoFile: "demos/line/demo.md",
     setupCommand: "--target=line",
     markers: ["createRemixLineTool", "handleWebhookDetailed", "autoSend === false", "LINE_CHANNEL_SECRET", "productionImageUrl"],
+  },
+  {
+    id: "kakao",
+    title: "KakaoTalk",
+    adapterFiles: ["adapters/kakao/remix-kakao-skill.mjs", "adapters/kakao/lily-skill-server.mjs", "adapters/kakao/README.md"],
+    demoFile: "demos/kakao/demo.md",
+    setupCommand: "--target=kakao",
+    markers: ["createRemixKakaoSkill", "simpleImage", "version: \"2.0\"", "Kakao i/Open Builder", "public image URLs"],
   },
   {
     id: "messenger",
@@ -662,6 +680,12 @@ async function verifyHostAdapterDryRuns() {
       }),
     );
     checks.push(
+      okCheck("Viber adapter real dry-run", false, {
+        skipped: true,
+        reason: "No bridge URL provided.",
+      }),
+    );
+    checks.push(
       okCheck("Slack adapter real dry-run", false, {
         skipped: true,
         reason: "No bridge URL provided.",
@@ -669,6 +693,12 @@ async function verifyHostAdapterDryRuns() {
     );
     checks.push(
       okCheck("LINE adapter real dry-run", false, {
+        skipped: true,
+        reason: "No bridge URL provided.",
+      }),
+    );
+    checks.push(
+      okCheck("KakaoTalk adapter real dry-run", false, {
         skipped: true,
         reason: "No bridge URL provided.",
       }),
@@ -868,6 +898,17 @@ async function verifyHostAdapterDryRuns() {
     }),
   );
 
+  const viber = await runViberRemixCommand(parseViberCommand("preview selfie cozy couch with lamp light"), {
+    bridgeUrl,
+    profileId: process.env.REMIX_PROFILE_ID || "",
+    characterName: "Lily",
+  });
+  checks.push(
+    okCheck("Viber adapter real dry-run", viber?.payload?.dryRun === true && /Preview ready/i.test(viber.text), {
+      command: viber?.command,
+    }),
+  );
+
   const slack = await runSlackRemixCommand(parseSlackCommand("preview selfie cozy couch with lamp light"), {
     bridgeUrl,
     profileId: process.env.REMIX_PROFILE_ID || "",
@@ -888,6 +929,26 @@ async function verifyHostAdapterDryRuns() {
     okCheck("LINE adapter real dry-run", line?.payload?.dryRun === true && /Preview ready/i.test(line.text), {
       command: line?.command,
     }),
+  );
+
+  const kakao = await runKakaoRemixSkill(
+    {
+      userRequest: { utterance: "preview selfie cozy couch with lamp light" },
+    },
+    {
+      bridgeUrl,
+      profileId: process.env.REMIX_PROFILE_ID || "",
+      characterName: "Lily",
+    },
+  );
+  checks.push(
+    okCheck(
+      "KakaoTalk adapter real dry-run",
+      kakao?.result?.payload?.dryRun === true && /Preview ready/i.test(kakao?.response?.template?.outputs?.[0]?.simpleText?.text || ""),
+      {
+        command: kakao?.parsed?.command,
+      },
+    ),
   );
 
   const messenger = await runMessengerRemixCommand(parseMessengerCommand("preview selfie cozy couch with lamp light"), {
