@@ -155,7 +155,7 @@ const targets = [
     adapterFiles: ["adapters/flowise/remix-camera-flowise-tool.js", "adapters/flowise/README.md"],
     demoFile: "demos/flowise/demo.md",
     setupCommand: "--target=flowise",
-    markers: ["remixCameraFlowiseTool", "Custom Tool", "preview=true"],
+    markers: ["remixCameraFlowiseTool", "Custom Tool", "preview=true", "confirm=true"],
   },
   {
     id: "botpress",
@@ -163,7 +163,7 @@ const targets = [
     adapterFiles: ["adapters/botpress/remix-camera-botpress-action.js", "adapters/botpress/README.md"],
     demoFile: "demos/botpress/demo.md",
     setupCommand: "--target=botpress",
-    markers: ["remixCameraBotpressAction", "Execute Code", "yes=true"],
+    markers: ["remixCameraBotpressAction", "Execute Code", "yes=true", "confirm=true"],
   },
 ];
 

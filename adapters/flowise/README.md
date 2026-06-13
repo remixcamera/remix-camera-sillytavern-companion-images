@@ -20,7 +20,7 @@ In Flowise:
 2. Add a Custom Tool.
 3. Set `REMIX_BRIDGE_URL` to `http://127.0.0.1:8787` if Flowise runs on the same machine.
 4. Paste the `flowiseCustomToolSnippet` body or adapt `remixCameraFlowiseTool`.
-5. Give the tool inputs for `command`, `prompt`, `preview`, and `yes`.
+5. Give the tool inputs for `command`, `prompt`, `preview`, and `yes` or `confirm`.
 
 Recommended commands:
 
@@ -35,6 +35,6 @@ daily-life-snap
 private-snap
 ```
 
-For generation, set `yes=true`. For preview, set `preview=true`; previews never spend credits.
+The helper defaults to `dry-run`. It only calls the bridge `generate` route when `yes=true` or `confirm=true`; setting `preview=true` or `dryRun=true` forces a preview. Previews never spend credits.
 
 Cloud-hosted Flowise cannot call a user's local `127.0.0.1` bridge directly. Use self-hosted Flowise on the same machine/network, or expose the bridge through a private authenticated tunnel that only Flowise can reach.
