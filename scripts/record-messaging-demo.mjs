@@ -27,6 +27,12 @@ import {
   sendInstagramText,
 } from "../adapters/instagram/remix-instagram-tool.mjs";
 import {
+  parseIntercomCommand,
+  runIntercomRemixCommand,
+  sendIntercomRemixResult,
+  sendIntercomText,
+} from "../adapters/intercom/remix-intercom-tool.mjs";
+import {
   parseMatrixCommand,
   runMatrixRemixCommand,
   sendMatrixRemixResult,
@@ -74,11 +80,45 @@ import {
   sendRocketChatRemixResult,
   sendRocketChatText,
 } from "../adapters/rocketchat/remix-rocketchat-tool.mjs";
+import {
+  parseZendeskCommand,
+  runZendeskRemixCommand,
+  sendZendeskRemixResult,
+  sendZendeskText,
+} from "../adapters/zendesk/remix-zendesk-sunshine-tool.mjs";
+import {
+  parseCrispCommand,
+  runCrispRemixCommand,
+  sendCrispRemixResult,
+  sendCrispText,
+} from "../adapters/crisp/remix-crisp-tool.mjs";
+import {
+  parseTidioCommand,
+  runTidioRemixCommand,
+  sendTidioTicketReply,
+} from "../adapters/tidio/remix-tidio-tool.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const packageRoot = path.resolve(__dirname, "..");
 
-const MESSAGING_TARGETS = ["telegram", "discord", "whatsapp", "slack", "mattermost", "rocketchat", "line", "messenger", "instagram", "twilio", "matrix", "vk"];
+const MESSAGING_TARGETS = [
+  "telegram",
+  "discord",
+  "whatsapp",
+  "slack",
+  "mattermost",
+  "rocketchat",
+  "intercom",
+  "zendesk",
+  "crisp",
+  "tidio",
+  "line",
+  "messenger",
+  "instagram",
+  "twilio",
+  "matrix",
+  "vk",
+];
 
 const COMMAND_ALIASES = new Map([
   ["selfie", "send-selfie"],
@@ -113,6 +153,10 @@ const DEFAULT_COMMANDS = {
   slack: "preview selfie cozy couch with lamp light",
   mattermost: "preview selfie cozy couch with lamp light",
   rocketchat: "preview selfie cozy couch with lamp light",
+  intercom: "preview selfie cozy couch with lamp light",
+  zendesk: "preview selfie cozy couch with lamp light",
+  crisp: "preview selfie cozy couch with lamp light",
+  tidio: "preview selfie cozy couch with lamp light",
   line: "preview selfie cozy couch with lamp light",
   messenger: "preview selfie cozy couch with lamp light",
   instagram: "preview selfie cozy couch with lamp light",
@@ -128,6 +172,10 @@ const DELIVERY_ENV = {
   slack: ["SLACK_BOT_TOKEN", "SLACK_CHANNEL_ID"],
   mattermost: ["MATTERMOST_WEBHOOK_URL"],
   rocketchat: ["ROCKETCHAT_URL", "ROCKETCHAT_AUTH_TOKEN", "ROCKETCHAT_USER_ID", "ROCKETCHAT_ROOM_ID"],
+  intercom: ["INTERCOM_ACCESS_TOKEN", "INTERCOM_ADMIN_ID", "INTERCOM_CONVERSATION_ID"],
+  zendesk: ["ZENDESK_SUBDOMAIN", "ZENDESK_APP_ID", "ZENDESK_CONVERSATION_ID", "ZENDESK_KEY_ID", "ZENDESK_SECRET"],
+  crisp: ["CRISP_TOKEN_ID", "CRISP_TOKEN_KEY", "CRISP_WEBSITE_ID", "CRISP_SESSION_ID"],
+  tidio: ["TIDIO_CLIENT_ID", "TIDIO_CLIENT_SECRET", "TIDIO_TICKET_ID"],
   line: ["LINE_CHANNEL_ACCESS_TOKEN", "LINE_TO"],
   messenger: ["MESSENGER_PAGE_ACCESS_TOKEN", "MESSENGER_RECIPIENT_ID"],
   instagram: ["INSTAGRAM_ACCESS_TOKEN", "INSTAGRAM_RECIPIENT_ID"],
@@ -248,6 +296,14 @@ export function parseTargetCommand(target, commandText) {
       return parseMattermostCommand(commandText);
     case "rocketchat":
       return parseRocketChatCommand(commandText);
+    case "intercom":
+      return parseIntercomCommand(commandText);
+    case "zendesk":
+      return parseZendeskCommand(commandText);
+    case "crisp":
+      return parseCrispCommand(commandText);
+    case "tidio":
+      return parseTidioCommand(commandText);
     case "line":
       return parseLineCommand(commandText);
     case "messenger":
@@ -332,6 +388,14 @@ export async function runTargetCommand({ target, parsedResult, options }) {
       return runMattermostRemixCommand(parsedResult, options);
     case "rocketchat":
       return runRocketChatRemixCommand(parsedResult, options);
+    case "intercom":
+      return runIntercomRemixCommand(parsedResult, options);
+    case "zendesk":
+      return runZendeskRemixCommand(parsedResult, options);
+    case "crisp":
+      return runCrispRemixCommand(parsedResult, options);
+    case "tidio":
+      return runTidioRemixCommand(parsedResult, options);
     case "line":
       return runLineRemixCommand(parsedResult, options);
     case "messenger":
@@ -503,6 +567,64 @@ async function deliverTargetResult({ target, result, commandText }) {
         roomId: process.env.ROCKETCHAT_ROOM_ID,
         channel: process.env.ROCKETCHAT_CHANNEL,
         result,
+      });
+    case "intercom":
+      await sendIntercomText({
+        accessToken: process.env.INTERCOM_ACCESS_TOKEN,
+        conversationId: process.env.INTERCOM_CONVERSATION_ID,
+        adminId: process.env.INTERCOM_ADMIN_ID,
+        text: `Intercom live demo command: ${commandText}`,
+        intercomVersion: process.env.INTERCOM_VERSION,
+      });
+      return sendIntercomRemixResult({
+        accessToken: process.env.INTERCOM_ACCESS_TOKEN,
+        conversationId: process.env.INTERCOM_CONVERSATION_ID,
+        adminId: process.env.INTERCOM_ADMIN_ID,
+        intercomVersion: process.env.INTERCOM_VERSION,
+        result,
+      });
+    case "zendesk":
+      await sendZendeskText({
+        subdomain: process.env.ZENDESK_SUBDOMAIN,
+        appId: process.env.ZENDESK_APP_ID,
+        conversationId: process.env.ZENDESK_CONVERSATION_ID,
+        keyId: process.env.ZENDESK_KEY_ID,
+        secret: process.env.ZENDESK_SECRET,
+        text: `Zendesk live demo command: ${commandText}`,
+      });
+      return sendZendeskRemixResult({
+        subdomain: process.env.ZENDESK_SUBDOMAIN,
+        appId: process.env.ZENDESK_APP_ID,
+        conversationId: process.env.ZENDESK_CONVERSATION_ID,
+        keyId: process.env.ZENDESK_KEY_ID,
+        secret: process.env.ZENDESK_SECRET,
+        result,
+      });
+    case "crisp":
+      await sendCrispText({
+        tokenId: process.env.CRISP_TOKEN_ID,
+        tokenKey: process.env.CRISP_TOKEN_KEY,
+        websiteId: process.env.CRISP_WEBSITE_ID,
+        sessionId: process.env.CRISP_SESSION_ID,
+        text: `Crisp live demo command: ${commandText}`,
+      });
+      return sendCrispRemixResult({
+        tokenId: process.env.CRISP_TOKEN_ID,
+        tokenKey: process.env.CRISP_TOKEN_KEY,
+        websiteId: process.env.CRISP_WEBSITE_ID,
+        sessionId: process.env.CRISP_SESSION_ID,
+        result,
+      });
+    case "tidio":
+      return sendTidioTicketReply({
+        clientId: process.env.TIDIO_CLIENT_ID,
+        clientSecret: process.env.TIDIO_CLIENT_SECRET,
+        ticketId: process.env.TIDIO_TICKET_ID,
+        operatorId: process.env.TIDIO_OPERATOR_ID,
+        result: {
+          ...result,
+          text: [`Tidio live demo command: ${commandText}`, result?.text || ""].filter(Boolean).join("\n"),
+        },
       });
     case "line":
       return sendLineRemixResult({

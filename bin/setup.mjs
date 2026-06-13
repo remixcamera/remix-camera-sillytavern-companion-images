@@ -33,6 +33,10 @@ const SUPPORTED_TARGETS = new Set([
   "slack",
   "mattermost",
   "rocketchat",
+  "intercom",
+  "zendesk",
+  "crisp",
+  "tidio",
   "line",
   "zalo",
   "kakao",
@@ -77,7 +81,7 @@ Usage:
   npx @remix-camera/sillytavern-setup [options]
 
 Options:
-  --target=sillytavern|mcp|risu|openwebui|librechat|lobechat|chatgpt-actions|agnai|telegram|discord|whatsapp|wechat|viber|vk|slack|mattermost|rocketchat|line|zalo|kakao|messenger|instagram|teams|twilio|matrix|dify|flowise|botpress|anythingllm|typingmind|poe|langflow|langchain|vercel-ai-sdk|n8n|pipedream|make|zapier|voiceflow|manychat|nomi|kindroid|bot-framework|dialogflow-es|dialogflow-cx|rasa|amazon-lex|watsonx-assistant
+  --target=sillytavern|mcp|risu|openwebui|librechat|lobechat|chatgpt-actions|agnai|telegram|discord|whatsapp|wechat|viber|vk|slack|mattermost|rocketchat|intercom|zendesk|crisp|tidio|line|zalo|kakao|messenger|instagram|teams|twilio|matrix|dify|flowise|botpress|anythingllm|typingmind|poe|langflow|langchain|vercel-ai-sdk|n8n|pipedream|make|zapier|voiceflow|manychat|nomi|kindroid|bot-framework|dialogflow-es|dialogflow-cx|rasa|amazon-lex|watsonx-assistant
   --sillytavern-dir=/path/to/SillyTavern  Use a specific local SillyTavern checkout
   --profile-id=profile_id                 Use a specific Remix.Camera character profile
   --character-name="Name"                 Override the Character Card name
@@ -511,6 +515,34 @@ function printTargetInstructions(target, { healthUrl, port, configPath }) {
       `  ROCKETCHAT_URL=... ROCKETCHAT_AUTH_TOKEN=... ROCKETCHAT_USER_ID=... ROCKETCHAT_ROOM_ID=... ROCKETCHAT_WEBHOOK_TOKEN=... REMIX_CONFIG_FILE=${configPath} node your-rocketchat-bot.mjs`,
       "Configure a Rocket.Chat outgoing integration or Apps-Engine command to call your HTTPS endpoint.",
       "The adapter verifies the Rocket.Chat webhook token and sends public productionImageUrl attachments through chat.postMessage.",
+    ],
+    intercom: [
+      "Reusable Intercom Conversations adapter:",
+      `  ${path.join(adapterRoot, "intercom", "remix-intercom-tool.mjs")}`,
+      "Import createRemixIntercomTool or parseIntercomCommand/runIntercomRemixCommand into your existing Intercom webhook or bot service.",
+      `  INTERCOM_ACCESS_TOKEN=... INTERCOM_ADMIN_ID=... INTERCOM_CONVERSATION_ID=... REMIX_CONFIG_FILE=${configPath} node your-intercom-bot.mjs`,
+      "Delivery uses Intercom conversation replies with attachment_urls and public Remix.Camera productionImageUrl values.",
+    ],
+    zendesk: [
+      "Reusable Zendesk Sunshine Conversations adapter:",
+      `  ${path.join(adapterRoot, "zendesk", "remix-zendesk-sunshine-tool.mjs")}`,
+      "Import createRemixZendeskTool or parseZendeskCommand/runZendeskRemixCommand into your existing Sunshine Conversations webhook or bot service.",
+      `  ZENDESK_SUBDOMAIN=... ZENDESK_APP_ID=... ZENDESK_CONVERSATION_ID=... ZENDESK_KEY_ID=... ZENDESK_SECRET=... REMIX_CONFIG_FILE=${configPath} node your-zendesk-bot.mjs`,
+      "Delivery sends a business text message, then content.type=image messages with public Remix.Camera productionImageUrl values.",
+    ],
+    crisp: [
+      "Reusable Crisp operator-message adapter:",
+      `  ${path.join(adapterRoot, "crisp", "remix-crisp-tool.mjs")}`,
+      "Import createRemixCrispTool or parseCrispCommand/runCrispRemixCommand into your existing Crisp webhook, plugin, or operator-bot service.",
+      `  CRISP_TOKEN_ID=... CRISP_TOKEN_KEY=... CRISP_WEBSITE_ID=... CRISP_SESSION_ID=... REMIX_CONFIG_FILE=${configPath} node your-crisp-bot.mjs`,
+      "Delivery uses Crisp type=text and type=file messages with public Remix.Camera productionImageUrl values.",
+    ],
+    tidio: [
+      "Reusable Tidio webhook, ticket-reply, and widget sidecar adapter:",
+      `  ${path.join(adapterRoot, "tidio", "remix-tidio-tool.mjs")}`,
+      "Import verifyTidioSignature before processing webhooks, then parseTidioCommand/runTidioRemixCommand for image requests.",
+      `  TIDIO_CLIENT_ID=... TIDIO_CLIENT_SECRET=... TIDIO_TICKET_ID=... TIDIO_WEBHOOK_SECRET=... REMIX_CONFIG_FILE=${configPath} node your-tidio-bot.mjs`,
+      "Tidio OpenAPI ticket replies are text-only, so delivery sends public Remix.Camera image links; widget demos can use tidioChatApi.messageFromOperator(...).",
     ],
     line: [
       "Reusable LINE Messaging API tool module:",
