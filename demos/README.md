@@ -24,6 +24,7 @@ Targets:
 - `whatsapp/`: WhatsApp Cloud API tool plus Lily proof-of-concept webhook demo.
 - `wechat/`: WeChat Official Account callback plus customer-service image demo.
 - `viber/`: Viber Bot REST API tool plus Lily proof-of-concept webhook demo.
+- `vk/`: VK community bot Callback API or Long Poll demo.
 - `slack/`: Slack slash-command tool plus Lily proof-of-concept demo.
 - `line/`: LINE Messaging API tool plus Lily proof-of-concept webhook demo.
 - `zalo/`: Zalo Official Account webhook and consultation-message demo.
@@ -101,7 +102,7 @@ The verifier does not fabricate generated image outputs. Real video demos should
 
 ## Messaging Host Demo Recorder
 
-Use the messaging recorder to create per-host, non-mocked demo evidence for Telegram, Discord, WhatsApp, Slack, LINE, Messenger, and Matrix.
+Use the messaging recorder to create per-host, non-mocked demo evidence for Telegram, Discord, WhatsApp, Slack, LINE, Messenger, Instagram, Twilio, Matrix, and VK.
 
 No-spend bridge evidence for every messaging adapter:
 

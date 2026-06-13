@@ -1,6 +1,6 @@
 # Remix.Camera Adapter Demo Verification
 
-Generated at: 2026-06-13T11:15:41.508Z
+Generated at: 2026-06-13T11:40:39.059Z
 Mode: bridge-dry-run
 Bridge URL: http://127.0.0.1:8787
 
@@ -21,6 +21,7 @@ Bridge URL: http://127.0.0.1:8787
 | WhatsApp | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | WeChat Official Account | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | Viber | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
+| VK community bots | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | Slack | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | LINE | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | Zalo Official Account | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
@@ -54,7 +55,7 @@ Bridge URL: http://127.0.0.1:8787
 | Amazon Lex V2 | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | IBM watsonx Assistant | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 
-Public demo ready targets: 1/45
+Public demo ready targets: 1/46
 
 ## Targets
 
@@ -200,6 +201,18 @@ Evidence: setup runbook and static adapter preflight. Public demo ready: no.
 - [x] marker present: x-viber-content-signature
 - [x] marker present: send_message
 - [x] marker present: public HTTPS image URLs
+
+### VK community bots
+Evidence: setup runbook and static adapter preflight. Public demo ready: no.
+- [x] adapter exists: adapters/vk/remix-vk-tool.mjs
+- [x] adapter exists: adapters/vk/README.md
+- [x] demo runbook exists: demos/vk/demo.md
+- [x] demo includes setup target
+- [x] marker present: createRemixVkTool
+- [x] marker present: message_new
+- [x] marker present: VK_ACCESS_TOKEN
+- [x] marker present: messages.send
+- [x] marker present: productionImageUrl
 
 ### Slack
 Evidence: setup runbook and static adapter preflight. Public demo ready: no.
@@ -565,11 +578,12 @@ Evidence: setup runbook and static adapter preflight. Public demo ready: no.
 
 - [x] Telegram adapter real dry-run (command: send-selfie)
 - [x] MCP adapter real dry-run (command: send-selfie)
-- [x] ChatGPT Actions adapter real dry-run (status 200; command: send-selfie)
+- [ ] ChatGPT Actions adapter real dry-run - Set REMIX_ACTION_API_KEY on the bridge and verifier to test the authenticated ChatGPT Actions route.
 - [x] Discord adapter real dry-run (command: send-selfie)
 - [x] WhatsApp adapter real dry-run (command: send-selfie)
 - [x] WeChat Official Account adapter real dry-run (command: send-selfie)
 - [x] Viber adapter real dry-run (command: send-selfie)
+- [x] VK community bot adapter real dry-run (command: send-selfie)
 - [x] Slack adapter real dry-run (command: send-selfie)
 - [x] LINE adapter real dry-run (command: send-selfie)
 - [x] Zalo Official Account adapter real dry-run (command: send-selfie)

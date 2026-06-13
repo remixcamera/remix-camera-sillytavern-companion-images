@@ -29,6 +29,7 @@ const SUPPORTED_TARGETS = new Set([
   "whatsapp",
   "wechat",
   "viber",
+  "vk",
   "slack",
   "line",
   "zalo",
@@ -74,7 +75,7 @@ Usage:
   npx @remix-camera/sillytavern-setup [options]
 
 Options:
-  --target=sillytavern|mcp|risu|openwebui|librechat|lobechat|chatgpt-actions|agnai|telegram|discord|whatsapp|wechat|viber|slack|line|zalo|kakao|messenger|instagram|teams|twilio|matrix|dify|flowise|botpress|anythingllm|typingmind|poe|langflow|langchain|vercel-ai-sdk|n8n|pipedream|make|zapier|voiceflow|manychat|nomi|kindroid|bot-framework|dialogflow-es|dialogflow-cx|rasa|amazon-lex|watsonx-assistant
+  --target=sillytavern|mcp|risu|openwebui|librechat|lobechat|chatgpt-actions|agnai|telegram|discord|whatsapp|wechat|viber|vk|slack|line|zalo|kakao|messenger|instagram|teams|twilio|matrix|dify|flowise|botpress|anythingllm|typingmind|poe|langflow|langchain|vercel-ai-sdk|n8n|pipedream|make|zapier|voiceflow|manychat|nomi|kindroid|bot-framework|dialogflow-es|dialogflow-cx|rasa|amazon-lex|watsonx-assistant
   --sillytavern-dir=/path/to/SillyTavern  Use a specific local SillyTavern checkout
   --profile-id=profile_id                 Use a specific Remix.Camera character profile
   --character-name="Name"                 Override the Character Card name
@@ -476,6 +477,14 @@ function printTargetInstructions(target, { healthUrl, port, configPath }) {
       `  VIBER_AUTH_TOKEN=... REMIX_CONFIG_FILE=${configPath} node ${path.join(adapterRoot, "viber", "lily-webhook-server.mjs")}`,
       "Expose the webhook over HTTPS and set that URL with Viber's set_webhook endpoint.",
       "Viber picture messages require public HTTPS image URLs ending in .jpg, .jpeg, .png, or .gif; the adapter refuses to post local bridge URLs as broken images.",
+    ],
+    vk: [
+      "Reusable VK community bot tool module:",
+      `  ${path.join(adapterRoot, "vk", "remix-vk-tool.mjs")}`,
+      "Import createRemixVkTool into your existing VK Callback API or Long Poll bot server.",
+      `  VK_ACCESS_TOKEN=... VK_CALLBACK_SECRET=... REMIX_CONFIG_FILE=${configPath} node your-vk-bot.mjs`,
+      "Enable bot capabilities and community messages in VK, then route message_new events to the tool.",
+      "The adapter sends productionImageUrl links by default, and can upload/send VK photo attachments when attachImages is enabled.",
     ],
     slack: [
       "Reusable Slack slash-command tool module:",

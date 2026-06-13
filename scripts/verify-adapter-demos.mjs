@@ -31,6 +31,7 @@ import { parseTeamsCommand, runTeamsRemixCommand } from "../adapters/teams/remix
 import { parseTwilioCommand, runTwilioRemixCommand } from "../adapters/twilio/remix-twilio-mms-tool.mjs";
 import { createRemixCameraAiSdkTools } from "../adapters/vercel-ai-sdk/remix-camera-ai-sdk-tools.mjs";
 import { parseViberCommand, runViberRemixCommand } from "../adapters/viber/remix-viber-tool.mjs";
+import { parseVkCommand, runVkRemixCommand } from "../adapters/vk/remix-vk-tool.mjs";
 import { runRemixCameraVoiceflowTool } from "../adapters/voiceflow/remix-camera-voiceflow-tool.mjs";
 import { runRemixCameraWatsonxAssistantTool } from "../adapters/watsonx-assistant/remix-camera-watsonx-tool.mjs";
 import { parseWeChatCommand, runWeChatRemixCommand } from "../adapters/wechat/remix-wechat-tool.mjs";
@@ -174,6 +175,14 @@ const targets = [
     demoFile: "demos/viber/demo.md",
     setupCommand: "--target=viber",
     markers: ["createRemixViberTool", "handleWebhookDetailed", "x-viber-content-signature", "send_message", "public HTTPS image URLs"],
+  },
+  {
+    id: "vk",
+    title: "VK community bots",
+    adapterFiles: ["adapters/vk/remix-vk-tool.mjs", "adapters/vk/README.md"],
+    demoFile: "demos/vk/demo.md",
+    setupCommand: "--target=vk",
+    markers: ["createRemixVkTool", "message_new", "VK_ACCESS_TOKEN", "messages.send", "productionImageUrl"],
   },
   {
     id: "slack",
@@ -736,6 +745,12 @@ async function verifyHostAdapterDryRuns() {
       }),
     );
     checks.push(
+      okCheck("VK community bot adapter real dry-run", false, {
+        skipped: true,
+        reason: "No bridge URL provided.",
+      }),
+    );
+    checks.push(
       okCheck("Slack adapter real dry-run", false, {
         skipped: true,
         reason: "No bridge URL provided.",
@@ -998,6 +1013,17 @@ async function verifyHostAdapterDryRuns() {
   checks.push(
     okCheck("Viber adapter real dry-run", viber?.payload?.dryRun === true && /Preview ready/i.test(viber.text), {
       command: viber?.command,
+    }),
+  );
+
+  const vk = await runVkRemixCommand(parseVkCommand("preview selfie cozy couch with lamp light"), {
+    bridgeUrl,
+    profileId: process.env.REMIX_PROFILE_ID || "",
+    characterName: "Lily",
+  });
+  checks.push(
+    okCheck("VK community bot adapter real dry-run", vk?.payload?.dryRun === true && /Preview ready/i.test(vk.text), {
+      command: vk?.command,
     }),
   );
 
