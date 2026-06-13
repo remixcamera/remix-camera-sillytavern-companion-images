@@ -36,6 +36,7 @@ const targets = [
       "demos/sillytavern/live-production-2026-06-12/sillytavern-remix-live-selfie-demo-poster.png",
       "demos/sillytavern/live-production-2026-06-12/result.json",
     ],
+    artifactKind: "live-production-recording",
     demoFile: "demos/sillytavern/demo.md",
     setupCommand: "--target=sillytavern",
     markers: ["Health Check", "Preview Prompt", "real image messages"],
@@ -89,6 +90,7 @@ const targets = [
       "demos/telegram/evidence-production-2026-06-12/transcript.md",
       "demos/telegram/evidence-production-2026-06-12/transcript.html",
     ],
+    artifactKind: "production-bridge-dry-run",
     demoFile: "demos/telegram/demo.md",
     setupCommand: "--target=telegram",
     markers: ["createRemixTelegramTool", "LILY_PROFILE_ID", "uploads local bridge images"],
@@ -313,6 +315,52 @@ async function verifyStaticTarget(target) {
   }
 
   return checks;
+}
+
+async function summarizeTargetEvidence(target) {
+  const artifactFiles = target.artifactFiles || [];
+  const missingArtifacts = [];
+  for (const artifactFile of artifactFiles) {
+    if (!(await fileExists(path.join(packageRoot, artifactFile)))) {
+      missingArtifacts.push(artifactFile);
+    }
+  }
+
+  const artifactsComplete = artifactFiles.length > 0 && missingArtifacts.length === 0;
+  if (target.artifactKind === "live-production-recording" && artifactsComplete) {
+    return {
+      status: "live-production-recording",
+      publicDemoReady: true,
+      evidenceLevel: "real host recording",
+      missingArtifacts,
+      nextStep: "Keep recording current when behavior or UI changes.",
+    };
+  }
+  if (target.artifactKind === "production-bridge-dry-run" && artifactsComplete) {
+    return {
+      status: "production-bridge-dry-run",
+      publicDemoReady: false,
+      evidenceLevel: "production bridge evidence",
+      missingArtifacts,
+      nextStep: "Record a real host-delivery demo after platform credentials are present.",
+    };
+  }
+  if (artifactFiles.length > 0) {
+    return {
+      status: "artifact-incomplete",
+      publicDemoReady: false,
+      evidenceLevel: "runbook with missing artifacts",
+      missingArtifacts,
+      nextStep: "Regenerate or restore the missing demo artifacts.",
+    };
+  }
+  return {
+    status: "runbook-ready",
+    publicDemoReady: false,
+    evidenceLevel: "setup runbook and static adapter preflight",
+    missingArtifacts,
+    nextStep: "Run this target in the real host and add production demo evidence.",
+  };
 }
 
 async function requestBridge(pathname, options = {}) {
@@ -542,11 +590,28 @@ function renderMarkdownReport(evidence) {
     `Mode: ${evidence.mode}`,
     `Bridge URL: ${evidence.bridgeUrl || "not provided"}`,
     "",
-    "## Targets",
+    "## Demo Evidence Status",
     "",
+    "| Target | Evidence level | Public demo ready | Next step |",
+    "| --- | --- | --- | --- |",
   ];
   for (const target of evidence.targets) {
+    lines.push(
+      `| ${target.title} | ${target.demoEvidence.evidenceLevel} | ${target.demoEvidence.publicDemoReady ? "yes" : "no"} | ${target.demoEvidence.nextStep} |`,
+    );
+  }
+  lines.push(
+    "",
+    `Public demo ready targets: ${evidence.demoSummary.publicDemoReadyCount}/${evidence.demoSummary.targetCount}`,
+    "",
+    "## Targets",
+    "",
+  );
+  for (const target of evidence.targets) {
     lines.push(`### ${target.title}`);
+    lines.push(
+      `Evidence: ${target.demoEvidence.evidenceLevel}. Public demo ready: ${target.demoEvidence.publicDemoReady ? "yes" : "no"}.`,
+    );
     for (const check of target.checks) {
       const marker = check.ok ? "[x]" : check.skipped ? "[ ]" : "[!]";
       const suffix = check.reason ? ` - ${check.reason}` : "";
@@ -592,6 +657,9 @@ function renderHtmlReport(evidence) {
       (target) => `
         <section>
           <h2>${esc(target.title)}</h2>
+          <p><strong>Evidence:</strong> ${esc(target.demoEvidence.evidenceLevel)}<br>
+          <strong>Public demo ready:</strong> ${target.demoEvidence.publicDemoReady ? "yes" : "no"}<br>
+          <small>${esc(target.demoEvidence.nextStep)}</small></p>
           <ul>${target.checks
             .map((check) => `<li class="${check.ok ? "ok" : check.skipped ? "skip" : "fail"}">${check.ok ? "OK" : check.skipped ? "SKIP" : "FAIL"} ${esc(check.name)}${detailHtml(check)}</li>`)
             .join("")}</ul>
@@ -627,6 +695,7 @@ function renderHtmlReport(evidence) {
   <main>
     <h1>Remix.Camera Adapter Demo Verification</h1>
     <p>Generated at ${esc(evidence.generatedAt)}. Mode: ${esc(evidence.mode)}. Bridge: ${esc(evidence.bridgeUrl || "not provided")}.</p>
+    <p>Public demo ready targets: ${esc(evidence.demoSummary.publicDemoReadyCount)}/${esc(evidence.demoSummary.targetCount)}. Bridge-only or runbook-only evidence is intentionally not counted as a public host recording.</p>
     <div class="grid">${targetCards}</div>
     <section style="margin-top:14px">
       <h2>Bridge and Host Adapter Checks</h2>
@@ -643,18 +712,32 @@ const evidence = {
   mode: bridgeUrl ? "bridge-dry-run" : "static-adapter-demo-preflight",
   bridgeUrl: bridgeUrl || null,
   targets: [],
+  demoSummary: {
+    targetCount: 0,
+    publicDemoReadyCount: 0,
+    productionBridgeEvidenceCount: 0,
+    runbookOnlyCount: 0,
+  },
   bridgeChecks: [],
   hostAdapterChecks: [],
   outputs: {},
 };
 
 for (const target of targets) {
+  const demoEvidence = await summarizeTargetEvidence(target);
   evidence.targets.push({
     id: target.id,
     title: target.title,
+    demoEvidence,
     checks: await verifyStaticTarget(target),
   });
 }
+evidence.demoSummary = {
+  targetCount: evidence.targets.length,
+  publicDemoReadyCount: evidence.targets.filter((target) => target.demoEvidence.publicDemoReady).length,
+  productionBridgeEvidenceCount: evidence.targets.filter((target) => target.demoEvidence.status === "production-bridge-dry-run").length,
+  runbookOnlyCount: evidence.targets.filter((target) => target.demoEvidence.status === "runbook-ready").length,
+};
 evidence.bridgeChecks = await verifyBridgeContracts();
 evidence.hostAdapterChecks = await verifyHostAdapterDryRuns();
 

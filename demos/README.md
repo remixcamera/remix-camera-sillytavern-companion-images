@@ -40,6 +40,16 @@ A host is demo-ready only when the evidence is recorded through that host's real
 
 Popular hosted apps such as Character.AI, JanitorAI, Chub/Venus, SpicyChat, CrushOn, Kindroid, Nomi, Candy, and Backyard AI are watchlist targets until they expose a reliable integration surface we can test directly. Do not record browser automation, scraped requests, or local harness output as if it were a production host demo.
 
+## Evidence Ladder
+
+The verifier reports one of these evidence levels for each supported target:
+
+- `real host recording`: a production recording or artifact from the target host itself. This is the only level counted as public demo ready.
+- `production bridge evidence`: real Remix.Camera bridge behavior, usually a no-credit dry-run, but not proof that the image landed inside the target host.
+- `setup runbook and static adapter preflight`: adapter files, setup command, and demo instructions exist, but a real host demo still needs to be run.
+
+Do not promote bridge-only evidence as a public demo. Bridge evidence is the engineering gate before spending credits or recording in the real host.
+
 ## Executable Verification
 
 Run a static adapter/demo preflight:

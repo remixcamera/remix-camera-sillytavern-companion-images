@@ -1,12 +1,40 @@
 # Remix.Camera Adapter Demo Verification
 
-Generated at: 2026-06-13T05:03:21.977Z
-Mode: static-adapter-demo-preflight
-Bridge URL: not provided
+Generated at: 2026-06-13T05:17:04.921Z
+Mode: bridge-dry-run
+Bridge URL: http://127.0.0.1:8787
+
+## Demo Evidence Status
+
+| Target | Evidence level | Public demo ready | Next step |
+| --- | --- | --- | --- |
+| SillyTavern | real host recording | yes | Keep recording current when behavior or UI changes. |
+| RisuAI | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
+| Open WebUI | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
+| LibreChat | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
+| LobeChat | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
+| Agnai | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
+| Telegram | production bridge evidence | no | Record a real host-delivery demo after platform credentials are present. |
+| Discord | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
+| WhatsApp | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
+| Slack | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
+| LINE | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
+| Messenger | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
+| Matrix | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
+| Dify | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
+| Flowise | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
+| Botpress | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
+| AnythingLLM | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
+| TypingMind | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
+| Poe | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
+| Langflow | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
+
+Public demo ready targets: 1/20
 
 ## Targets
 
 ### SillyTavern
+Evidence: real host recording. Public demo ready: yes.
 - [x] adapter exists: extension/remix-camera-companion-images/index.js
 - [x] adapter exists: extension/remix-camera-companion-images/manifest.json
 - [x] demo artifact exists: demos/sillytavern/live-production-2026-06-12/sillytavern-remix-live-selfie-demo.webm
@@ -19,6 +47,7 @@ Bridge URL: not provided
 - [x] marker present: real image messages
 
 ### RisuAI
+Evidence: setup runbook and static adapter preflight. Public demo ready: no.
 - [x] adapter exists: adapters/risu/remix-camera-companion-images.risu.js
 - [x] demo runbook exists: demos/risu/demo.md
 - [x] demo includes setup target
@@ -27,6 +56,7 @@ Bridge URL: not provided
 - [x] marker present: yes=true
 
 ### Open WebUI
+Evidence: setup runbook and static adapter preflight. Public demo ready: no.
 - [x] adapter exists: adapters/openwebui/remix_camera_companion_images.py
 - [x] demo runbook exists: demos/openwebui/demo.md
 - [x] demo includes setup target
@@ -35,6 +65,7 @@ Bridge URL: not provided
 - [x] marker present: BRIDGE_URL
 
 ### LibreChat
+Evidence: setup runbook and static adapter preflight. Public demo ready: no.
 - [x] adapter exists: adapters/librechat/README.md
 - [x] demo runbook exists: demos/librechat/demo.md
 - [x] demo includes setup target
@@ -43,6 +74,7 @@ Bridge URL: not provided
 - [x] marker present: dry-run
 
 ### LobeChat
+Evidence: setup runbook and static adapter preflight. Public demo ready: no.
 - [x] adapter exists: adapters/lobe/README.md
 - [x] demo runbook exists: demos/lobechat/demo.md
 - [x] demo includes setup target
@@ -51,6 +83,7 @@ Bridge URL: not provided
 - [x] marker present: yes=true
 
 ### Agnai
+Evidence: setup runbook and static adapter preflight. Public demo ready: no.
 - [x] adapter exists: adapters/agnai/remix-camera-agnai.user.js
 - [x] demo runbook exists: demos/agnai/demo.md
 - [x] demo includes setup target
@@ -59,6 +92,7 @@ Bridge URL: not provided
 - [x] marker present: yes
 
 ### Telegram
+Evidence: production bridge evidence. Public demo ready: no.
 - [x] adapter exists: adapters/telegram/remix-telegram-tool.mjs
 - [x] adapter exists: adapters/telegram/lily-bot.mjs
 - [x] demo artifact exists: demos/telegram/evidence-production-2026-06-12/result.json
@@ -71,6 +105,7 @@ Bridge URL: not provided
 - [x] marker present: uploads local bridge images
 
 ### Discord
+Evidence: setup runbook and static adapter preflight. Public demo ready: no.
 - [x] adapter exists: adapters/discord/remix-discord-tool.mjs
 - [x] adapter exists: adapters/discord/lily-interactions-server.mjs
 - [x] demo runbook exists: demos/discord/demo.md
@@ -81,6 +116,7 @@ Bridge URL: not provided
 - [x] marker present: yes:true
 
 ### WhatsApp
+Evidence: setup runbook and static adapter preflight. Public demo ready: no.
 - [x] adapter exists: adapters/whatsapp/remix-whatsapp-tool.mjs
 - [x] adapter exists: adapters/whatsapp/lily-webhook-server.mjs
 - [x] demo runbook exists: demos/whatsapp/demo.md
@@ -92,6 +128,7 @@ Bridge URL: not provided
 - [x] marker present: uploads local bridge images
 
 ### Slack
+Evidence: setup runbook and static adapter preflight. Public demo ready: no.
 - [x] adapter exists: adapters/slack/remix-slack-tool.mjs
 - [x] adapter exists: adapters/slack/lily-slash-command-server.mjs
 - [x] demo runbook exists: demos/slack/demo.md
@@ -103,6 +140,7 @@ Bridge URL: not provided
 - [x] marker present: uploaded files
 
 ### LINE
+Evidence: setup runbook and static adapter preflight. Public demo ready: no.
 - [x] adapter exists: adapters/line/remix-line-tool.mjs
 - [x] adapter exists: adapters/line/lily-webhook-server.mjs
 - [x] demo runbook exists: demos/line/demo.md
@@ -114,6 +152,7 @@ Bridge URL: not provided
 - [x] marker present: productionImageUrl
 
 ### Messenger
+Evidence: setup runbook and static adapter preflight. Public demo ready: no.
 - [x] adapter exists: adapters/messenger/remix-messenger-tool.mjs
 - [x] adapter exists: adapters/messenger/lily-webhook-server.mjs
 - [x] demo runbook exists: demos/messenger/demo.md
@@ -125,6 +164,7 @@ Bridge URL: not provided
 - [x] marker present: productionImageUrl
 
 ### Matrix
+Evidence: setup runbook and static adapter preflight. Public demo ready: no.
 - [x] adapter exists: adapters/matrix/remix-matrix-tool.mjs
 - [x] adapter exists: adapters/matrix/lily-sync-bot.mjs
 - [x] demo runbook exists: demos/matrix/demo.md
@@ -136,6 +176,7 @@ Bridge URL: not provided
 - [x] marker present: m.image
 
 ### Dify
+Evidence: setup runbook and static adapter preflight. Public demo ready: no.
 - [x] adapter exists: adapters/dify/README.md
 - [x] demo runbook exists: demos/dify/demo.md
 - [x] demo includes setup target
@@ -144,6 +185,7 @@ Bridge URL: not provided
 - [x] marker present: /dry-run
 
 ### Flowise
+Evidence: setup runbook and static adapter preflight. Public demo ready: no.
 - [x] adapter exists: adapters/flowise/remix-camera-flowise-tool.js
 - [x] adapter exists: adapters/flowise/README.md
 - [x] demo runbook exists: demos/flowise/demo.md
@@ -154,6 +196,7 @@ Bridge URL: not provided
 - [x] marker present: confirm=true
 
 ### Botpress
+Evidence: setup runbook and static adapter preflight. Public demo ready: no.
 - [x] adapter exists: adapters/botpress/remix-camera-botpress-action.js
 - [x] adapter exists: adapters/botpress/README.md
 - [x] demo runbook exists: demos/botpress/demo.md
@@ -164,6 +207,7 @@ Bridge URL: not provided
 - [x] marker present: confirm=true
 
 ### AnythingLLM
+Evidence: setup runbook and static adapter preflight. Public demo ready: no.
 - [x] adapter exists: adapters/anythingllm/README.md
 - [x] adapter exists: adapters/anythingllm/remix-camera-companion-images/plugin.json
 - [x] adapter exists: adapters/anythingllm/remix-camera-companion-images/handler.js
@@ -174,6 +218,7 @@ Bridge URL: not provided
 - [x] marker present: yes=true
 
 ### TypingMind
+Evidence: setup runbook and static adapter preflight. Public demo ready: no.
 - [x] adapter exists: adapters/typingmind/README.md
 - [x] adapter exists: adapters/typingmind/function-spec.json
 - [x] adapter exists: adapters/typingmind/remix-camera-plugin.js
@@ -184,6 +229,7 @@ Bridge URL: not provided
 - [x] marker present: yes=true
 
 ### Poe
+Evidence: setup runbook and static adapter preflight. Public demo ready: no.
 - [x] adapter exists: adapters/poe/README.md
 - [x] adapter exists: adapters/poe/remix_camera_poe_bot.py
 - [x] demo runbook exists: demos/poe/demo.md
@@ -193,6 +239,7 @@ Bridge URL: not provided
 - [x] marker present: yes=true
 
 ### Langflow
+Evidence: setup runbook and static adapter preflight. Public demo ready: no.
 - [x] adapter exists: adapters/langflow/README.md
 - [x] adapter exists: adapters/langflow/remix_camera_component.py
 - [x] demo runbook exists: demos/langflow/demo.md
@@ -203,14 +250,24 @@ Bridge URL: not provided
 
 ## Bridge Contracts
 
-- [ ] bridge dry-run previews - Set REMIX_BRIDGE_URL or pass --bridge-url=http://127.0.0.1:8787 to run real dry-run previews.
+- [x] bridge health (status 200; auth design_api_session)
+- [x] OpenAPI exposes all generate endpoints (status 200)
+- [x] Lobe manifest exposes preview and generate tools (status 200; apis 16)
+- [x] bridge dry-run: send-selfie (status 200; template: Realistic Bedroom Selfie Girl Phone Mirror)
+- [x] bridge dry-run: auto-selfie-from-chat (status 200; template: Candid Mirror Selfie Squating)
+- [x] bridge dry-run: outfit-try-on (status 200; template: Bedroom Mirror Selfie White Tank Yellow Skirt Braid)
+- [x] bridge dry-run: couple-photo (status 200; template: Realistic Couple Mirror Selfie Black Outfit)
+- [x] bridge dry-run: couples-vacation (status 200; template: Romantic Tropical Beach Couple Golden Hour Kiss)
+- [x] bridge dry-run: date-night (status 200; template: Realistic Couple Restaurant Terrace Evening Warm Light)
+- [x] bridge dry-run: daily-life-snap (status 200; template: Knit Sweater Iced Coffee Cafe Candid)
+- [x] bridge dry-run: private-snap (status 200; template: Adult Woman Cozy Bedroom Mirror Selfie)
 
 ## Host Adapter Dry-Runs
 
-- [ ] Telegram adapter real dry-run - No bridge URL provided.
-- [ ] Discord adapter real dry-run - No bridge URL provided.
-- [ ] WhatsApp adapter real dry-run - No bridge URL provided.
-- [ ] Slack adapter real dry-run - No bridge URL provided.
-- [ ] LINE adapter real dry-run - No bridge URL provided.
-- [ ] Messenger adapter real dry-run - No bridge URL provided.
-- [ ] Matrix adapter real dry-run - No bridge URL provided.
+- [x] Telegram adapter real dry-run (command: send-selfie)
+- [x] Discord adapter real dry-run (command: send-selfie)
+- [x] WhatsApp adapter real dry-run (command: send-selfie)
+- [x] Slack adapter real dry-run (command: send-selfie)
+- [x] LINE adapter real dry-run (command: send-selfie)
+- [x] Messenger adapter real dry-run (command: send-selfie)
+- [x] Matrix adapter real dry-run (command: send-selfie)
