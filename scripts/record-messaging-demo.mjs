@@ -301,6 +301,18 @@ function deliverySkippedReason(target) {
   return `Set ${missing.join(", ")} to send this demo through the real ${target} host.`;
 }
 
+export function deliveryReadiness(target) {
+  const requiredEnv = DELIVERY_ENV[target] || [];
+  const missingEnv = missingDeliveryEnv(target);
+  return {
+    target,
+    requiredEnv,
+    missingEnv,
+    hasDeliveryCredentials: requiredEnv.length > 0 && missingEnv.length === 0,
+    status: missingEnv.length === 0 ? "host-delivery-ready" : "missing-host-delivery-credentials",
+  };
+}
+
 async function deliverDiscordWebhook({ webhookUrl, result, commandText }) {
   const sent = [];
   sent.push(await postDiscordWebhook({ webhookUrl, content: `Discord live demo command: ${commandText}` }));
@@ -619,6 +631,96 @@ function renderHtml(evidence) {
 `;
 }
 
+function renderSummaryMarkdown(summary) {
+  const lines = [
+    "# Remix.Camera Messaging Demo Readiness",
+    "",
+    `Generated at: ${summary.generatedAt}`,
+    `Target: ${summary.target}`,
+    `Bridge: ${summary.bridgeUrl}`,
+    `Delivery requested: ${summary.deliveryRequested ? "yes" : "no"}`,
+    "",
+    "## Host Matrix",
+    "",
+    "| Host | Mode | Prompt template | Delivery status | Missing env | Evidence |",
+    "| --- | --- | --- | --- | --- | --- |",
+  ];
+  for (const item of summary.evidence) {
+    const readiness = item.deliveryReadiness || { missingEnv: [], status: "unknown" };
+    const missing = readiness.missingEnv?.length ? readiness.missingEnv.join(", ") : "none";
+    const evidencePath = item.outputs?.markdownPath || item.outputs?.jsonPath || "";
+    lines.push(
+      `| ${item.target} | ${item.mode} | ${item.promptTemplate || "n/a"} | ${readiness.status} | ${missing} | ${evidencePath} |`,
+    );
+  }
+  lines.push(
+    "",
+    "Bridge-only output is not a public host demo. Record a host-delivery demo only after the required platform credentials are present and the message/image lands in the real host.",
+    "",
+  );
+  return lines.join("\n");
+}
+
+function renderSummaryHtml(summary) {
+  const esc = (value) =>
+    String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  const rows = summary.evidence
+    .map((item) => {
+      const readiness = item.deliveryReadiness || { missingEnv: [], status: "unknown" };
+      const ready = readiness.status === "host-delivery-ready";
+      const missing = readiness.missingEnv?.length ? readiness.missingEnv.join(", ") : "none";
+      const evidencePath = item.outputs?.markdownPath || item.outputs?.jsonPath || "";
+      return `<tr>
+        <td>${esc(titleCase(item.target))}</td>
+        <td><code>${esc(item.mode)}</code></td>
+        <td>${esc(item.promptTemplate || "n/a")}</td>
+        <td class="${ready ? "ready" : "blocked"}">${esc(readiness.status)}</td>
+        <td>${esc(missing)}</td>
+        <td>${esc(evidencePath)}</td>
+      </tr>`;
+    })
+    .join("");
+  return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Remix.Camera Messaging Demo Readiness</title>
+  <style>
+    body { margin: 0; font: 15px/1.5 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #171717; color: #f7f7f8; }
+    main { max-width: 1120px; margin: 0 auto; padding: 32px 20px; }
+    h1 { margin: 0 0 8px; font-size: 30px; }
+    p { color: #b8b8b8; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; background: #222; border: 1px solid #333; }
+    th, td { border-bottom: 1px solid #333; padding: 10px; text-align: left; vertical-align: top; overflow-wrap: anywhere; }
+    th { color: #d1fe17; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
+    code { color: #f7f7f8; background: rgba(255,255,255,.08); border-radius: 4px; padding: 2px 4px; }
+    .ready { color: #d1fe17; font-weight: 700; }
+    .blocked { color: #f7b955; font-weight: 700; }
+    .note { margin-top: 18px; border-left: 4px solid #f7b955; padding-left: 12px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Remix.Camera Messaging Demo Readiness</h1>
+    <p>Generated at ${esc(summary.generatedAt)}. Target: ${esc(summary.target)}. Bridge: ${esc(summary.bridgeUrl)}. Delivery requested: ${summary.deliveryRequested ? "yes" : "no"}.</p>
+    <table>
+      <thead>
+        <tr><th>Host</th><th>Mode</th><th>Prompt template</th><th>Delivery status</th><th>Missing env</th><th>Evidence</th></tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <p class="note">Bridge-only output is not a public host demo. Record a host-delivery demo only after the required platform credentials are present and the message/image lands in the real host.</p>
+  </main>
+</body>
+</html>
+`;
+}
+
 function titleCase(value) {
   return String(value || "")
     .split(/[-_\s]+/)
@@ -802,10 +904,19 @@ export async function runRecorder(argv = process.argv.slice(2)) {
         mode: item.mode,
         promptTemplate: item.bridge.promptTemplate,
         hostDelivery: item.hostDelivery,
+        plannedGenerationCount: item.plannedGenerationCount,
+        deliveryReadiness: deliveryReadiness(item.target),
         outputs: item.outputs,
       })),
+      outputs: {
+        jsonPath: path.join(outputRoot, "summary.json"),
+        markdownPath: path.join(outputRoot, "summary.md"),
+        htmlPath: path.join(outputRoot, "summary.html"),
+      },
     };
-    await writeFile(path.join(outputRoot, "summary.json"), `${JSON.stringify(summary, null, 2)}\n`);
+    await writeFile(summary.outputs.jsonPath, `${JSON.stringify(summary, null, 2)}\n`);
+    await writeFile(summary.outputs.markdownPath, renderSummaryMarkdown(summary));
+    await writeFile(summary.outputs.htmlPath, renderSummaryHtml(summary));
     console.log(JSON.stringify(summary, null, 2));
     return summary;
   } finally {

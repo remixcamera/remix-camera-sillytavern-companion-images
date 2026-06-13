@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   buildEvidence,
+  deliveryReadiness,
   parseTargetCommand,
   plannedGenerationCount,
 } from "../scripts/record-messaging-demo.mjs";
@@ -66,3 +67,33 @@ test("messaging recorder evidence records no-delivery dry-runs honestly", () => 
   assert.match(evidence.text, /Preview ready/);
 });
 
+test("messaging recorder reports delivery readiness without secret values", () => {
+  const originalToken = process.env.TELEGRAM_BOT_TOKEN;
+  const originalChatId = process.env.TELEGRAM_CHAT_ID;
+  try {
+    delete process.env.TELEGRAM_BOT_TOKEN;
+    process.env.TELEGRAM_CHAT_ID = "12345";
+    const missing = deliveryReadiness("telegram");
+    assert.equal(missing.status, "missing-host-delivery-credentials");
+    assert.deepEqual(missing.requiredEnv, ["TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID"]);
+    assert.deepEqual(missing.missingEnv, ["TELEGRAM_BOT_TOKEN"]);
+    assert.equal(Object.values(missing).some((value) => String(value).includes("12345")), false);
+
+    process.env.TELEGRAM_BOT_TOKEN = "secret-token";
+    const ready = deliveryReadiness("telegram");
+    assert.equal(ready.status, "host-delivery-ready");
+    assert.deepEqual(ready.missingEnv, []);
+    assert.equal(Object.values(ready).some((value) => String(value).includes("secret-token")), false);
+  } finally {
+    if (originalToken === undefined) {
+      delete process.env.TELEGRAM_BOT_TOKEN;
+    } else {
+      process.env.TELEGRAM_BOT_TOKEN = originalToken;
+    }
+    if (originalChatId === undefined) {
+      delete process.env.TELEGRAM_CHAT_ID;
+    } else {
+      process.env.TELEGRAM_CHAT_ID = originalChatId;
+    }
+  }
+});
