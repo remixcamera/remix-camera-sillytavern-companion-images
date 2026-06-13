@@ -8,7 +8,9 @@ import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
 import { COMPANION_COMMANDS } from "../lib/companion-tools.mjs";
 import { runRemixCameraLexV2Lambda } from "../adapters/amazon-lex/remix-camera-lex-v2-lambda.mjs";
+import { runRemixCameraBotFrameworkActivity } from "../adapters/bot-framework/remix-camera-bot-framework-handler.mjs";
 import { runRemixCameraDialogflowCxWebhook } from "../adapters/dialogflow-cx/remix-camera-dialogflow-cx-webhook.mjs";
+import { runRemixCameraDialogflowEsWebhook } from "../adapters/dialogflow-es/remix-camera-dialogflow-es-webhook.mjs";
 import { runDiscordRemixInteraction } from "../adapters/discord/remix-discord-tool.mjs";
 import { parseInstagramCommand, runInstagramRemixCommand } from "../adapters/instagram/remix-instagram-tool.mjs";
 import { createRemixCameraLangChainTools } from "../adapters/langchain/remix-camera-langchain-tools.mjs";
@@ -330,6 +332,22 @@ const targets = [
     demoFile: "demos/manychat/demo.md",
     setupCommand: "--target=manychat",
     markers: ["Manychat External Request", "External Request", "yes=true"],
+  },
+  {
+    id: "bot-framework",
+    title: "Microsoft Bot Framework",
+    adapterFiles: ["adapters/bot-framework/README.md", "adapters/bot-framework/remix-camera-bot-framework-handler.mjs"],
+    demoFile: "demos/bot-framework/demo.md",
+    setupCommand: "--target=bot-framework",
+    markers: ["createRemixBotFrameworkTurnHandler", "Hero Card", "yes"],
+  },
+  {
+    id: "dialogflow-es",
+    title: "Dialogflow ES",
+    adapterFiles: ["adapters/dialogflow-es/README.md", "adapters/dialogflow-es/remix-camera-dialogflow-es-webhook.mjs"],
+    demoFile: "demos/dialogflow-es/demo.md",
+    setupCommand: "--target=dialogflow-es",
+    markers: ["Dialogflow ES", "fulfillmentMessages", "yes=true"],
   },
   {
     id: "dialogflow-cx",
@@ -716,6 +734,18 @@ async function verifyHostAdapterDryRuns() {
       }),
     );
     checks.push(
+      okCheck("Microsoft Bot Framework adapter real dry-run", false, {
+        skipped: true,
+        reason: "No bridge URL provided.",
+      }),
+    );
+    checks.push(
+      okCheck("Dialogflow ES adapter real dry-run", false, {
+        skipped: true,
+        reason: "No bridge URL provided.",
+      }),
+    );
+    checks.push(
       okCheck("Dialogflow CX adapter real dry-run", false, {
         skipped: true,
         reason: "No bridge URL provided.",
@@ -997,6 +1027,57 @@ async function verifyHostAdapterDryRuns() {
     okCheck("Manychat adapter real dry-run", manychat?.payload?.dryRun === true && /Preview ready/i.test(manychat?.text || ""), {
       command: "send-selfie",
     }),
+  );
+
+  const botFramework = await runRemixCameraBotFrameworkActivity(
+    {
+      type: "message",
+      text: "selfie cozy couch with lamp light",
+    },
+    {
+      bridgeUrl,
+      profileId: process.env.REMIX_PROFILE_ID || "",
+      characterName: "Lily",
+    },
+  );
+  checks.push(
+    okCheck(
+      "Microsoft Bot Framework adapter real dry-run",
+      botFramework?.dryRun === true && /Preview ready/i.test(botFramework?.activities?.[0]?.text || botFramework?.text || ""),
+      {
+        command: "send-selfie",
+      },
+    ),
+  );
+
+  const dialogflowEs = await runRemixCameraDialogflowEsWebhook(
+    {
+      session: "projects/remix-camera/agent/sessions/adapter-demo",
+      queryResult: {
+        queryText: "cozy couch with lamp light",
+        intent: { displayName: "remix_camera_send_selfie_preview" },
+        parameters: {
+          command: "send-selfie",
+          action: "dry-run",
+          characterName: "Lily",
+        },
+      },
+    },
+    {
+      bridgeUrl,
+      profileId: process.env.REMIX_PROFILE_ID || "",
+      characterName: "Lily",
+    },
+  );
+  checks.push(
+    okCheck(
+      "Dialogflow ES adapter real dry-run",
+      dialogflowEs?.payload?.remixCamera?.dryRun === true &&
+        /Preview ready/i.test(dialogflowEs?.fulfillmentMessages?.[0]?.text?.text?.[0] || ""),
+      {
+        command: "send-selfie",
+      },
+    ),
   );
 
   const dialogflowCx = await runRemixCameraDialogflowCxWebhook(

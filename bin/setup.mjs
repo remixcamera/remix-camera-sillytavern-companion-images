@@ -48,6 +48,8 @@ const SUPPORTED_TARGETS = new Set([
   "zapier",
   "voiceflow",
   "manychat",
+  "bot-framework",
+  "dialogflow-es",
   "dialogflow-cx",
   "rasa",
   "amazon-lex",
@@ -65,7 +67,7 @@ Usage:
   npx @remix-camera/sillytavern-setup [options]
 
 Options:
-  --target=sillytavern|mcp|risu|openwebui|librechat|lobechat|agnai|telegram|discord|whatsapp|slack|line|messenger|instagram|teams|twilio|matrix|dify|flowise|botpress|anythingllm|typingmind|poe|langflow|langchain|vercel-ai-sdk|n8n|pipedream|make|zapier|voiceflow|manychat|dialogflow-cx|rasa|amazon-lex|watsonx-assistant
+  --target=sillytavern|mcp|risu|openwebui|librechat|lobechat|agnai|telegram|discord|whatsapp|slack|line|messenger|instagram|teams|twilio|matrix|dify|flowise|botpress|anythingllm|typingmind|poe|langflow|langchain|vercel-ai-sdk|n8n|pipedream|make|zapier|voiceflow|manychat|bot-framework|dialogflow-es|dialogflow-cx|rasa|amazon-lex|watsonx-assistant
   --sillytavern-dir=/path/to/SillyTavern  Use a specific local SillyTavern checkout
   --profile-id=profile_id                 Use a specific Remix.Camera character profile
   --character-name="Name"                 Override the Character Card name
@@ -618,6 +620,21 @@ function printTargetInstructions(target, { healthUrl, port, configPath }) {
       "Set the request URL to a public HTTPS bridge URL. Manychat External Request does not allow plain HTTP URLs.",
       "Use action=dry-run first and require action=generate plus yes=true before spending credits.",
       "Map $.results[0].productionImageUrl into a Manychat custom field before sending an image message.",
+    ],
+    "bot-framework": [
+      "Import this generic Bot Framework activity handler into an existing Azure Bot Service/Bot Builder bot:",
+      `  ${path.join(adapterRoot, "bot-framework", "remix-camera-bot-framework-handler.mjs")}`,
+      "Use createRemixBotFrameworkTurnHandler(...) inside your bot's turn handler.",
+      "Direct commands default to preview; confirmed generation requires generate plus yes.",
+      "Generated image replies use Bot Framework Hero Card attachments.",
+    ],
+    "dialogflow-es": [
+      "Deploy an HTTPS webhook service that imports this Dialogflow ES handler:",
+      `  ${path.join(adapterRoot, "dialogflow-es", "remix-camera-dialogflow-es-webhook.mjs")}`,
+      "Set the Dialogflow ES Fulfillment webhook URL to that deployed service.",
+      "Pass command, action, prompt, characterName, and consent/reference parameters through queryResult.parameters.",
+      "Use action=dry-run first and require action=generate plus yes=true before spending credits.",
+      "The webhook returns fulfillmentMessages, a remixCamera custom payload, and remix_camera output context metadata.",
     ],
     "dialogflow-cx": [
       "Deploy an HTTPS webhook service that imports this handler:",

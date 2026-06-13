@@ -3,7 +3,9 @@ import { createRequire } from "node:module";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import { runRemixCameraLexV2Lambda } from "../adapters/amazon-lex/remix-camera-lex-v2-lambda.mjs";
+import { runRemixCameraBotFrameworkActivity } from "../adapters/bot-framework/remix-camera-bot-framework-handler.mjs";
 import { runRemixCameraDialogflowCxWebhook } from "../adapters/dialogflow-cx/remix-camera-dialogflow-cx-webhook.mjs";
+import { runRemixCameraDialogflowEsWebhook } from "../adapters/dialogflow-es/remix-camera-dialogflow-es-webhook.mjs";
 import { runRemixCameraManychatTool } from "../adapters/manychat/remix-camera-manychat-tool.mjs";
 import { runRemixCameraMakeTool } from "../adapters/make/remix-camera-make-tool.mjs";
 import { runRemixCameraN8nTool } from "../adapters/n8n/remix-camera-n8n-tool.mjs";
@@ -222,6 +224,110 @@ test("watsonx Assistant helper defaults to a no-spend dry-run preview", async ()
   assert.equal(calls[0].body.characterName, "Lily");
   assert.match(result.text, /Preview ready: Excellent Lily Selfie/);
   assert.equal(result.dryRun, true);
+});
+
+test("Bot Framework activity handler defaults direct commands to no-spend previews", async () => {
+  const { calls, fetchImpl } = mockFetchRecorder({
+    ok: true,
+    dryRun: true,
+    promptTemplate: { packTitle: "Excellent Lily Selfie" },
+    prompt: "preview prompt",
+  });
+  const result = await runRemixCameraBotFrameworkActivity(
+    {
+      type: "message",
+      text: "selfie cozy couch",
+    },
+    { bridgeUrl: "http://bridge.local", fetchImpl, characterName: "Lily" },
+  );
+
+  assert.equal(calls[0].url, "http://bridge.local/v1/tools/send-selfie/dry-run");
+  assert.equal(calls[0].body.yes, undefined);
+  assert.equal(calls[0].body.characterName, "Lily");
+  assert.match(result.activities[0].text, /Preview ready: Excellent Lily Selfie/);
+  assert.equal(result.activities[0].channelData.remixCamera.dryRun, true);
+});
+
+test("Bot Framework activity handler requires yes before generation and returns Hero cards", async () => {
+  const { calls, fetchImpl } = mockFetchRecorder({
+    ok: true,
+    markdown: "![Lily](https://cdn.example/lily.jpg)",
+    results: [{ productionImageUrl: "https://cdn.example/lily.jpg" }],
+  });
+  const result = await runRemixCameraBotFrameworkActivity(
+    {
+      type: "message",
+      text: "generate selfie yes cozy couch",
+    },
+    { bridgeUrl: "http://bridge.local", fetchImpl, characterName: "Lily" },
+  );
+
+  assert.equal(calls[0].url, "http://bridge.local/v1/tools/send-selfie/generate");
+  assert.equal(calls[0].body.yes, true);
+  assert.equal(result.activities[0].attachments[0].contentType, "application/vnd.microsoft.card.hero");
+  assert.equal(result.activities[0].attachments[0].content.images[0].url, "https://cdn.example/lily.jpg");
+  await assert.rejects(
+    () =>
+      runRemixCameraBotFrameworkActivity(
+        {
+          type: "message",
+          text: "generate selfie cozy couch",
+        },
+        { bridgeUrl: "http://bridge.local", fetchImpl },
+      ),
+    /yes=true/,
+  );
+});
+
+test("Dialogflow ES webhook defaults to a no-spend dry-run preview", async () => {
+  const { calls, fetchImpl } = mockFetchRecorder({
+    ok: true,
+    dryRun: true,
+    promptTemplate: { packTitle: "Excellent Lily Selfie" },
+    prompt: "preview prompt",
+  });
+  const response = await runRemixCameraDialogflowEsWebhook(
+    {
+      session: "projects/demo/agent/sessions/test-session",
+      queryResult: {
+        queryText: "cozy couch",
+        intent: { displayName: "remix_camera_send_selfie_preview" },
+        parameters: {
+          characterName: "Lily",
+        },
+      },
+    },
+    { bridgeUrl: "http://bridge.local", fetchImpl },
+  );
+
+  assert.equal(calls[0].url, "http://bridge.local/v1/tools/send-selfie/dry-run");
+  assert.equal(calls[0].body.yes, undefined);
+  assert.equal(calls[0].body.characterName, "Lily");
+  assert.match(response.fulfillmentMessages[0].text.text[0], /Preview ready: Excellent Lily Selfie/);
+  assert.equal(response.payload.remixCamera.dryRun, true);
+  assert.match(response.outputContexts[0].name, /contexts\/remix_camera$/);
+});
+
+test("Dialogflow ES webhook requires yes=true before generation", async () => {
+  const { calls, fetchImpl } = mockFetchRecorder({ ok: true });
+  await assert.rejects(
+    () =>
+      runRemixCameraDialogflowEsWebhook(
+        {
+          queryResult: {
+            queryText: "cozy couch",
+            intent: { displayName: "remix_camera_send_selfie_generate" },
+            parameters: {
+              command: "send-selfie",
+              action: "generate",
+            },
+          },
+        },
+        { bridgeUrl: "http://bridge.local", fetchImpl },
+      ),
+    /yes=true/,
+  );
+  assert.equal(calls.length, 0);
 });
 
 test("Make action module JSON keeps generation behind action=generate and yes=true", () => {

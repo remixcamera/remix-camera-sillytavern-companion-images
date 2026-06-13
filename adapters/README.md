@@ -37,6 +37,8 @@ npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=zapier
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=voiceflow
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=manychat
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=bot-framework
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=dialogflow-es
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=dialogflow-cx
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=rasa
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=amazon-lex
@@ -86,6 +88,8 @@ npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=
 | Zapier | `adapters/zapier/remix-camera-zapier-app/index.cjs` | Zapier Platform CLI create action for bot and workflow Zaps |
 | Voiceflow | `adapters/voiceflow/remix-camera-voiceflow-api-tool.json` + `adapters/voiceflow/remix-camera-voiceflow-tool.mjs` | Voiceflow API tool or Workflow API step for assistant builders |
 | Manychat | `adapters/manychat/remix-camera-manychat-external-request.json` + `adapters/manychat/remix-camera-manychat-tool.mjs` | Manychat External Request action for Messenger, Instagram, WhatsApp, Telegram, SMS, and automation flows |
+| Microsoft Bot Framework | `adapters/bot-framework/remix-camera-bot-framework-handler.mjs` | Generic Bot Framework activity handler for Azure Bot Service, Bot Builder, Web Chat, and Direct Line bots |
+| Dialogflow ES | `adapters/dialogflow-es/remix-camera-dialogflow-es-webhook.mjs` | Dialogflow ES webhook fulfillment for legacy ES agents and integrations |
 | Dialogflow CX | `adapters/dialogflow-cx/remix-camera-dialogflow-cx-webhook.mjs` | Dialogflow CX webhook fulfillment for bot routes and pages |
 | Rasa | `adapters/rasa/remix_camera_rasa_actions.py` | Rasa custom action for assistants using Rasa flows, stories, and action server |
 | Amazon Lex V2 | `adapters/amazon-lex/remix-camera-lex-v2-lambda.mjs` | Amazon Lex V2 Lambda code hook for bot intents |
@@ -106,7 +110,7 @@ Supported means the package has a concrete integration surface and a runbook. Wa
 | Agnai | Supported | Userscript against the local bridge. |
 | Telegram, Discord, WhatsApp, Slack, LINE, Messenger, Instagram DMs, Microsoft Teams, Twilio SMS/MMS, Matrix | Supported | Reusable bot/webhook modules plus Lily proof wrappers where a direct Lily wrapper is useful. |
 | Dify, Flowise, Botpress | Supported | OpenAPI/custom tool/action surfaces. |
-| AnythingLLM, TypingMind, Poe, Langflow, LangChain JS, Vercel AI SDK, n8n, Pipedream, Make, Zapier, Voiceflow, Manychat, Dialogflow CX, Rasa, Amazon Lex V2, IBM watsonx Assistant | Supported | Official custom skill, plugin, server-bot, custom component, framework tool, workflow, custom app, API tool, External Request, webhook, custom action, Lambda code hook, and OpenAPI custom-extension surfaces. |
+| AnythingLLM, TypingMind, Poe, Langflow, LangChain JS, Vercel AI SDK, n8n, Pipedream, Make, Zapier, Voiceflow, Manychat, Microsoft Bot Framework, Dialogflow ES, Dialogflow CX, Rasa, Amazon Lex V2, IBM watsonx Assistant | Supported | Official custom skill, plugin, server-bot, custom component, framework tool, workflow, custom app, API tool, External Request, activity handler, webhook, custom action, Lambda code hook, and OpenAPI custom-extension surfaces. |
 | Character.AI | Watchlist | Popular consumer host, but no production adapter without an official API, plugin, or partner surface. |
 | JanitorAI | Watchlist | Popular roleplay host with external model-provider setup; direct image insertion needs a reliable host callback/tool surface. |
 | Chub/Venus | Watchlist | Strong character-card and API-provider ecosystem; direct chat insertion needs a supported host surface. |

@@ -9,7 +9,7 @@ The integration has two parts:
 - `bridge/`: a local Node.js bridge that stores `REMIX_SESSION_TOKEN` server-side and calls the Remix.Camera API.
 - `extension/`: a SillyTavern extension that adds image buttons and optional function tools for a character.
 - `characters/`: importable Character Card V2 examples with Remix.Camera visual metadata.
-- `adapters/`: wrappers for MCP clients, RisuAI, Open WebUI, LibreChat, LobeChat, Agnai, Telegram, Discord, WhatsApp, Slack, LINE, Messenger, Instagram DMs, Microsoft Teams, Twilio SMS/MMS, Matrix, Dify, Flowise, Botpress, AnythingLLM, TypingMind, Poe, Langflow, LangChain JS, the Vercel AI SDK, n8n, Pipedream, Make, Zapier, Voiceflow, Manychat, Dialogflow CX, Rasa, Amazon Lex V2, and IBM watsonx Assistant.
+- `adapters/`: wrappers for MCP clients, RisuAI, Open WebUI, LibreChat, LobeChat, Agnai, Telegram, Discord, WhatsApp, Slack, LINE, Messenger, Instagram DMs, Microsoft Teams, Microsoft Bot Framework, Twilio SMS/MMS, Matrix, Dify, Flowise, Botpress, AnythingLLM, TypingMind, Poe, Langflow, LangChain JS, the Vercel AI SDK, n8n, Pipedream, Make, Zapier, Voiceflow, Manychat, Dialogflow ES, Dialogflow CX, Rasa, Amazon Lex V2, and IBM watsonx Assistant.
 
 ## What It Enables
 
@@ -90,6 +90,8 @@ npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=zapier
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=voiceflow
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=manychat
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=bot-framework
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=dialogflow-es
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=dialogflow-cx
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=rasa
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=amazon-lex
@@ -119,6 +121,7 @@ Adapter files:
 - Messenger Lily proof of concept: `adapters/messenger/lily-webhook-server.mjs`
 - Instagram DMs reusable tool: `adapters/instagram/remix-instagram-tool.mjs`
 - Microsoft Teams reusable tool: `adapters/teams/remix-teams-tool.mjs`
+- Microsoft Bot Framework reusable handler: `adapters/bot-framework/remix-camera-bot-framework-handler.mjs`
 - Twilio SMS/MMS reusable tool: `adapters/twilio/remix-twilio-mms-tool.mjs`
 - Matrix reusable tool: `adapters/matrix/remix-matrix-tool.mjs`
 - Matrix Lily proof of concept: `adapters/matrix/lily-sync-bot.mjs`
@@ -137,6 +140,8 @@ Adapter files:
 - Zapier: `adapters/zapier/remix-camera-zapier-app/index.cjs`
 - Voiceflow: `adapters/voiceflow/remix-camera-voiceflow-api-tool.json` plus `adapters/voiceflow/remix-camera-voiceflow-tool.mjs`
 - Manychat: `adapters/manychat/remix-camera-manychat-external-request.json` plus `adapters/manychat/remix-camera-manychat-tool.mjs`
+- Microsoft Bot Framework: `adapters/bot-framework/remix-camera-bot-framework-handler.mjs`
+- Dialogflow ES: `adapters/dialogflow-es/remix-camera-dialogflow-es-webhook.mjs`
 - Dialogflow CX: `adapters/dialogflow-cx/remix-camera-dialogflow-cx-webhook.mjs`
 - Rasa: `adapters/rasa/remix_camera_rasa_actions.py`
 - Amazon Lex V2: `adapters/amazon-lex/remix-camera-lex-v2-lambda.mjs`
@@ -149,7 +154,7 @@ Popular hosted companion apps are tracked separately from supported adapters:
 - Character.AI: popular consumer companion app, but not a production adapter target until there is an official API, plugin, or partner integration surface.
 - JanitorAI: popular roleplay host that can connect to outside model APIs, but this package does not yet have a first-party tool callback surface inside JanitorAI itself.
 - Chub/Venus: strong character-card and API-provider ecosystem; use Remix.Camera character setup plus SillyTavern/Risu/Open WebUI today, and treat direct Chub/Venus chat insertion as pending a supported host surface.
-- MCP clients, AnythingLLM, TypingMind, Poe, Langflow, LangChain JS, the Vercel AI SDK, n8n, Pipedream, Make, Zapier, Voiceflow, Manychat, Dialogflow CX, Rasa, Amazon Lex V2, and IBM watsonx Assistant: supported through local stdio MCP, official custom skill, plugin, server-bot, custom component, framework tool, workflow, custom app, API tool, external request, webhook, custom action, Lambda code hook, or OpenAPI custom-extension surfaces.
+- MCP clients, AnythingLLM, TypingMind, Poe, Langflow, LangChain JS, the Vercel AI SDK, n8n, Pipedream, Make, Zapier, Voiceflow, Manychat, Microsoft Bot Framework, Dialogflow ES, Dialogflow CX, Rasa, Amazon Lex V2, and IBM watsonx Assistant: supported through local stdio MCP, official custom skill, plugin, server-bot, custom component, framework tool, workflow, custom app, API tool, external request, activity handler, webhook, custom action, Lambda code hook, or OpenAPI custom-extension surfaces.
 - SpicyChat, CrushOn, Kindroid, Nomi, Candy, Backyard AI, and similar hosted apps: watchlist targets. Support should be added only through official import/export, bot, webhook, tool, or browser-extension surfaces that can be tested without scraping or fake screenshots. Nomi and Kindroid can be bridged later through their official APIs, but they are not yet direct chat-surface adapters in this package.
 
 Do not label a host as supported until the package can run through that host's real UI, API, webhook, OpenAPI action, custom tool, or bot interface and produce non-mocked evidence.
