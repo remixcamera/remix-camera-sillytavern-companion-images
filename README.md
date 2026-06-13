@@ -118,6 +118,8 @@ For messaging targets, the reusable demo recorder can produce honest evidence wi
 npm run demo:messaging
 ```
 
+This writes `summary.json`, `summary.md`, and `summary.html` with a host-by-host readiness matrix, plus per-host `result.json`, `transcript.md`, and `transcript.html` files. The readiness matrix lists missing delivery environment variable names only; it never prints secret values.
+
 Add `--deliver` plus the target's bot credentials only when the demo should send into the real host. Add `--yes --max-generations=1` only after reviewing the command and intentionally spending one Remix.Camera generation.
 
 ## Use an Existing SillyTavern Character

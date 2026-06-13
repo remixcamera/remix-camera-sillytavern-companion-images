@@ -91,7 +91,7 @@ npm run demo:messaging:deliver -- \
   --output-dir=demos/telegram/live-production-$(date +%F)
 ```
 
-The recorder writes `result.json`, `transcript.md`, and `transcript.html`. It refuses to spend credits unless `--yes` is present and the planned generation count is at or below `--max-generations`.
+The recorder writes a top-level `summary.json`, `summary.md`, and `summary.html` readiness matrix, plus each target's `result.json`, `transcript.md`, and `transcript.html`. It refuses to spend credits unless `--yes` is present and the planned generation count is at or below `--max-generations`.
 
 Delivery environment variables:
 
