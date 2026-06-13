@@ -1,8 +1,8 @@
 # Remix.Camera Adapter Demo Verification
 
-Generated at: 2026-06-12T17:28:05.087Z
-Mode: bridge-dry-run
-Bridge URL: http://127.0.0.1:8796
+Generated at: 2026-06-13T05:03:21.977Z
+Mode: static-adapter-demo-preflight
+Bridge URL: not provided
 
 ## Targets
 
@@ -47,6 +47,7 @@ Bridge URL: http://127.0.0.1:8796
 - [x] demo runbook exists: demos/lobechat/demo.md
 - [x] demo includes setup target
 - [x] marker present: /lobe/manifest.json
+- [x] marker present: Preview
 - [x] marker present: yes=true
 
 ### Agnai
@@ -74,6 +75,7 @@ Bridge URL: http://127.0.0.1:8796
 - [x] adapter exists: adapters/discord/lily-interactions-server.mjs
 - [x] demo runbook exists: demos/discord/demo.md
 - [x] demo includes setup target
+- [x] marker present: createRemixDiscordTool
 - [x] marker present: verifyDiscordSignature
 - [x] marker present: sendDiscordWebhookResult
 - [x] marker present: yes:true
@@ -84,6 +86,8 @@ Bridge URL: http://127.0.0.1:8796
 - [x] demo runbook exists: demos/whatsapp/demo.md
 - [x] demo includes setup target
 - [x] marker present: createRemixWhatsAppTool
+- [x] marker present: handleWebhookDetailed
+- [x] marker present: autoSend === false
 - [x] marker present: WHATSAPP_PHONE_NUMBER_ID
 - [x] marker present: uploads local bridge images
 
@@ -93,6 +97,8 @@ Bridge URL: http://127.0.0.1:8796
 - [x] demo runbook exists: demos/slack/demo.md
 - [x] demo includes setup target
 - [x] marker present: createRemixSlackTool
+- [x] marker present: handleSlashCommandDetailed
+- [x] marker present: autoSend === false
 - [x] marker present: SLACK_SIGNING_SECRET
 - [x] marker present: uploaded files
 
@@ -102,6 +108,8 @@ Bridge URL: http://127.0.0.1:8796
 - [x] demo runbook exists: demos/line/demo.md
 - [x] demo includes setup target
 - [x] marker present: createRemixLineTool
+- [x] marker present: handleWebhookDetailed
+- [x] marker present: autoSend === false
 - [x] marker present: LINE_CHANNEL_SECRET
 - [x] marker present: productionImageUrl
 
@@ -111,6 +119,8 @@ Bridge URL: http://127.0.0.1:8796
 - [x] demo runbook exists: demos/messenger/demo.md
 - [x] demo includes setup target
 - [x] marker present: createRemixMessengerTool
+- [x] marker present: handleWebhookDetailed
+- [x] marker present: autoSend === false
 - [x] marker present: MESSENGER_APP_SECRET
 - [x] marker present: productionImageUrl
 
@@ -120,6 +130,8 @@ Bridge URL: http://127.0.0.1:8796
 - [x] demo runbook exists: demos/matrix/demo.md
 - [x] demo includes setup target
 - [x] marker present: createRemixMatrixTool
+- [x] marker present: handleSyncDetailed
+- [x] marker present: autoSend === false
 - [x] marker present: MATRIX_ACCESS_TOKEN
 - [x] marker present: m.image
 
@@ -139,6 +151,7 @@ Bridge URL: http://127.0.0.1:8796
 - [x] marker present: remixCameraFlowiseTool
 - [x] marker present: Custom Tool
 - [x] marker present: preview=true
+- [x] marker present: confirm=true
 
 ### Botpress
 - [x] adapter exists: adapters/botpress/remix-camera-botpress-action.js
@@ -148,27 +161,56 @@ Bridge URL: http://127.0.0.1:8796
 - [x] marker present: remixCameraBotpressAction
 - [x] marker present: Execute Code
 - [x] marker present: yes=true
+- [x] marker present: confirm=true
+
+### AnythingLLM
+- [x] adapter exists: adapters/anythingllm/README.md
+- [x] adapter exists: adapters/anythingllm/remix-camera-companion-images/plugin.json
+- [x] adapter exists: adapters/anythingllm/remix-camera-companion-images/handler.js
+- [x] demo runbook exists: demos/anythingllm/demo.md
+- [x] demo includes setup target
+- [x] marker present: module.exports.runtime
+- [x] marker present: REMIX_BRIDGE_URL
+- [x] marker present: yes=true
+
+### TypingMind
+- [x] adapter exists: adapters/typingmind/README.md
+- [x] adapter exists: adapters/typingmind/function-spec.json
+- [x] adapter exists: adapters/typingmind/remix-camera-plugin.js
+- [x] demo runbook exists: demos/typingmind/demo.md
+- [x] demo includes setup target
+- [x] marker present: remix_camera_companion_image
+- [x] marker present: OpenAI Function Spec
+- [x] marker present: yes=true
+
+### Poe
+- [x] adapter exists: adapters/poe/README.md
+- [x] adapter exists: adapters/poe/remix_camera_poe_bot.py
+- [x] demo runbook exists: demos/poe/demo.md
+- [x] demo includes setup target
+- [x] marker present: fastapi_poe
+- [x] marker present: PartialResponse
+- [x] marker present: yes=true
+
+### Langflow
+- [x] adapter exists: adapters/langflow/README.md
+- [x] adapter exists: adapters/langflow/remix_camera_component.py
+- [x] demo runbook exists: demos/langflow/demo.md
+- [x] demo includes setup target
+- [x] marker present: RemixCameraCompanionImages
+- [x] marker present: Output
+- [x] marker present: yes=true
 
 ## Bridge Contracts
 
-- [x] bridge health (status 200; auth design_api_session)
-- [x] OpenAPI exposes all generate endpoints (status 200)
-- [x] Lobe manifest exposes all tools (status 200)
-- [x] bridge dry-run: send-selfie (status 200; template: Realistic Bedroom Selfie Girl Phone Mirror)
-- [x] bridge dry-run: auto-selfie-from-chat (status 200; template: Candid Mirror Selfie Squating)
-- [x] bridge dry-run: outfit-try-on (status 200; template: Bedroom Mirror Selfie White Tank Yellow Skirt Braid)
-- [x] bridge dry-run: couple-photo (status 200; template: Realistic Couple Mirror Selfie Black Outfit)
-- [x] bridge dry-run: couples-vacation (status 200; template: Romantic Tropical Beach Couple Golden Hour Kiss)
-- [x] bridge dry-run: date-night (status 200; template: Realistic Couple Restaurant Terrace Evening Warm Light)
-- [x] bridge dry-run: daily-life-snap (status 200; template: Knit Sweater Iced Coffee Cafe Candid)
-- [x] bridge dry-run: private-snap (status 200; template: Adult Woman Cozy Bedroom Mirror Selfie)
+- [ ] bridge dry-run previews - Set REMIX_BRIDGE_URL or pass --bridge-url=http://127.0.0.1:8787 to run real dry-run previews.
 
 ## Host Adapter Dry-Runs
 
-- [x] Telegram adapter real dry-run (command: send-selfie)
-- [x] Discord adapter real dry-run (command: send-selfie)
-- [x] WhatsApp adapter real dry-run (command: send-selfie)
-- [x] Slack adapter real dry-run (command: send-selfie)
-- [x] LINE adapter real dry-run (command: send-selfie)
-- [x] Messenger adapter real dry-run (command: send-selfie)
-- [x] Matrix adapter real dry-run (command: send-selfie)
+- [ ] Telegram adapter real dry-run - No bridge URL provided.
+- [ ] Discord adapter real dry-run - No bridge URL provided.
+- [ ] WhatsApp adapter real dry-run - No bridge URL provided.
+- [ ] Slack adapter real dry-run - No bridge URL provided.
+- [ ] LINE adapter real dry-run - No bridge URL provided.
+- [ ] Messenger adapter real dry-run - No bridge URL provided.
+- [ ] Matrix adapter real dry-run - No bridge URL provided.

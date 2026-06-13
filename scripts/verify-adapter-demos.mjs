@@ -165,6 +165,42 @@ const targets = [
     setupCommand: "--target=botpress",
     markers: ["remixCameraBotpressAction", "Execute Code", "yes=true", "confirm=true"],
   },
+  {
+    id: "anythingllm",
+    title: "AnythingLLM",
+    adapterFiles: [
+      "adapters/anythingllm/README.md",
+      "adapters/anythingllm/remix-camera-companion-images/plugin.json",
+      "adapters/anythingllm/remix-camera-companion-images/handler.js",
+    ],
+    demoFile: "demos/anythingllm/demo.md",
+    setupCommand: "--target=anythingllm",
+    markers: ["module.exports.runtime", "REMIX_BRIDGE_URL", "yes=true"],
+  },
+  {
+    id: "typingmind",
+    title: "TypingMind",
+    adapterFiles: ["adapters/typingmind/README.md", "adapters/typingmind/function-spec.json", "adapters/typingmind/remix-camera-plugin.js"],
+    demoFile: "demos/typingmind/demo.md",
+    setupCommand: "--target=typingmind",
+    markers: ["remix_camera_companion_image", "OpenAI Function Spec", "yes=true"],
+  },
+  {
+    id: "poe",
+    title: "Poe",
+    adapterFiles: ["adapters/poe/README.md", "adapters/poe/remix_camera_poe_bot.py"],
+    demoFile: "demos/poe/demo.md",
+    setupCommand: "--target=poe",
+    markers: ["fastapi_poe", "PartialResponse", "yes=true"],
+  },
+  {
+    id: "langflow",
+    title: "Langflow",
+    adapterFiles: ["adapters/langflow/README.md", "adapters/langflow/remix_camera_component.py"],
+    demoFile: "demos/langflow/demo.md",
+    setupCommand: "--target=langflow",
+    markers: ["RemixCameraCompanionImages", "Output", "yes=true"],
+  },
 ];
 
 const commandInputs = {

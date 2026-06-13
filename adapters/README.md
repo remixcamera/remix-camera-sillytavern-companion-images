@@ -21,6 +21,10 @@ npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=dify
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=flowise
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=botpress
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=anythingllm
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=typingmind
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=poe
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=langflow
 ```
 
 ## Adapter Matrix
@@ -50,6 +54,10 @@ npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=
 | Dify | `http://127.0.0.1:8787/openapi.json` | Dify custom OpenAPI tool |
 | Flowise | `adapters/flowise/remix-camera-flowise-tool.js` | Flowise Custom Tool helper |
 | Botpress | `adapters/botpress/remix-camera-botpress-action.js` | Botpress Execute Code card or Action helper |
+| AnythingLLM | `adapters/anythingllm/remix-camera-companion-images` | AnythingLLM custom agent skill |
+| TypingMind | `adapters/typingmind/function-spec.json` + `adapters/typingmind/remix-camera-plugin.js` | TypingMind plugin function |
+| Poe | `adapters/poe/remix_camera_poe_bot.py` | Poe server bot wrapper |
+| Langflow | `adapters/langflow/remix_camera_component.py` | Langflow custom component tool |
 
 ## Popular Host Feasibility
 
@@ -65,6 +73,7 @@ Supported means the package has a concrete integration surface and a runbook. Wa
 | Agnai | Supported | Userscript against the local bridge. |
 | Telegram, Discord, WhatsApp, Slack, LINE, Messenger, Matrix | Supported | Reusable bot/webhook modules plus Lily proof wrappers. |
 | Dify, Flowise, Botpress | Supported | OpenAPI/custom tool/action surfaces. |
+| AnythingLLM, TypingMind, Poe, Langflow | Supported | Official custom skill, plugin, server-bot, and custom component surfaces. |
 | Character.AI | Watchlist | Popular consumer host, but no production adapter without an official API, plugin, or partner surface. |
 | JanitorAI | Watchlist | Popular roleplay host with external model-provider setup; direct image insertion needs a reliable host callback/tool surface. |
 | Chub/Venus | Watchlist | Strong character-card and API-provider ecosystem; direct chat insertion needs a supported host surface. |

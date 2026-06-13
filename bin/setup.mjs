@@ -32,6 +32,10 @@ const SUPPORTED_TARGETS = new Set([
   "dify",
   "flowise",
   "botpress",
+  "anythingllm",
+  "typingmind",
+  "poe",
+  "langflow",
 ]);
 
 function printHelp() {
@@ -45,7 +49,7 @@ Usage:
   npx @remix-camera/sillytavern-setup [options]
 
 Options:
-  --target=sillytavern|risu|openwebui|librechat|lobechat|agnai|telegram|discord|whatsapp|slack|line|messenger|matrix|dify|flowise|botpress
+  --target=sillytavern|risu|openwebui|librechat|lobechat|agnai|telegram|discord|whatsapp|slack|line|messenger|matrix|dify|flowise|botpress|anythingllm|typingmind|poe|langflow
   --sillytavern-dir=/path/to/SillyTavern  Use a specific local SillyTavern checkout
   --profile-id=profile_id                 Use a specific Remix.Camera character profile
   --character-name="Name"                 Override the Character Card name
@@ -123,6 +127,11 @@ function allowedOriginsForTarget(target) {
     origins.add("https://agnai.chat");
     origins.add("http://localhost:3001");
     origins.add("http://127.0.0.1:3001");
+  }
+  if (target === "typingmind") {
+    origins.add("https://typingmind.com");
+    origins.add("https://www.typingmind.com");
+    origins.add("https://custom.typingmind.com");
   }
   return [...origins];
 }
@@ -463,6 +472,38 @@ function printTargetInstructions(target, { healthUrl, port, configPath }) {
       "Point REMIX_BRIDGE_URL at:",
       `  ${bridgeUrl}`,
       "Use dry-run previews first and set yes=true only after explicit generation confirmation.",
+    ],
+    anythingllm: [
+      "Install this AnythingLLM custom agent skill folder:",
+      `  ${path.join(adapterRoot, "anythingllm", "remix-camera-companion-images")}`,
+      "Copy it into AnythingLLM's plugins/agent-skills directory without renaming the folder.",
+      "Configure REMIX_BRIDGE_URL in AnythingLLM if your bridge URL differs from:",
+      `  ${bridgeUrl}`,
+      "The skill returns dry-run previews unless yes=true or confirm=true is provided.",
+    ],
+    typingmind: [
+      "Create a TypingMind plugin with this OpenAI function spec:",
+      `  ${path.join(adapterRoot, "typingmind", "function-spec.json")}`,
+      "Paste this JavaScript implementation:",
+      `  ${path.join(adapterRoot, "typingmind", "remix-camera-plugin.js")}`,
+      "Add a bridgeUrl user setting with this value:",
+      `  ${bridgeUrl}`,
+      "The plugin returns dry-run previews unless yes=true or confirm=true is provided.",
+    ],
+    poe: [
+      "Use this Poe server bot wrapper:",
+      `  ${path.join(adapterRoot, "poe", "remix_camera_poe_bot.py")}`,
+      "Deploy it to a public HTTPS server URL, then create a Poe Server Bot pointed at that URL.",
+      "Set REMIX_BRIDGE_URL for the Poe bot process if the bridge differs from:",
+      `  ${bridgeUrl}`,
+      "The bot previews first and generates only when the user says yes=true.",
+    ],
+    langflow: [
+      "Create a Langflow custom component from this file:",
+      `  ${path.join(adapterRoot, "langflow", "remix_camera_component.py")}`,
+      "Set Bridge URL to:",
+      `  ${bridgeUrl}`,
+      "Connect the component output to an Agent's tools. Keep preview=true until explicit confirmation.",
     ],
   };
   console.log("");
