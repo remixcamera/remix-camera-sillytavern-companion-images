@@ -23,91 +23,152 @@
 <body>
   <main>
     <h1>Remix.Camera Adapter Demo Verification</h1>
-    <p>Generated at 2026-06-13T05:03:21.977Z. Mode: static-adapter-demo-preflight. Bridge: not provided.</p>
+    <p>Generated at 2026-06-13T05:17:04.921Z. Mode: bridge-dry-run. Bridge: http://127.0.0.1:8787.</p>
+    <p>Public demo ready targets: 1/20. Bridge-only or runbook-only evidence is intentionally not counted as a public host recording.</p>
     <div class="grid">
         <section>
           <h2>SillyTavern</h2>
+          <p><strong>Evidence:</strong> real host recording<br>
+          <strong>Public demo ready:</strong> yes<br>
+          <small>Keep recording current when behavior or UI changes.</small></p>
           <ul><li class="ok">OK adapter exists: extension/remix-camera-companion-images/index.js</li><li class="ok">OK adapter exists: extension/remix-camera-companion-images/manifest.json</li><li class="ok">OK demo artifact exists: demos/sillytavern/live-production-2026-06-12/sillytavern-remix-live-selfie-demo.webm</li><li class="ok">OK demo artifact exists: demos/sillytavern/live-production-2026-06-12/sillytavern-remix-live-selfie-demo-poster.png</li><li class="ok">OK demo artifact exists: demos/sillytavern/live-production-2026-06-12/result.json</li><li class="ok">OK demo runbook exists: demos/sillytavern/demo.md</li><li class="ok">OK demo includes setup target</li><li class="ok">OK marker present: Health Check</li><li class="ok">OK marker present: Preview Prompt</li><li class="ok">OK marker present: real image messages</li></ul>
         </section>
         <section>
           <h2>RisuAI</h2>
+          <p><strong>Evidence:</strong> setup runbook and static adapter preflight<br>
+          <strong>Public demo ready:</strong> no<br>
+          <small>Run this target in the real host and add production demo evidence.</small></p>
           <ul><li class="ok">OK adapter exists: adapters/risu/remix-camera-companion-images.risu.js</li><li class="ok">OK demo runbook exists: demos/risu/demo.md</li><li class="ok">OK demo includes setup target</li><li class="ok">OK marker present: registerMCP</li><li class="ok">OK marker present: plugin:remix-camera-companion-images</li><li class="ok">OK marker present: yes=true</li></ul>
         </section>
         <section>
           <h2>Open WebUI</h2>
+          <p><strong>Evidence:</strong> setup runbook and static adapter preflight<br>
+          <strong>Public demo ready:</strong> no<br>
+          <small>Run this target in the real host and add production demo evidence.</small></p>
           <ul><li class="ok">OK adapter exists: adapters/openwebui/remix_camera_companion_images.py</li><li class="ok">OK demo runbook exists: demos/openwebui/demo.md</li><li class="ok">OK demo includes setup target</li><li class="ok">OK marker present: class Tools</li><li class="ok">OK marker present: yes=True</li><li class="ok">OK marker present: BRIDGE_URL</li></ul>
         </section>
         <section>
           <h2>LibreChat</h2>
+          <p><strong>Evidence:</strong> setup runbook and static adapter preflight<br>
+          <strong>Public demo ready:</strong> no<br>
+          <small>Run this target in the real host and add production demo evidence.</small></p>
           <ul><li class="ok">OK adapter exists: adapters/librechat/README.md</li><li class="ok">OK demo runbook exists: demos/librechat/demo.md</li><li class="ok">OK demo includes setup target</li><li class="ok">OK marker present: /librechat/openapi.json</li><li class="ok">OK marker present: yes=true</li><li class="ok">OK marker present: dry-run</li></ul>
         </section>
         <section>
           <h2>LobeChat</h2>
+          <p><strong>Evidence:</strong> setup runbook and static adapter preflight<br>
+          <strong>Public demo ready:</strong> no<br>
+          <small>Run this target in the real host and add production demo evidence.</small></p>
           <ul><li class="ok">OK adapter exists: adapters/lobe/README.md</li><li class="ok">OK demo runbook exists: demos/lobechat/demo.md</li><li class="ok">OK demo includes setup target</li><li class="ok">OK marker present: /lobe/manifest.json</li><li class="ok">OK marker present: Preview</li><li class="ok">OK marker present: yes=true</li></ul>
         </section>
         <section>
           <h2>Agnai</h2>
+          <p><strong>Evidence:</strong> setup runbook and static adapter preflight<br>
+          <strong>Public demo ready:</strong> no<br>
+          <small>Run this target in the real host and add production demo evidence.</small></p>
           <ul><li class="ok">OK adapter exists: adapters/agnai/remix-camera-agnai.user.js</li><li class="ok">OK demo runbook exists: demos/agnai/demo.md</li><li class="ok">OK demo includes setup target</li><li class="ok">OK marker present: @match        https://agnai.chat/*</li><li class="ok">OK marker present: Selfie preview</li><li class="ok">OK marker present: yes</li></ul>
         </section>
         <section>
           <h2>Telegram</h2>
+          <p><strong>Evidence:</strong> production bridge evidence<br>
+          <strong>Public demo ready:</strong> no<br>
+          <small>Record a real host-delivery demo after platform credentials are present.</small></p>
           <ul><li class="ok">OK adapter exists: adapters/telegram/remix-telegram-tool.mjs</li><li class="ok">OK adapter exists: adapters/telegram/lily-bot.mjs</li><li class="ok">OK demo artifact exists: demos/telegram/evidence-production-2026-06-12/result.json</li><li class="ok">OK demo artifact exists: demos/telegram/evidence-production-2026-06-12/transcript.md</li><li class="ok">OK demo artifact exists: demos/telegram/evidence-production-2026-06-12/transcript.html</li><li class="ok">OK demo runbook exists: demos/telegram/demo.md</li><li class="ok">OK demo includes setup target</li><li class="ok">OK marker present: createRemixTelegramTool</li><li class="ok">OK marker present: LILY_PROFILE_ID</li><li class="ok">OK marker present: uploads local bridge images</li></ul>
         </section>
         <section>
           <h2>Discord</h2>
+          <p><strong>Evidence:</strong> setup runbook and static adapter preflight<br>
+          <strong>Public demo ready:</strong> no<br>
+          <small>Run this target in the real host and add production demo evidence.</small></p>
           <ul><li class="ok">OK adapter exists: adapters/discord/remix-discord-tool.mjs</li><li class="ok">OK adapter exists: adapters/discord/lily-interactions-server.mjs</li><li class="ok">OK demo runbook exists: demos/discord/demo.md</li><li class="ok">OK demo includes setup target</li><li class="ok">OK marker present: createRemixDiscordTool</li><li class="ok">OK marker present: verifyDiscordSignature</li><li class="ok">OK marker present: sendDiscordWebhookResult</li><li class="ok">OK marker present: yes:true</li></ul>
         </section>
         <section>
           <h2>WhatsApp</h2>
+          <p><strong>Evidence:</strong> setup runbook and static adapter preflight<br>
+          <strong>Public demo ready:</strong> no<br>
+          <small>Run this target in the real host and add production demo evidence.</small></p>
           <ul><li class="ok">OK adapter exists: adapters/whatsapp/remix-whatsapp-tool.mjs</li><li class="ok">OK adapter exists: adapters/whatsapp/lily-webhook-server.mjs</li><li class="ok">OK demo runbook exists: demos/whatsapp/demo.md</li><li class="ok">OK demo includes setup target</li><li class="ok">OK marker present: createRemixWhatsAppTool</li><li class="ok">OK marker present: handleWebhookDetailed</li><li class="ok">OK marker present: autoSend === false</li><li class="ok">OK marker present: WHATSAPP_PHONE_NUMBER_ID</li><li class="ok">OK marker present: uploads local bridge images</li></ul>
         </section>
         <section>
           <h2>Slack</h2>
+          <p><strong>Evidence:</strong> setup runbook and static adapter preflight<br>
+          <strong>Public demo ready:</strong> no<br>
+          <small>Run this target in the real host and add production demo evidence.</small></p>
           <ul><li class="ok">OK adapter exists: adapters/slack/remix-slack-tool.mjs</li><li class="ok">OK adapter exists: adapters/slack/lily-slash-command-server.mjs</li><li class="ok">OK demo runbook exists: demos/slack/demo.md</li><li class="ok">OK demo includes setup target</li><li class="ok">OK marker present: createRemixSlackTool</li><li class="ok">OK marker present: handleSlashCommandDetailed</li><li class="ok">OK marker present: autoSend === false</li><li class="ok">OK marker present: SLACK_SIGNING_SECRET</li><li class="ok">OK marker present: uploaded files</li></ul>
         </section>
         <section>
           <h2>LINE</h2>
+          <p><strong>Evidence:</strong> setup runbook and static adapter preflight<br>
+          <strong>Public demo ready:</strong> no<br>
+          <small>Run this target in the real host and add production demo evidence.</small></p>
           <ul><li class="ok">OK adapter exists: adapters/line/remix-line-tool.mjs</li><li class="ok">OK adapter exists: adapters/line/lily-webhook-server.mjs</li><li class="ok">OK demo runbook exists: demos/line/demo.md</li><li class="ok">OK demo includes setup target</li><li class="ok">OK marker present: createRemixLineTool</li><li class="ok">OK marker present: handleWebhookDetailed</li><li class="ok">OK marker present: autoSend === false</li><li class="ok">OK marker present: LINE_CHANNEL_SECRET</li><li class="ok">OK marker present: productionImageUrl</li></ul>
         </section>
         <section>
           <h2>Messenger</h2>
+          <p><strong>Evidence:</strong> setup runbook and static adapter preflight<br>
+          <strong>Public demo ready:</strong> no<br>
+          <small>Run this target in the real host and add production demo evidence.</small></p>
           <ul><li class="ok">OK adapter exists: adapters/messenger/remix-messenger-tool.mjs</li><li class="ok">OK adapter exists: adapters/messenger/lily-webhook-server.mjs</li><li class="ok">OK demo runbook exists: demos/messenger/demo.md</li><li class="ok">OK demo includes setup target</li><li class="ok">OK marker present: createRemixMessengerTool</li><li class="ok">OK marker present: handleWebhookDetailed</li><li class="ok">OK marker present: autoSend === false</li><li class="ok">OK marker present: MESSENGER_APP_SECRET</li><li class="ok">OK marker present: productionImageUrl</li></ul>
         </section>
         <section>
           <h2>Matrix</h2>
+          <p><strong>Evidence:</strong> setup runbook and static adapter preflight<br>
+          <strong>Public demo ready:</strong> no<br>
+          <small>Run this target in the real host and add production demo evidence.</small></p>
           <ul><li class="ok">OK adapter exists: adapters/matrix/remix-matrix-tool.mjs</li><li class="ok">OK adapter exists: adapters/matrix/lily-sync-bot.mjs</li><li class="ok">OK demo runbook exists: demos/matrix/demo.md</li><li class="ok">OK demo includes setup target</li><li class="ok">OK marker present: createRemixMatrixTool</li><li class="ok">OK marker present: handleSyncDetailed</li><li class="ok">OK marker present: autoSend === false</li><li class="ok">OK marker present: MATRIX_ACCESS_TOKEN</li><li class="ok">OK marker present: m.image</li></ul>
         </section>
         <section>
           <h2>Dify</h2>
+          <p><strong>Evidence:</strong> setup runbook and static adapter preflight<br>
+          <strong>Public demo ready:</strong> no<br>
+          <small>Run this target in the real host and add production demo evidence.</small></p>
           <ul><li class="ok">OK adapter exists: adapters/dify/README.md</li><li class="ok">OK demo runbook exists: demos/dify/demo.md</li><li class="ok">OK demo includes setup target</li><li class="ok">OK marker present: custom OpenAPI tool</li><li class="ok">OK marker present: /openapi.json</li><li class="ok">OK marker present: /dry-run</li></ul>
         </section>
         <section>
           <h2>Flowise</h2>
+          <p><strong>Evidence:</strong> setup runbook and static adapter preflight<br>
+          <strong>Public demo ready:</strong> no<br>
+          <small>Run this target in the real host and add production demo evidence.</small></p>
           <ul><li class="ok">OK adapter exists: adapters/flowise/remix-camera-flowise-tool.js</li><li class="ok">OK adapter exists: adapters/flowise/README.md</li><li class="ok">OK demo runbook exists: demos/flowise/demo.md</li><li class="ok">OK demo includes setup target</li><li class="ok">OK marker present: remixCameraFlowiseTool</li><li class="ok">OK marker present: Custom Tool</li><li class="ok">OK marker present: preview=true</li><li class="ok">OK marker present: confirm=true</li></ul>
         </section>
         <section>
           <h2>Botpress</h2>
+          <p><strong>Evidence:</strong> setup runbook and static adapter preflight<br>
+          <strong>Public demo ready:</strong> no<br>
+          <small>Run this target in the real host and add production demo evidence.</small></p>
           <ul><li class="ok">OK adapter exists: adapters/botpress/remix-camera-botpress-action.js</li><li class="ok">OK adapter exists: adapters/botpress/README.md</li><li class="ok">OK demo runbook exists: demos/botpress/demo.md</li><li class="ok">OK demo includes setup target</li><li class="ok">OK marker present: remixCameraBotpressAction</li><li class="ok">OK marker present: Execute Code</li><li class="ok">OK marker present: yes=true</li><li class="ok">OK marker present: confirm=true</li></ul>
         </section>
         <section>
           <h2>AnythingLLM</h2>
+          <p><strong>Evidence:</strong> setup runbook and static adapter preflight<br>
+          <strong>Public demo ready:</strong> no<br>
+          <small>Run this target in the real host and add production demo evidence.</small></p>
           <ul><li class="ok">OK adapter exists: adapters/anythingllm/README.md</li><li class="ok">OK adapter exists: adapters/anythingllm/remix-camera-companion-images/plugin.json</li><li class="ok">OK adapter exists: adapters/anythingllm/remix-camera-companion-images/handler.js</li><li class="ok">OK demo runbook exists: demos/anythingllm/demo.md</li><li class="ok">OK demo includes setup target</li><li class="ok">OK marker present: module.exports.runtime</li><li class="ok">OK marker present: REMIX_BRIDGE_URL</li><li class="ok">OK marker present: yes=true</li></ul>
         </section>
         <section>
           <h2>TypingMind</h2>
+          <p><strong>Evidence:</strong> setup runbook and static adapter preflight<br>
+          <strong>Public demo ready:</strong> no<br>
+          <small>Run this target in the real host and add production demo evidence.</small></p>
           <ul><li class="ok">OK adapter exists: adapters/typingmind/README.md</li><li class="ok">OK adapter exists: adapters/typingmind/function-spec.json</li><li class="ok">OK adapter exists: adapters/typingmind/remix-camera-plugin.js</li><li class="ok">OK demo runbook exists: demos/typingmind/demo.md</li><li class="ok">OK demo includes setup target</li><li class="ok">OK marker present: remix_camera_companion_image</li><li class="ok">OK marker present: OpenAI Function Spec</li><li class="ok">OK marker present: yes=true</li></ul>
         </section>
         <section>
           <h2>Poe</h2>
+          <p><strong>Evidence:</strong> setup runbook and static adapter preflight<br>
+          <strong>Public demo ready:</strong> no<br>
+          <small>Run this target in the real host and add production demo evidence.</small></p>
           <ul><li class="ok">OK adapter exists: adapters/poe/README.md</li><li class="ok">OK adapter exists: adapters/poe/remix_camera_poe_bot.py</li><li class="ok">OK demo runbook exists: demos/poe/demo.md</li><li class="ok">OK demo includes setup target</li><li class="ok">OK marker present: fastapi_poe</li><li class="ok">OK marker present: PartialResponse</li><li class="ok">OK marker present: yes=true</li></ul>
         </section>
         <section>
           <h2>Langflow</h2>
+          <p><strong>Evidence:</strong> setup runbook and static adapter preflight<br>
+          <strong>Public demo ready:</strong> no<br>
+          <small>Run this target in the real host and add production demo evidence.</small></p>
           <ul><li class="ok">OK adapter exists: adapters/langflow/README.md</li><li class="ok">OK adapter exists: adapters/langflow/remix_camera_component.py</li><li class="ok">OK demo runbook exists: demos/langflow/demo.md</li><li class="ok">OK demo includes setup target</li><li class="ok">OK marker present: RemixCameraCompanionImages</li><li class="ok">OK marker present: Output</li><li class="ok">OK marker present: yes=true</li></ul>
         </section></div>
     <section style="margin-top:14px">
       <h2>Bridge and Host Adapter Checks</h2>
-      <ul><li class="skip">SKIP bridge dry-run previews <small>Set REMIX_BRIDGE_URL or pass --bridge-url=http://127.0.0.1:8787 to run real dry-run previews.</small></li><li class="skip">SKIP Telegram adapter real dry-run <small>No bridge URL provided.</small></li><li class="skip">SKIP Discord adapter real dry-run <small>No bridge URL provided.</small></li><li class="skip">SKIP WhatsApp adapter real dry-run <small>No bridge URL provided.</small></li><li class="skip">SKIP Slack adapter real dry-run <small>No bridge URL provided.</small></li><li class="skip">SKIP LINE adapter real dry-run <small>No bridge URL provided.</small></li><li class="skip">SKIP Messenger adapter real dry-run <small>No bridge URL provided.</small></li><li class="skip">SKIP Matrix adapter real dry-run <small>No bridge URL provided.</small></li></ul>
+      <ul><li class="ok">OK bridge health <small>status 200; auth design_api_session</small></li><li class="ok">OK OpenAPI exposes all generate endpoints <small>status 200</small></li><li class="ok">OK Lobe manifest exposes preview and generate tools <small>status 200; apis 16</small></li><li class="ok">OK bridge dry-run: send-selfie <small>status 200; template: Realistic Bedroom Selfie Girl Phone Mirror</small></li><li class="ok">OK bridge dry-run: auto-selfie-from-chat <small>status 200; template: Candid Mirror Selfie Squating</small></li><li class="ok">OK bridge dry-run: outfit-try-on <small>status 200; template: Bedroom Mirror Selfie White Tank Yellow Skirt Braid</small></li><li class="ok">OK bridge dry-run: couple-photo <small>status 200; template: Realistic Couple Mirror Selfie Black Outfit</small></li><li class="ok">OK bridge dry-run: couples-vacation <small>status 200; template: Romantic Tropical Beach Couple Golden Hour Kiss</small></li><li class="ok">OK bridge dry-run: date-night <small>status 200; template: Realistic Couple Restaurant Terrace Evening Warm Light</small></li><li class="ok">OK bridge dry-run: daily-life-snap <small>status 200; template: Knit Sweater Iced Coffee Cafe Candid</small></li><li class="ok">OK bridge dry-run: private-snap <small>status 200; template: Adult Woman Cozy Bedroom Mirror Selfie</small></li><li class="ok">OK Telegram adapter real dry-run <small>command: send-selfie</small></li><li class="ok">OK Discord adapter real dry-run <small>command: send-selfie</small></li><li class="ok">OK WhatsApp adapter real dry-run <small>command: send-selfie</small></li><li class="ok">OK Slack adapter real dry-run <small>command: send-selfie</small></li><li class="ok">OK LINE adapter real dry-run <small>command: send-selfie</small></li><li class="ok">OK Messenger adapter real dry-run <small>command: send-selfie</small></li><li class="ok">OK Matrix adapter real dry-run <small>command: send-selfie</small></li></ul>
     </section>
   </main>
 </body>

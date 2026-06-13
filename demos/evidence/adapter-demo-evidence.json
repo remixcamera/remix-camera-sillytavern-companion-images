@@ -1,12 +1,19 @@
 {
   "ok": true,
-  "generatedAt": "2026-06-13T05:03:21.977Z",
-  "mode": "static-adapter-demo-preflight",
-  "bridgeUrl": null,
+  "generatedAt": "2026-06-13T05:17:04.921Z",
+  "mode": "bridge-dry-run",
+  "bridgeUrl": "http://127.0.0.1:8787",
   "targets": [
     {
       "id": "sillytavern",
       "title": "SillyTavern",
+      "demoEvidence": {
+        "status": "live-production-recording",
+        "publicDemoReady": true,
+        "evidenceLevel": "real host recording",
+        "missingArtifacts": [],
+        "nextStep": "Keep recording current when behavior or UI changes."
+      },
       "checks": [
         {
           "name": "adapter exists: extension/remix-camera-companion-images/index.js",
@@ -63,6 +70,13 @@
     {
       "id": "risu",
       "title": "RisuAI",
+      "demoEvidence": {
+        "status": "runbook-ready",
+        "publicDemoReady": false,
+        "evidenceLevel": "setup runbook and static adapter preflight",
+        "missingArtifacts": [],
+        "nextStep": "Run this target in the real host and add production demo evidence."
+      },
       "checks": [
         {
           "name": "adapter exists: adapters/risu/remix-camera-companion-images.risu.js",
@@ -99,6 +113,13 @@
     {
       "id": "openwebui",
       "title": "Open WebUI",
+      "demoEvidence": {
+        "status": "runbook-ready",
+        "publicDemoReady": false,
+        "evidenceLevel": "setup runbook and static adapter preflight",
+        "missingArtifacts": [],
+        "nextStep": "Run this target in the real host and add production demo evidence."
+      },
       "checks": [
         {
           "name": "adapter exists: adapters/openwebui/remix_camera_companion_images.py",
@@ -135,6 +156,13 @@
     {
       "id": "librechat",
       "title": "LibreChat",
+      "demoEvidence": {
+        "status": "runbook-ready",
+        "publicDemoReady": false,
+        "evidenceLevel": "setup runbook and static adapter preflight",
+        "missingArtifacts": [],
+        "nextStep": "Run this target in the real host and add production demo evidence."
+      },
       "checks": [
         {
           "name": "adapter exists: adapters/librechat/README.md",
@@ -171,6 +199,13 @@
     {
       "id": "lobechat",
       "title": "LobeChat",
+      "demoEvidence": {
+        "status": "runbook-ready",
+        "publicDemoReady": false,
+        "evidenceLevel": "setup runbook and static adapter preflight",
+        "missingArtifacts": [],
+        "nextStep": "Run this target in the real host and add production demo evidence."
+      },
       "checks": [
         {
           "name": "adapter exists: adapters/lobe/README.md",
@@ -207,6 +242,13 @@
     {
       "id": "agnai",
       "title": "Agnai",
+      "demoEvidence": {
+        "status": "runbook-ready",
+        "publicDemoReady": false,
+        "evidenceLevel": "setup runbook and static adapter preflight",
+        "missingArtifacts": [],
+        "nextStep": "Run this target in the real host and add production demo evidence."
+      },
       "checks": [
         {
           "name": "adapter exists: adapters/agnai/remix-camera-agnai.user.js",
@@ -243,6 +285,13 @@
     {
       "id": "telegram",
       "title": "Telegram",
+      "demoEvidence": {
+        "status": "production-bridge-dry-run",
+        "publicDemoReady": false,
+        "evidenceLevel": "production bridge evidence",
+        "missingArtifacts": [],
+        "nextStep": "Record a real host-delivery demo after platform credentials are present."
+      },
       "checks": [
         {
           "name": "adapter exists: adapters/telegram/remix-telegram-tool.mjs",
@@ -299,6 +348,13 @@
     {
       "id": "discord",
       "title": "Discord",
+      "demoEvidence": {
+        "status": "runbook-ready",
+        "publicDemoReady": false,
+        "evidenceLevel": "setup runbook and static adapter preflight",
+        "missingArtifacts": [],
+        "nextStep": "Run this target in the real host and add production demo evidence."
+      },
       "checks": [
         {
           "name": "adapter exists: adapters/discord/remix-discord-tool.mjs",
@@ -345,6 +401,13 @@
     {
       "id": "whatsapp",
       "title": "WhatsApp",
+      "demoEvidence": {
+        "status": "runbook-ready",
+        "publicDemoReady": false,
+        "evidenceLevel": "setup runbook and static adapter preflight",
+        "missingArtifacts": [],
+        "nextStep": "Run this target in the real host and add production demo evidence."
+      },
       "checks": [
         {
           "name": "adapter exists: adapters/whatsapp/remix-whatsapp-tool.mjs",
@@ -396,6 +459,13 @@
     {
       "id": "slack",
       "title": "Slack",
+      "demoEvidence": {
+        "status": "runbook-ready",
+        "publicDemoReady": false,
+        "evidenceLevel": "setup runbook and static adapter preflight",
+        "missingArtifacts": [],
+        "nextStep": "Run this target in the real host and add production demo evidence."
+      },
       "checks": [
         {
           "name": "adapter exists: adapters/slack/remix-slack-tool.mjs",
@@ -447,6 +517,13 @@
     {
       "id": "line",
       "title": "LINE",
+      "demoEvidence": {
+        "status": "runbook-ready",
+        "publicDemoReady": false,
+        "evidenceLevel": "setup runbook and static adapter preflight",
+        "missingArtifacts": [],
+        "nextStep": "Run this target in the real host and add production demo evidence."
+      },
       "checks": [
         {
           "name": "adapter exists: adapters/line/remix-line-tool.mjs",
@@ -498,6 +575,13 @@
     {
       "id": "messenger",
       "title": "Messenger",
+      "demoEvidence": {
+        "status": "runbook-ready",
+        "publicDemoReady": false,
+        "evidenceLevel": "setup runbook and static adapter preflight",
+        "missingArtifacts": [],
+        "nextStep": "Run this target in the real host and add production demo evidence."
+      },
       "checks": [
         {
           "name": "adapter exists: adapters/messenger/remix-messenger-tool.mjs",
@@ -549,6 +633,13 @@
     {
       "id": "matrix",
       "title": "Matrix",
+      "demoEvidence": {
+        "status": "runbook-ready",
+        "publicDemoReady": false,
+        "evidenceLevel": "setup runbook and static adapter preflight",
+        "missingArtifacts": [],
+        "nextStep": "Run this target in the real host and add production demo evidence."
+      },
       "checks": [
         {
           "name": "adapter exists: adapters/matrix/remix-matrix-tool.mjs",
@@ -600,6 +691,13 @@
     {
       "id": "dify",
       "title": "Dify",
+      "demoEvidence": {
+        "status": "runbook-ready",
+        "publicDemoReady": false,
+        "evidenceLevel": "setup runbook and static adapter preflight",
+        "missingArtifacts": [],
+        "nextStep": "Run this target in the real host and add production demo evidence."
+      },
       "checks": [
         {
           "name": "adapter exists: adapters/dify/README.md",
@@ -636,6 +734,13 @@
     {
       "id": "flowise",
       "title": "Flowise",
+      "demoEvidence": {
+        "status": "runbook-ready",
+        "publicDemoReady": false,
+        "evidenceLevel": "setup runbook and static adapter preflight",
+        "missingArtifacts": [],
+        "nextStep": "Run this target in the real host and add production demo evidence."
+      },
       "checks": [
         {
           "name": "adapter exists: adapters/flowise/remix-camera-flowise-tool.js",
@@ -682,6 +787,13 @@
     {
       "id": "botpress",
       "title": "Botpress",
+      "demoEvidence": {
+        "status": "runbook-ready",
+        "publicDemoReady": false,
+        "evidenceLevel": "setup runbook and static adapter preflight",
+        "missingArtifacts": [],
+        "nextStep": "Run this target in the real host and add production demo evidence."
+      },
       "checks": [
         {
           "name": "adapter exists: adapters/botpress/remix-camera-botpress-action.js",
@@ -728,6 +840,13 @@
     {
       "id": "anythingllm",
       "title": "AnythingLLM",
+      "demoEvidence": {
+        "status": "runbook-ready",
+        "publicDemoReady": false,
+        "evidenceLevel": "setup runbook and static adapter preflight",
+        "missingArtifacts": [],
+        "nextStep": "Run this target in the real host and add production demo evidence."
+      },
       "checks": [
         {
           "name": "adapter exists: adapters/anythingllm/README.md",
@@ -774,6 +893,13 @@
     {
       "id": "typingmind",
       "title": "TypingMind",
+      "demoEvidence": {
+        "status": "runbook-ready",
+        "publicDemoReady": false,
+        "evidenceLevel": "setup runbook and static adapter preflight",
+        "missingArtifacts": [],
+        "nextStep": "Run this target in the real host and add production demo evidence."
+      },
       "checks": [
         {
           "name": "adapter exists: adapters/typingmind/README.md",
@@ -820,6 +946,13 @@
     {
       "id": "poe",
       "title": "Poe",
+      "demoEvidence": {
+        "status": "runbook-ready",
+        "publicDemoReady": false,
+        "evidenceLevel": "setup runbook and static adapter preflight",
+        "missingArtifacts": [],
+        "nextStep": "Run this target in the real host and add production demo evidence."
+      },
       "checks": [
         {
           "name": "adapter exists: adapters/poe/README.md",
@@ -861,6 +994,13 @@
     {
       "id": "langflow",
       "title": "Langflow",
+      "demoEvidence": {
+        "status": "runbook-ready",
+        "publicDemoReady": false,
+        "evidenceLevel": "setup runbook and static adapter preflight",
+        "missingArtifacts": [],
+        "nextStep": "Run this target in the real host and add production demo evidence."
+      },
       "checks": [
         {
           "name": "adapter exists: adapters/langflow/README.md",
@@ -900,56 +1040,114 @@
       ]
     }
   ],
+  "demoSummary": {
+    "targetCount": 20,
+    "publicDemoReadyCount": 1,
+    "productionBridgeEvidenceCount": 1,
+    "runbookOnlyCount": 18
+  },
   "bridgeChecks": [
     {
-      "name": "bridge dry-run previews",
-      "ok": false,
-      "skipped": true,
-      "reason": "Set REMIX_BRIDGE_URL or pass --bridge-url=http://127.0.0.1:8787 to run real dry-run previews."
+      "name": "bridge health",
+      "ok": true,
+      "status": 200,
+      "authMode": "design_api_session"
+    },
+    {
+      "name": "OpenAPI exposes all generate endpoints",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "name": "Lobe manifest exposes preview and generate tools",
+      "ok": true,
+      "status": 200,
+      "apiCount": 16
+    },
+    {
+      "name": "bridge dry-run: send-selfie",
+      "ok": true,
+      "status": 200,
+      "promptTemplate": "Realistic Bedroom Selfie Girl Phone Mirror"
+    },
+    {
+      "name": "bridge dry-run: auto-selfie-from-chat",
+      "ok": true,
+      "status": 200,
+      "promptTemplate": "Candid Mirror Selfie Squating"
+    },
+    {
+      "name": "bridge dry-run: outfit-try-on",
+      "ok": true,
+      "status": 200,
+      "promptTemplate": "Bedroom Mirror Selfie White Tank Yellow Skirt Braid"
+    },
+    {
+      "name": "bridge dry-run: couple-photo",
+      "ok": true,
+      "status": 200,
+      "promptTemplate": "Realistic Couple Mirror Selfie Black Outfit"
+    },
+    {
+      "name": "bridge dry-run: couples-vacation",
+      "ok": true,
+      "status": 200,
+      "promptTemplate": "Romantic Tropical Beach Couple Golden Hour Kiss"
+    },
+    {
+      "name": "bridge dry-run: date-night",
+      "ok": true,
+      "status": 200,
+      "promptTemplate": "Realistic Couple Restaurant Terrace Evening Warm Light"
+    },
+    {
+      "name": "bridge dry-run: daily-life-snap",
+      "ok": true,
+      "status": 200,
+      "promptTemplate": "Knit Sweater Iced Coffee Cafe Candid"
+    },
+    {
+      "name": "bridge dry-run: private-snap",
+      "ok": true,
+      "status": 200,
+      "promptTemplate": "Adult Woman Cozy Bedroom Mirror Selfie"
     }
   ],
   "hostAdapterChecks": [
     {
       "name": "Telegram adapter real dry-run",
-      "ok": false,
-      "skipped": true,
-      "reason": "No bridge URL provided."
+      "ok": true,
+      "command": "send-selfie"
     },
     {
       "name": "Discord adapter real dry-run",
-      "ok": false,
-      "skipped": true,
-      "reason": "No bridge URL provided."
+      "ok": true,
+      "command": "send-selfie"
     },
     {
       "name": "WhatsApp adapter real dry-run",
-      "ok": false,
-      "skipped": true,
-      "reason": "No bridge URL provided."
+      "ok": true,
+      "command": "send-selfie"
     },
     {
       "name": "Slack adapter real dry-run",
-      "ok": false,
-      "skipped": true,
-      "reason": "No bridge URL provided."
+      "ok": true,
+      "command": "send-selfie"
     },
     {
       "name": "LINE adapter real dry-run",
-      "ok": false,
-      "skipped": true,
-      "reason": "No bridge URL provided."
+      "ok": true,
+      "command": "send-selfie"
     },
     {
       "name": "Messenger adapter real dry-run",
-      "ok": false,
-      "skipped": true,
-      "reason": "No bridge URL provided."
+      "ok": true,
+      "command": "send-selfie"
     },
     {
       "name": "Matrix adapter real dry-run",
-      "ok": false,
-      "skipped": true,
-      "reason": "No bridge URL provided."
+      "ok": true,
+      "command": "send-selfie"
     }
   ],
   "outputs": {
