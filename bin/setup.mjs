@@ -31,6 +31,8 @@ const SUPPORTED_TARGETS = new Set([
   "viber",
   "vk",
   "slack",
+  "mattermost",
+  "rocketchat",
   "line",
   "zalo",
   "kakao",
@@ -75,7 +77,7 @@ Usage:
   npx @remix-camera/sillytavern-setup [options]
 
 Options:
-  --target=sillytavern|mcp|risu|openwebui|librechat|lobechat|chatgpt-actions|agnai|telegram|discord|whatsapp|wechat|viber|vk|slack|line|zalo|kakao|messenger|instagram|teams|twilio|matrix|dify|flowise|botpress|anythingllm|typingmind|poe|langflow|langchain|vercel-ai-sdk|n8n|pipedream|make|zapier|voiceflow|manychat|nomi|kindroid|bot-framework|dialogflow-es|dialogflow-cx|rasa|amazon-lex|watsonx-assistant
+  --target=sillytavern|mcp|risu|openwebui|librechat|lobechat|chatgpt-actions|agnai|telegram|discord|whatsapp|wechat|viber|vk|slack|mattermost|rocketchat|line|zalo|kakao|messenger|instagram|teams|twilio|matrix|dify|flowise|botpress|anythingllm|typingmind|poe|langflow|langchain|vercel-ai-sdk|n8n|pipedream|make|zapier|voiceflow|manychat|nomi|kindroid|bot-framework|dialogflow-es|dialogflow-cx|rasa|amazon-lex|watsonx-assistant
   --sillytavern-dir=/path/to/SillyTavern  Use a specific local SillyTavern checkout
   --profile-id=profile_id                 Use a specific Remix.Camera character profile
   --character-name="Name"                 Override the Character Card name
@@ -493,6 +495,22 @@ function printTargetInstructions(target, { healthUrl, port, configPath }) {
       `  SLACK_SIGNING_SECRET=... SLACK_BOT_TOKEN=... REMIX_CONFIG_FILE=${configPath} node ${path.join(adapterRoot, "slack", "lily-slash-command-server.mjs")}`,
       "Expose the server over HTTPS and set the Slack slash-command Request URL to your hosted endpoint.",
       "The adapter uploads local bridge images to Slack files before sending, so 127.0.0.1 image URLs are not posted as broken Slack image blocks.",
+    ],
+    mattermost: [
+      "Reusable Mattermost slash-command and webhook tool module:",
+      `  ${path.join(adapterRoot, "mattermost", "remix-mattermost-tool.mjs")}`,
+      "Import createRemixMattermostTool into a Mattermost slash-command endpoint or existing bot server.",
+      `  MATTERMOST_TOKEN=... MATTERMOST_WEBHOOK_URL=... REMIX_CONFIG_FILE=${configPath} node your-mattermost-bot.mjs`,
+      "Create a Mattermost slash command or outgoing webhook that points at your HTTPS endpoint.",
+      "The adapter verifies the Mattermost token and posts public productionImageUrl attachments through Mattermost-compatible JSON.",
+    ],
+    rocketchat: [
+      "Reusable Rocket.Chat outgoing-integration and REST delivery tool module:",
+      `  ${path.join(adapterRoot, "rocketchat", "remix-rocketchat-tool.mjs")}`,
+      "Import createRemixRocketChatTool into an outgoing integration, Apps-Engine slash command, or existing bot server.",
+      `  ROCKETCHAT_URL=... ROCKETCHAT_AUTH_TOKEN=... ROCKETCHAT_USER_ID=... ROCKETCHAT_ROOM_ID=... ROCKETCHAT_WEBHOOK_TOKEN=... REMIX_CONFIG_FILE=${configPath} node your-rocketchat-bot.mjs`,
+      "Configure a Rocket.Chat outgoing integration or Apps-Engine command to call your HTTPS endpoint.",
+      "The adapter verifies the Rocket.Chat webhook token and sends public productionImageUrl attachments through chat.postMessage.",
     ],
     line: [
       "Reusable LINE Messaging API tool module:",

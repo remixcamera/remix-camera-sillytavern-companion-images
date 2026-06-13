@@ -20,6 +20,8 @@ npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=viber
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=vk
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=slack
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=mattermost
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=rocketchat
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=line
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=zalo
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=kakao
@@ -78,6 +80,8 @@ npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=
 | VK community bots | `adapters/vk/remix-vk-tool.mjs` | Reusable VK Callback API or Long Poll community bot module |
 | Slack | `adapters/slack/remix-slack-tool.mjs` | Reusable Slack slash-command module |
 | Slack Lily | `adapters/slack/lily-slash-command-server.mjs` | Proof-of-concept Slack slash-command server |
+| Mattermost | `adapters/mattermost/remix-mattermost-tool.mjs` | Reusable slash-command, outgoing-webhook, and incoming-webhook delivery module |
+| Rocket.Chat | `adapters/rocketchat/remix-rocketchat-tool.mjs` | Reusable outgoing-integration, Apps-Engine command, and REST delivery module |
 | LINE | `adapters/line/remix-line-tool.mjs` | Reusable LINE Messaging API module |
 | LINE Lily | `adapters/line/lily-webhook-server.mjs` | Proof-of-concept LINE webhook server |
 | Zalo Official Account | `adapters/zalo/remix-zalo-tool.mjs` | Reusable Zalo OA webhook and consultation-message module |
@@ -129,7 +133,7 @@ Supported means the package has a concrete integration surface and a runbook. Wa
 | LobeChat | Supported | Plugin manifest. |
 | ChatGPT Actions | Supported | Custom GPT Action OpenAPI schema with Bearer auth and preview/generate endpoints. |
 | Agnai | Supported | Userscript against the local bridge. |
-| Telegram, Discord, WhatsApp, WeChat Official Account, Viber, VK community bots, Slack, LINE, Zalo Official Account, KakaoTalk, Messenger, Instagram DMs, Microsoft Teams, Twilio SMS/MMS, Matrix | Supported | Reusable bot/webhook/skill modules plus Lily proof wrappers where a direct Lily wrapper is useful. |
+| Telegram, Discord, WhatsApp, WeChat Official Account, Viber, VK community bots, Slack, Mattermost, Rocket.Chat, LINE, Zalo Official Account, KakaoTalk, Messenger, Instagram DMs, Microsoft Teams, Twilio SMS/MMS, Matrix | Supported | Reusable bot/webhook/skill modules plus Lily proof wrappers where a direct Lily wrapper is useful. |
 | Dify, Flowise, Botpress | Supported | OpenAPI/custom tool/action surfaces. |
 | AnythingLLM, TypingMind, Poe, Langflow, LangChain JS, Vercel AI SDK, n8n, Pipedream, Make, Zapier, Voiceflow, Manychat, Nomi, Kindroid, Microsoft Bot Framework, Dialogflow ES, Dialogflow CX, Rasa, Amazon Lex V2, IBM watsonx Assistant | Supported | Official custom skill, plugin, server-bot, custom component, framework tool, workflow, custom app, API tool, External Request, official companion API sidecar, activity handler, webhook, custom action, Lambda code hook, and OpenAPI custom-extension surfaces. |
 | Character.AI | Watchlist | Popular consumer host, but no production adapter without an official API, plugin, or partner surface. |

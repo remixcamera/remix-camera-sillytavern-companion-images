@@ -16,6 +16,7 @@ import { parseInstagramCommand, runInstagramRemixCommand } from "../adapters/ins
 import { runKakaoRemixSkill } from "../adapters/kakao/remix-kakao-skill.mjs";
 import { createRemixCameraLangChainTools } from "../adapters/langchain/remix-camera-langchain-tools.mjs";
 import { parseLineCommand, runLineRemixCommand } from "../adapters/line/remix-line-tool.mjs";
+import { parseMattermostCommand, runMattermostRemixCommand } from "../adapters/mattermost/remix-mattermost-tool.mjs";
 import { parseMessengerCommand, runMessengerRemixCommand } from "../adapters/messenger/remix-messenger-tool.mjs";
 import { parseMatrixCommand, runMatrixRemixCommand } from "../adapters/matrix/remix-matrix-tool.mjs";
 import { handleMcpRequest, normalizeMcpToolName } from "../adapters/mcp/remix-camera-mcp-server.mjs";
@@ -25,6 +26,7 @@ import { runRemixCameraN8nTool } from "../adapters/n8n/remix-camera-n8n-tool.mjs
 import { runRemixCameraKindroidTurn } from "../adapters/kindroid/remix-camera-kindroid-tool.mjs";
 import { runRemixCameraNomiTurn } from "../adapters/nomi/remix-camera-nomi-tool.mjs";
 import { runRemixCameraPipedreamAction } from "../adapters/pipedream/remix-camera-pipedream-action.mjs";
+import { parseRocketChatCommand, runRocketChatRemixCommand } from "../adapters/rocketchat/remix-rocketchat-tool.mjs";
 import { parseSlackCommand, runSlackRemixCommand } from "../adapters/slack/remix-slack-tool.mjs";
 import { parseTelegramCommand, runTelegramRemixCommand } from "../adapters/telegram/remix-telegram-tool.mjs";
 import { parseTeamsCommand, runTeamsRemixCommand } from "../adapters/teams/remix-teams-tool.mjs";
@@ -191,6 +193,22 @@ const targets = [
     demoFile: "demos/slack/demo.md",
     setupCommand: "--target=slack",
     markers: ["createRemixSlackTool", "handleSlashCommandDetailed", "autoSend === false", "SLACK_SIGNING_SECRET", "uploaded files"],
+  },
+  {
+    id: "mattermost",
+    title: "Mattermost",
+    adapterFiles: ["adapters/mattermost/remix-mattermost-tool.mjs", "adapters/mattermost/README.md"],
+    demoFile: "demos/mattermost/demo.md",
+    setupCommand: "--target=mattermost",
+    markers: ["createRemixMattermostTool", "MATTERMOST_TOKEN", "incoming webhook", "productionImageUrl"],
+  },
+  {
+    id: "rocketchat",
+    title: "Rocket.Chat",
+    adapterFiles: ["adapters/rocketchat/remix-rocketchat-tool.mjs", "adapters/rocketchat/README.md"],
+    demoFile: "demos/rocketchat/demo.md",
+    setupCommand: "--target=rocketchat",
+    markers: ["createRemixRocketChatTool", "ROCKETCHAT_URL", "chat.postMessage", "productionImageUrl"],
   },
   {
     id: "line",
@@ -757,6 +775,18 @@ async function verifyHostAdapterDryRuns() {
       }),
     );
     checks.push(
+      okCheck("Mattermost adapter real dry-run", false, {
+        skipped: true,
+        reason: "No bridge URL provided.",
+      }),
+    );
+    checks.push(
+      okCheck("Rocket.Chat adapter real dry-run", false, {
+        skipped: true,
+        reason: "No bridge URL provided.",
+      }),
+    );
+    checks.push(
       okCheck("LINE adapter real dry-run", false, {
         skipped: true,
         reason: "No bridge URL provided.",
@@ -1035,6 +1065,28 @@ async function verifyHostAdapterDryRuns() {
   checks.push(
     okCheck("Slack adapter real dry-run", slack?.payload?.dryRun === true && /Preview ready/i.test(slack.text), {
       command: slack?.command,
+    }),
+  );
+
+  const mattermost = await runMattermostRemixCommand(parseMattermostCommand("preview selfie cozy couch with lamp light"), {
+    bridgeUrl,
+    profileId: process.env.REMIX_PROFILE_ID || "",
+    characterName: "Lily",
+  });
+  checks.push(
+    okCheck("Mattermost adapter real dry-run", mattermost?.payload?.dryRun === true && /Preview ready/i.test(mattermost.text), {
+      command: mattermost?.command,
+    }),
+  );
+
+  const rocketchat = await runRocketChatRemixCommand(parseRocketChatCommand("preview selfie cozy couch with lamp light"), {
+    bridgeUrl,
+    profileId: process.env.REMIX_PROFILE_ID || "",
+    characterName: "Lily",
+  });
+  checks.push(
+    okCheck("Rocket.Chat adapter real dry-run", rocketchat?.payload?.dryRun === true && /Preview ready/i.test(rocketchat.text), {
+      command: rocketchat?.command,
     }),
   );
 

@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "generatedAt": "2026-06-13T11:40:39.059Z",
+  "generatedAt": "2026-06-13T12:17:51.505Z",
   "mode": "bridge-dry-run",
   "bridgeUrl": "http://127.0.0.1:8787",
   "targets": [
@@ -806,6 +806,112 @@
           "name": "marker present: uploaded files",
           "ok": true,
           "marker": "uploaded files"
+        }
+      ]
+    },
+    {
+      "id": "mattermost",
+      "title": "Mattermost",
+      "demoEvidence": {
+        "status": "runbook-ready",
+        "publicDemoReady": false,
+        "evidenceLevel": "setup runbook and static adapter preflight",
+        "missingArtifacts": [],
+        "nextStep": "Run this target in the real host and add production demo evidence."
+      },
+      "checks": [
+        {
+          "name": "adapter exists: adapters/mattermost/remix-mattermost-tool.mjs",
+          "ok": true,
+          "path": "adapters/mattermost/remix-mattermost-tool.mjs"
+        },
+        {
+          "name": "adapter exists: adapters/mattermost/README.md",
+          "ok": true,
+          "path": "adapters/mattermost/README.md"
+        },
+        {
+          "name": "demo runbook exists: demos/mattermost/demo.md",
+          "ok": true,
+          "path": "demos/mattermost/demo.md"
+        },
+        {
+          "name": "demo includes setup target",
+          "ok": true,
+          "expected": "--target=mattermost"
+        },
+        {
+          "name": "marker present: createRemixMattermostTool",
+          "ok": true,
+          "marker": "createRemixMattermostTool"
+        },
+        {
+          "name": "marker present: MATTERMOST_TOKEN",
+          "ok": true,
+          "marker": "MATTERMOST_TOKEN"
+        },
+        {
+          "name": "marker present: incoming webhook",
+          "ok": true,
+          "marker": "incoming webhook"
+        },
+        {
+          "name": "marker present: productionImageUrl",
+          "ok": true,
+          "marker": "productionImageUrl"
+        }
+      ]
+    },
+    {
+      "id": "rocketchat",
+      "title": "Rocket.Chat",
+      "demoEvidence": {
+        "status": "runbook-ready",
+        "publicDemoReady": false,
+        "evidenceLevel": "setup runbook and static adapter preflight",
+        "missingArtifacts": [],
+        "nextStep": "Run this target in the real host and add production demo evidence."
+      },
+      "checks": [
+        {
+          "name": "adapter exists: adapters/rocketchat/remix-rocketchat-tool.mjs",
+          "ok": true,
+          "path": "adapters/rocketchat/remix-rocketchat-tool.mjs"
+        },
+        {
+          "name": "adapter exists: adapters/rocketchat/README.md",
+          "ok": true,
+          "path": "adapters/rocketchat/README.md"
+        },
+        {
+          "name": "demo runbook exists: demos/rocketchat/demo.md",
+          "ok": true,
+          "path": "demos/rocketchat/demo.md"
+        },
+        {
+          "name": "demo includes setup target",
+          "ok": true,
+          "expected": "--target=rocketchat"
+        },
+        {
+          "name": "marker present: createRemixRocketChatTool",
+          "ok": true,
+          "marker": "createRemixRocketChatTool"
+        },
+        {
+          "name": "marker present: ROCKETCHAT_URL",
+          "ok": true,
+          "marker": "ROCKETCHAT_URL"
+        },
+        {
+          "name": "marker present: chat.postMessage",
+          "ok": true,
+          "marker": "chat.postMessage"
+        },
+        {
+          "name": "marker present: productionImageUrl",
+          "ok": true,
+          "marker": "productionImageUrl"
         }
       ]
     },
@@ -2414,10 +2520,10 @@
     }
   ],
   "demoSummary": {
-    "targetCount": 46,
+    "targetCount": 48,
     "publicDemoReadyCount": 1,
     "productionBridgeEvidenceCount": 1,
-    "runbookOnlyCount": 44
+    "runbookOnlyCount": 46
   },
   "bridgeChecks": [
     {
@@ -2535,6 +2641,16 @@
     },
     {
       "name": "Slack adapter real dry-run",
+      "ok": true,
+      "command": "send-selfie"
+    },
+    {
+      "name": "Mattermost adapter real dry-run",
+      "ok": true,
+      "command": "send-selfie"
+    },
+    {
+      "name": "Rocket.Chat adapter real dry-run",
       "ok": true,
       "command": "send-selfie"
     },
