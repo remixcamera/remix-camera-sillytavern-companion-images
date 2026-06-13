@@ -9,7 +9,7 @@ The integration has two parts:
 - `bridge/`: a local Node.js bridge that stores `REMIX_SESSION_TOKEN` server-side and calls the Remix.Camera API.
 - `extension/`: a SillyTavern extension that adds image buttons and optional function tools for a character.
 - `characters/`: importable Character Card V2 examples with Remix.Camera visual metadata.
-- `adapters/`: wrappers for MCP clients, RisuAI, Open WebUI, LibreChat, LobeChat, Agnai, Telegram, Discord, WhatsApp, Viber, Slack, LINE, KakaoTalk, Messenger, Instagram DMs, Microsoft Teams, Microsoft Bot Framework, Twilio SMS/MMS, Matrix, Dify, Flowise, Botpress, AnythingLLM, TypingMind, Poe, Langflow, LangChain JS, the Vercel AI SDK, n8n, Pipedream, Make, Zapier, Voiceflow, Manychat, Nomi, Kindroid, Dialogflow ES, Dialogflow CX, Rasa, Amazon Lex V2, and IBM watsonx Assistant.
+- `adapters/`: wrappers for MCP clients, RisuAI, Open WebUI, LibreChat, LobeChat, Agnai, Telegram, Discord, WhatsApp, WeChat Official Account, Viber, Slack, LINE, Zalo Official Account, KakaoTalk, Messenger, Instagram DMs, Microsoft Teams, Microsoft Bot Framework, Twilio SMS/MMS, Matrix, Dify, Flowise, Botpress, AnythingLLM, TypingMind, Poe, Langflow, LangChain JS, the Vercel AI SDK, n8n, Pipedream, Make, Zapier, Voiceflow, Manychat, Nomi, Kindroid, Dialogflow ES, Dialogflow CX, Rasa, Amazon Lex V2, and IBM watsonx Assistant.
 
 ## What It Enables
 
@@ -68,9 +68,11 @@ npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=telegram
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=discord
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=whatsapp
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=wechat
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=viber
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=slack
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=line
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=zalo
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=kakao
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=messenger
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=instagram
@@ -117,12 +119,16 @@ Adapter files:
 - Discord Lily proof of concept: `adapters/discord/lily-interactions-server.mjs`
 - WhatsApp reusable tool: `adapters/whatsapp/remix-whatsapp-tool.mjs`
 - WhatsApp Lily proof of concept: `adapters/whatsapp/lily-webhook-server.mjs`
+- WeChat Official Account reusable tool: `adapters/wechat/remix-wechat-tool.mjs`
+- WeChat Lily proof of concept: `adapters/wechat/lily-webhook-server.mjs`
 - Viber reusable tool: `adapters/viber/remix-viber-tool.mjs`
 - Viber Lily proof of concept: `adapters/viber/lily-webhook-server.mjs`
 - Slack reusable tool: `adapters/slack/remix-slack-tool.mjs`
 - Slack Lily proof of concept: `adapters/slack/lily-slash-command-server.mjs`
 - LINE reusable tool: `adapters/line/remix-line-tool.mjs`
 - LINE Lily proof of concept: `adapters/line/lily-webhook-server.mjs`
+- Zalo Official Account reusable tool: `adapters/zalo/remix-zalo-tool.mjs`
+- Zalo Lily proof of concept: `adapters/zalo/lily-webhook-server.mjs`
 - KakaoTalk reusable Skill handler: `adapters/kakao/remix-kakao-skill.mjs`
 - KakaoTalk Lily proof of concept: `adapters/kakao/lily-skill-server.mjs`
 - Messenger reusable tool: `adapters/messenger/remix-messenger-tool.mjs`

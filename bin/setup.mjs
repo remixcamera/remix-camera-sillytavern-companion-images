@@ -26,9 +26,11 @@ const SUPPORTED_TARGETS = new Set([
   "telegram",
   "discord",
   "whatsapp",
+  "wechat",
   "viber",
   "slack",
   "line",
+  "zalo",
   "kakao",
   "messenger",
   "instagram",
@@ -71,7 +73,7 @@ Usage:
   npx @remix-camera/sillytavern-setup [options]
 
 Options:
-  --target=sillytavern|mcp|risu|openwebui|librechat|lobechat|agnai|telegram|discord|whatsapp|viber|slack|line|kakao|messenger|instagram|teams|twilio|matrix|dify|flowise|botpress|anythingllm|typingmind|poe|langflow|langchain|vercel-ai-sdk|n8n|pipedream|make|zapier|voiceflow|manychat|nomi|kindroid|bot-framework|dialogflow-es|dialogflow-cx|rasa|amazon-lex|watsonx-assistant
+  --target=sillytavern|mcp|risu|openwebui|librechat|lobechat|agnai|telegram|discord|whatsapp|wechat|viber|slack|line|zalo|kakao|messenger|instagram|teams|twilio|matrix|dify|flowise|botpress|anythingllm|typingmind|poe|langflow|langchain|vercel-ai-sdk|n8n|pipedream|make|zapier|voiceflow|manychat|nomi|kindroid|bot-framework|dialogflow-es|dialogflow-cx|rasa|amazon-lex|watsonx-assistant
   --sillytavern-dir=/path/to/SillyTavern  Use a specific local SillyTavern checkout
   --profile-id=profile_id                 Use a specific Remix.Camera character profile
   --character-name="Name"                 Override the Character Card name
@@ -450,6 +452,14 @@ function printTargetInstructions(target, { healthUrl, port, configPath }) {
       "Expose the webhook over HTTPS and set that URL in the Meta app webhook settings.",
       "The adapter uploads local bridge images to WhatsApp media before sending.",
     ],
+    wechat: [
+      "Reusable WeChat Official Account tool module:",
+      `  ${path.join(adapterRoot, "wechat", "remix-wechat-tool.mjs")}`,
+      "Lily proof-of-concept WeChat webhook:",
+      `  WECHAT_ACCESS_TOKEN=... WECHAT_WEBHOOK_TOKEN=... REMIX_CONFIG_FILE=${configPath} node ${path.join(adapterRoot, "wechat", "lily-webhook-server.mjs")}`,
+      "Expose the webhook over HTTPS and set that URL in the WeChat Official Account platform.",
+      "The adapter verifies signed callbacks, uploads generated images as temporary media, then sends image customer-service messages.",
+    ],
     viber: [
       "Reusable Viber Bot API tool module:",
       `  ${path.join(adapterRoot, "viber", "remix-viber-tool.mjs")}`,
@@ -473,6 +483,14 @@ function printTargetInstructions(target, { healthUrl, port, configPath }) {
       `  LINE_CHANNEL_ACCESS_TOKEN=... LINE_CHANNEL_SECRET=... REMIX_CONFIG_FILE=${configPath} node ${path.join(adapterRoot, "line", "lily-webhook-server.mjs")}`,
       "Expose the webhook over HTTPS and set that URL in the LINE Developers Console.",
       "LINE image messages require public HTTPS URLs; the adapter uses productionImageUrl instead of posting 127.0.0.1 bridge URLs.",
+    ],
+    zalo: [
+      "Reusable Zalo Official Account tool module:",
+      `  ${path.join(adapterRoot, "zalo", "remix-zalo-tool.mjs")}`,
+      "Lily proof-of-concept Zalo OA webhook:",
+      `  ZALO_ACCESS_TOKEN=... ZALO_APP_SECRET=... REMIX_CONFIG_FILE=${configPath} node ${path.join(adapterRoot, "zalo", "lily-webhook-server.mjs")}`,
+      "Expose the webhook over HTTPS and set that URL in the Zalo OA developer console.",
+      "Zalo OA image messages require public HTTPS image URLs; the adapter uses productionImageUrl instead of posting 127.0.0.1 bridge URLs.",
     ],
     kakao: [
       "Reusable Kakao i/Open Builder Skill handler:",

@@ -33,7 +33,9 @@ import { createRemixCameraAiSdkTools } from "../adapters/vercel-ai-sdk/remix-cam
 import { parseViberCommand, runViberRemixCommand } from "../adapters/viber/remix-viber-tool.mjs";
 import { runRemixCameraVoiceflowTool } from "../adapters/voiceflow/remix-camera-voiceflow-tool.mjs";
 import { runRemixCameraWatsonxAssistantTool } from "../adapters/watsonx-assistant/remix-camera-watsonx-tool.mjs";
+import { parseWeChatCommand, runWeChatRemixCommand } from "../adapters/wechat/remix-wechat-tool.mjs";
 import { parseWhatsAppCommand, runWhatsAppRemixCommand } from "../adapters/whatsapp/remix-whatsapp-tool.mjs";
+import { parseZaloCommand, runZaloRemixCommand } from "../adapters/zalo/remix-zalo-tool.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const execFileAsync = promisify(execFile);
@@ -150,6 +152,14 @@ const targets = [
     markers: ["createRemixWhatsAppTool", "handleWebhookDetailed", "autoSend === false", "WHATSAPP_PHONE_NUMBER_ID", "uploads local bridge images"],
   },
   {
+    id: "wechat",
+    title: "WeChat Official Account",
+    adapterFiles: ["adapters/wechat/remix-wechat-tool.mjs", "adapters/wechat/lily-webhook-server.mjs", "adapters/wechat/README.md"],
+    demoFile: "demos/wechat/demo.md",
+    setupCommand: "--target=wechat",
+    markers: ["createRemixWeChatTool", "handleWebhookDetailed", "WECHAT_WEBHOOK_TOKEN", "temporary media", "customer-service"],
+  },
+  {
     id: "viber",
     title: "Viber",
     adapterFiles: ["adapters/viber/remix-viber-tool.mjs", "adapters/viber/lily-webhook-server.mjs", "adapters/viber/README.md"],
@@ -172,6 +182,14 @@ const targets = [
     demoFile: "demos/line/demo.md",
     setupCommand: "--target=line",
     markers: ["createRemixLineTool", "handleWebhookDetailed", "autoSend === false", "LINE_CHANNEL_SECRET", "productionImageUrl"],
+  },
+  {
+    id: "zalo",
+    title: "Zalo Official Account",
+    adapterFiles: ["adapters/zalo/remix-zalo-tool.mjs", "adapters/zalo/lily-webhook-server.mjs", "adapters/zalo/README.md"],
+    demoFile: "demos/zalo/demo.md",
+    setupCommand: "--target=zalo",
+    markers: ["createRemixZaloTool", "handleWebhookDetailed", "ZALO_ACCESS_TOKEN", "/v3.0/oa/message/cs", "productionImageUrl"],
   },
   {
     id: "kakao",
@@ -680,6 +698,12 @@ async function verifyHostAdapterDryRuns() {
       }),
     );
     checks.push(
+      okCheck("WeChat Official Account adapter real dry-run", false, {
+        skipped: true,
+        reason: "No bridge URL provided.",
+      }),
+    );
+    checks.push(
       okCheck("Viber adapter real dry-run", false, {
         skipped: true,
         reason: "No bridge URL provided.",
@@ -693,6 +717,12 @@ async function verifyHostAdapterDryRuns() {
     );
     checks.push(
       okCheck("LINE adapter real dry-run", false, {
+        skipped: true,
+        reason: "No bridge URL provided.",
+      }),
+    );
+    checks.push(
+      okCheck("Zalo Official Account adapter real dry-run", false, {
         skipped: true,
         reason: "No bridge URL provided.",
       }),
@@ -898,6 +928,17 @@ async function verifyHostAdapterDryRuns() {
     }),
   );
 
+  const wechat = await runWeChatRemixCommand(parseWeChatCommand("preview selfie cozy couch with lamp light"), {
+    bridgeUrl,
+    profileId: process.env.REMIX_PROFILE_ID || "",
+    characterName: "Lily",
+  });
+  checks.push(
+    okCheck("WeChat Official Account adapter real dry-run", wechat?.payload?.dryRun === true && /Preview ready/i.test(wechat.text), {
+      command: wechat?.command,
+    }),
+  );
+
   const viber = await runViberRemixCommand(parseViberCommand("preview selfie cozy couch with lamp light"), {
     bridgeUrl,
     profileId: process.env.REMIX_PROFILE_ID || "",
@@ -928,6 +969,17 @@ async function verifyHostAdapterDryRuns() {
   checks.push(
     okCheck("LINE adapter real dry-run", line?.payload?.dryRun === true && /Preview ready/i.test(line.text), {
       command: line?.command,
+    }),
+  );
+
+  const zalo = await runZaloRemixCommand(parseZaloCommand("preview selfie cozy couch with lamp light"), {
+    bridgeUrl,
+    profileId: process.env.REMIX_PROFILE_ID || "",
+    characterName: "Lily",
+  });
+  checks.push(
+    okCheck("Zalo Official Account adapter real dry-run", zalo?.payload?.dryRun === true && /Preview ready/i.test(zalo.text), {
+      command: zalo?.command,
     }),
   );
 

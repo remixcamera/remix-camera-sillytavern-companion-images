@@ -15,9 +15,11 @@ npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=telegram
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=discord
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=whatsapp
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=wechat
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=viber
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=slack
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=line
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=zalo
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=kakao
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=messenger
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=instagram
@@ -66,12 +68,16 @@ npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=
 | Discord Lily | `adapters/discord/lily-interactions-server.mjs` | Proof-of-concept Discord interactions server |
 | WhatsApp | `adapters/whatsapp/remix-whatsapp-tool.mjs` | Reusable WhatsApp Cloud API module |
 | WhatsApp Lily | `adapters/whatsapp/lily-webhook-server.mjs` | Proof-of-concept WhatsApp webhook server |
+| WeChat Official Account | `adapters/wechat/remix-wechat-tool.mjs` | Reusable WeChat Official Account callback and customer-service message module |
+| WeChat Lily | `adapters/wechat/lily-webhook-server.mjs` | Proof-of-concept WeChat Official Account webhook server |
 | Viber | `adapters/viber/remix-viber-tool.mjs` | Reusable Viber Bot REST API module |
 | Viber Lily | `adapters/viber/lily-webhook-server.mjs` | Proof-of-concept Viber webhook server |
 | Slack | `adapters/slack/remix-slack-tool.mjs` | Reusable Slack slash-command module |
 | Slack Lily | `adapters/slack/lily-slash-command-server.mjs` | Proof-of-concept Slack slash-command server |
 | LINE | `adapters/line/remix-line-tool.mjs` | Reusable LINE Messaging API module |
 | LINE Lily | `adapters/line/lily-webhook-server.mjs` | Proof-of-concept LINE webhook server |
+| Zalo Official Account | `adapters/zalo/remix-zalo-tool.mjs` | Reusable Zalo OA webhook and consultation-message module |
+| Zalo Lily | `adapters/zalo/lily-webhook-server.mjs` | Proof-of-concept Zalo OA webhook server |
 | KakaoTalk | `adapters/kakao/remix-kakao-skill.mjs` | Kakao i/Open Builder Skill handler |
 | KakaoTalk Lily | `adapters/kakao/lily-skill-server.mjs` | Proof-of-concept Kakao Skill server |
 | Messenger | `adapters/messenger/remix-messenger-tool.mjs` | Reusable Messenger Platform module |
@@ -118,7 +124,7 @@ Supported means the package has a concrete integration surface and a runbook. Wa
 | LibreChat | Supported | OpenAPI Action. |
 | LobeChat | Supported | Plugin manifest. |
 | Agnai | Supported | Userscript against the local bridge. |
-| Telegram, Discord, WhatsApp, Viber, Slack, LINE, KakaoTalk, Messenger, Instagram DMs, Microsoft Teams, Twilio SMS/MMS, Matrix | Supported | Reusable bot/webhook/skill modules plus Lily proof wrappers where a direct Lily wrapper is useful. |
+| Telegram, Discord, WhatsApp, WeChat Official Account, Viber, Slack, LINE, Zalo Official Account, KakaoTalk, Messenger, Instagram DMs, Microsoft Teams, Twilio SMS/MMS, Matrix | Supported | Reusable bot/webhook/skill modules plus Lily proof wrappers where a direct Lily wrapper is useful. |
 | Dify, Flowise, Botpress | Supported | OpenAPI/custom tool/action surfaces. |
 | AnythingLLM, TypingMind, Poe, Langflow, LangChain JS, Vercel AI SDK, n8n, Pipedream, Make, Zapier, Voiceflow, Manychat, Nomi, Kindroid, Microsoft Bot Framework, Dialogflow ES, Dialogflow CX, Rasa, Amazon Lex V2, IBM watsonx Assistant | Supported | Official custom skill, plugin, server-bot, custom component, framework tool, workflow, custom app, API tool, External Request, official companion API sidecar, activity handler, webhook, custom action, Lambda code hook, and OpenAPI custom-extension surfaces. |
 | Character.AI | Watchlist | Popular consumer host, but no production adapter without an official API, plugin, or partner surface. |

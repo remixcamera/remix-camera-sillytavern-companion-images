@@ -1,6 +1,6 @@
 # Remix.Camera Adapter Demo Verification
 
-Generated at: 2026-06-13T10:24:59.652Z
+Generated at: 2026-06-13T10:51:30.550Z
 Mode: bridge-dry-run
 Bridge URL: http://127.0.0.1:8787
 
@@ -18,9 +18,11 @@ Bridge URL: http://127.0.0.1:8787
 | Telegram | production bridge evidence | no | Record a real host-delivery demo after platform credentials are present. |
 | Discord | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | WhatsApp | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
+| WeChat Official Account | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | Viber | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | Slack | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | LINE | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
+| Zalo Official Account | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | KakaoTalk | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | Messenger | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | Instagram DMs | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
@@ -51,7 +53,7 @@ Bridge URL: http://127.0.0.1:8787
 | Amazon Lex V2 | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | IBM watsonx Assistant | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 
-Public demo ready targets: 1/42
+Public demo ready targets: 1/44
 
 ## Targets
 
@@ -162,6 +164,19 @@ Evidence: setup runbook and static adapter preflight. Public demo ready: no.
 - [x] marker present: WHATSAPP_PHONE_NUMBER_ID
 - [x] marker present: uploads local bridge images
 
+### WeChat Official Account
+Evidence: setup runbook and static adapter preflight. Public demo ready: no.
+- [x] adapter exists: adapters/wechat/remix-wechat-tool.mjs
+- [x] adapter exists: adapters/wechat/lily-webhook-server.mjs
+- [x] adapter exists: adapters/wechat/README.md
+- [x] demo runbook exists: demos/wechat/demo.md
+- [x] demo includes setup target
+- [x] marker present: createRemixWeChatTool
+- [x] marker present: handleWebhookDetailed
+- [x] marker present: WECHAT_WEBHOOK_TOKEN
+- [x] marker present: temporary media
+- [x] marker present: customer-service
+
 ### Viber
 Evidence: setup runbook and static adapter preflight. Public demo ready: no.
 - [x] adapter exists: adapters/viber/remix-viber-tool.mjs
@@ -197,6 +212,19 @@ Evidence: setup runbook and static adapter preflight. Public demo ready: no.
 - [x] marker present: handleWebhookDetailed
 - [x] marker present: autoSend === false
 - [x] marker present: LINE_CHANNEL_SECRET
+- [x] marker present: productionImageUrl
+
+### Zalo Official Account
+Evidence: setup runbook and static adapter preflight. Public demo ready: no.
+- [x] adapter exists: adapters/zalo/remix-zalo-tool.mjs
+- [x] adapter exists: adapters/zalo/lily-webhook-server.mjs
+- [x] adapter exists: adapters/zalo/README.md
+- [x] demo runbook exists: demos/zalo/demo.md
+- [x] demo includes setup target
+- [x] marker present: createRemixZaloTool
+- [x] marker present: handleWebhookDetailed
+- [x] marker present: ZALO_ACCESS_TOKEN
+- [x] marker present: /v3.0/oa/message/cs
 - [x] marker present: productionImageUrl
 
 ### KakaoTalk
@@ -527,9 +555,11 @@ Evidence: setup runbook and static adapter preflight. Public demo ready: no.
 - [x] MCP adapter real dry-run (command: send-selfie)
 - [x] Discord adapter real dry-run (command: send-selfie)
 - [x] WhatsApp adapter real dry-run (command: send-selfie)
+- [x] WeChat Official Account adapter real dry-run (command: send-selfie)
 - [x] Viber adapter real dry-run (command: send-selfie)
 - [x] Slack adapter real dry-run (command: send-selfie)
 - [x] LINE adapter real dry-run (command: send-selfie)
+- [x] Zalo Official Account adapter real dry-run (command: send-selfie)
 - [x] KakaoTalk adapter real dry-run (command: send-selfie)
 - [x] Messenger adapter real dry-run (command: send-selfie)
 - [x] Instagram adapter real dry-run (command: send-selfie)

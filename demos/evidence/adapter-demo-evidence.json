@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "generatedAt": "2026-06-13T10:24:59.652Z",
+  "generatedAt": "2026-06-13T10:51:30.550Z",
   "mode": "bridge-dry-run",
   "bridgeUrl": "http://127.0.0.1:8787",
   "targets": [
@@ -520,6 +520,69 @@
       ]
     },
     {
+      "id": "wechat",
+      "title": "WeChat Official Account",
+      "demoEvidence": {
+        "status": "runbook-ready",
+        "publicDemoReady": false,
+        "evidenceLevel": "setup runbook and static adapter preflight",
+        "missingArtifacts": [],
+        "nextStep": "Run this target in the real host and add production demo evidence."
+      },
+      "checks": [
+        {
+          "name": "adapter exists: adapters/wechat/remix-wechat-tool.mjs",
+          "ok": true,
+          "path": "adapters/wechat/remix-wechat-tool.mjs"
+        },
+        {
+          "name": "adapter exists: adapters/wechat/lily-webhook-server.mjs",
+          "ok": true,
+          "path": "adapters/wechat/lily-webhook-server.mjs"
+        },
+        {
+          "name": "adapter exists: adapters/wechat/README.md",
+          "ok": true,
+          "path": "adapters/wechat/README.md"
+        },
+        {
+          "name": "demo runbook exists: demos/wechat/demo.md",
+          "ok": true,
+          "path": "demos/wechat/demo.md"
+        },
+        {
+          "name": "demo includes setup target",
+          "ok": true,
+          "expected": "--target=wechat"
+        },
+        {
+          "name": "marker present: createRemixWeChatTool",
+          "ok": true,
+          "marker": "createRemixWeChatTool"
+        },
+        {
+          "name": "marker present: handleWebhookDetailed",
+          "ok": true,
+          "marker": "handleWebhookDetailed"
+        },
+        {
+          "name": "marker present: WECHAT_WEBHOOK_TOKEN",
+          "ok": true,
+          "marker": "WECHAT_WEBHOOK_TOKEN"
+        },
+        {
+          "name": "marker present: temporary media",
+          "ok": true,
+          "marker": "temporary media"
+        },
+        {
+          "name": "marker present: customer-service",
+          "ok": true,
+          "marker": "customer-service"
+        }
+      ]
+    },
+    {
       "id": "viber",
       "title": "Viber",
       "demoEvidence": {
@@ -690,6 +753,69 @@
           "name": "marker present: LINE_CHANNEL_SECRET",
           "ok": true,
           "marker": "LINE_CHANNEL_SECRET"
+        },
+        {
+          "name": "marker present: productionImageUrl",
+          "ok": true,
+          "marker": "productionImageUrl"
+        }
+      ]
+    },
+    {
+      "id": "zalo",
+      "title": "Zalo Official Account",
+      "demoEvidence": {
+        "status": "runbook-ready",
+        "publicDemoReady": false,
+        "evidenceLevel": "setup runbook and static adapter preflight",
+        "missingArtifacts": [],
+        "nextStep": "Run this target in the real host and add production demo evidence."
+      },
+      "checks": [
+        {
+          "name": "adapter exists: adapters/zalo/remix-zalo-tool.mjs",
+          "ok": true,
+          "path": "adapters/zalo/remix-zalo-tool.mjs"
+        },
+        {
+          "name": "adapter exists: adapters/zalo/lily-webhook-server.mjs",
+          "ok": true,
+          "path": "adapters/zalo/lily-webhook-server.mjs"
+        },
+        {
+          "name": "adapter exists: adapters/zalo/README.md",
+          "ok": true,
+          "path": "adapters/zalo/README.md"
+        },
+        {
+          "name": "demo runbook exists: demos/zalo/demo.md",
+          "ok": true,
+          "path": "demos/zalo/demo.md"
+        },
+        {
+          "name": "demo includes setup target",
+          "ok": true,
+          "expected": "--target=zalo"
+        },
+        {
+          "name": "marker present: createRemixZaloTool",
+          "ok": true,
+          "marker": "createRemixZaloTool"
+        },
+        {
+          "name": "marker present: handleWebhookDetailed",
+          "ok": true,
+          "marker": "handleWebhookDetailed"
+        },
+        {
+          "name": "marker present: ZALO_ACCESS_TOKEN",
+          "ok": true,
+          "marker": "ZALO_ACCESS_TOKEN"
+        },
+        {
+          "name": "marker present: /v3.0/oa/message/cs",
+          "ok": true,
+          "marker": "/v3.0/oa/message/cs"
         },
         {
           "name": "marker present: productionImageUrl",
@@ -2182,10 +2308,10 @@
     }
   ],
   "demoSummary": {
-    "targetCount": 42,
+    "targetCount": 44,
     "publicDemoReadyCount": 1,
     "productionBridgeEvidenceCount": 1,
-    "runbookOnlyCount": 40
+    "runbookOnlyCount": 42
   },
   "bridgeChecks": [
     {
@@ -2276,6 +2402,11 @@
       "command": "send-selfie"
     },
     {
+      "name": "WeChat Official Account adapter real dry-run",
+      "ok": true,
+      "command": "send-selfie"
+    },
+    {
       "name": "Viber adapter real dry-run",
       "ok": true,
       "command": "send-selfie"
@@ -2287,6 +2418,11 @@
     },
     {
       "name": "LINE adapter real dry-run",
+      "ok": true,
+      "command": "send-selfie"
+    },
+    {
+      "name": "Zalo Official Account adapter real dry-run",
       "ok": true,
       "command": "send-selfie"
     },
