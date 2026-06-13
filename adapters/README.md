@@ -37,7 +37,7 @@ npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=
 | LibreChat | `http://127.0.0.1:8787/librechat/openapi.json` | OpenAPI Action |
 | LobeChat | `http://127.0.0.1:8787/lobe/manifest.json` | Lobe plugin manifest with preview and guarded generate tools |
 | Agnai | `adapters/agnai/remix-camera-agnai.user.js` | Browser userscript against local bridge |
-| Telegram | `adapters/telegram/remix-telegram-tool.mjs` | Reusable bot integration module |
+| Telegram | `adapters/telegram/remix-telegram-tool.mjs` + `adapters/telegram/framework-middleware.mjs` | Reusable bot integration module plus Telegraf/grammY middleware |
 | Telegram Lily | `adapters/telegram/lily-bot.mjs` | Proof-of-concept Telegram bot |
 | Discord | `adapters/discord/remix-discord-tool.mjs` | Reusable Discord interactions module |
 | Discord Lily | `adapters/discord/lily-interactions-server.mjs` | Proof-of-concept Discord interactions server |

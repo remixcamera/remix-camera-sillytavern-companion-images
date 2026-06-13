@@ -1,6 +1,6 @@
 # Remix.Camera Adapter Demo Verification
 
-Generated at: 2026-06-13T05:17:04.921Z
+Generated at: 2026-06-13T06:01:07.998Z
 Mode: bridge-dry-run
 Bridge URL: http://127.0.0.1:8787
 
@@ -94,6 +94,7 @@ Evidence: setup runbook and static adapter preflight. Public demo ready: no.
 ### Telegram
 Evidence: production bridge evidence. Public demo ready: no.
 - [x] adapter exists: adapters/telegram/remix-telegram-tool.mjs
+- [x] adapter exists: adapters/telegram/framework-middleware.mjs
 - [x] adapter exists: adapters/telegram/lily-bot.mjs
 - [x] demo artifact exists: demos/telegram/evidence-production-2026-06-12/result.json
 - [x] demo artifact exists: demos/telegram/evidence-production-2026-06-12/transcript.md
@@ -101,6 +102,7 @@ Evidence: production bridge evidence. Public demo ready: no.
 - [x] demo runbook exists: demos/telegram/demo.md
 - [x] demo includes setup target
 - [x] marker present: createRemixTelegramTool
+- [x] marker present: createRemixTelegramTelegrafMiddleware
 - [x] marker present: LILY_PROFILE_ID
 - [x] marker present: uploads local bridge images
 
