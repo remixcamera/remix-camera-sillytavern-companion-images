@@ -106,7 +106,7 @@ See `adapters/README.md` and `demos/README.md` for target-specific demo runbooks
 For messaging targets, the reusable demo recorder can produce honest evidence without faking host output:
 
 ```bash
-node scripts/record-messaging-demo.mjs --target=all
+npm run demo:messaging
 ```
 
 Add `--deliver` plus the target's bot credentials only when the demo should send into the real host. Add `--yes --max-generations=1` only after reviewing the command and intentionally spending one Remix.Camera generation.

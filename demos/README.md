@@ -61,16 +61,15 @@ Use the messaging recorder to create per-host, non-mocked demo evidence for Tele
 No-spend bridge evidence for every messaging adapter:
 
 ```bash
-node scripts/record-messaging-demo.mjs --target=all --output-dir=tmp/messaging-demo-evidence
+npm run demo:messaging
 ```
 
 Credentialed real host delivery for one platform:
 
 ```bash
 TELEGRAM_BOT_TOKEN=... TELEGRAM_CHAT_ID=... \
-node scripts/record-messaging-demo.mjs \
+npm run demo:messaging:deliver -- \
   --target=telegram \
-  --deliver \
   --output-dir=demos/telegram/live-production-$(date +%F)
 ```
 
@@ -78,12 +77,11 @@ Credentialed real generation and host delivery, capped to one Remix.Camera gener
 
 ```bash
 TELEGRAM_BOT_TOKEN=... TELEGRAM_CHAT_ID=... \
-node scripts/record-messaging-demo.mjs \
+npm run demo:messaging:deliver -- \
   --target=telegram \
   --command="/selfie cozy couch with lamp light" \
   --yes \
   --max-generations=1 \
-  --deliver \
   --output-dir=demos/telegram/live-production-$(date +%F)
 ```
 

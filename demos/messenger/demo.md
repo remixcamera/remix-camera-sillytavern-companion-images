@@ -36,7 +36,7 @@ Record the real Messenger conversation, webhook signature verification, bridge l
 Create no-spend bridge evidence for the Messenger adapter:
 
 ```bash
-node scripts/record-messaging-demo.mjs --target=messenger --output-dir=tmp/messaging-demo-evidence/messenger
+npm run demo:messaging -- --target=messenger --output-dir=tmp/messaging-demo-evidence/messenger
 ```
 
 Create a real Messenger delivery proof:
@@ -44,9 +44,8 @@ Create a real Messenger delivery proof:
 ```bash
 MESSENGER_PAGE_ACCESS_TOKEN=... \
 MESSENGER_RECIPIENT_ID=... \
-node scripts/record-messaging-demo.mjs \
+npm run demo:messaging:deliver -- \
   --target=messenger \
-  --deliver \
   --output-dir=demos/messenger/live-production-$(date +%F)
 ```
 
