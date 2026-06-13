@@ -16,6 +16,7 @@ Targets:
 - `openwebui/`: Open WebUI native Tool demo.
 - `librechat/`: LibreChat OpenAPI Action demo.
 - `lobechat/`: LobeChat plugin manifest demo.
+- `chatgpt-actions/`: ChatGPT Custom GPT Actions demo.
 - `agnai/`: Agnai userscript demo.
 - `telegram/`: reusable Telegram bot tool plus Lily proof-of-concept demo.
 - `telegram/evidence-production-2026-06-12/`: production bridge dry-run evidence for the reusable Telegram tool; real Telegram send path is documented but awaits Bot API credentials.

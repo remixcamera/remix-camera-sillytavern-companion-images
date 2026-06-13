@@ -6,7 +6,7 @@ import { readFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { URL } from "node:url";
-import { createBridgeOpenApiDocument, createLobeManifest } from "../lib/companion-tools.mjs";
+import { createBridgeOpenApiDocument, createChatGptActionsOpenApiDocument, createLobeManifest } from "../lib/companion-tools.mjs";
 
 const SERVICE = "remix-camera-sillytavern-bridge";
 const VERSION = "0.3.0";
@@ -70,6 +70,8 @@ const config = {
   apiBaseUrl: trimTrailingSlash(process.env.REMIX_API_BASE_URL || persistedConfig.apiBaseUrl || "https://remix.camera"),
   apiKey: process.env.REMIX_API_KEY || "",
   sessionToken: process.env.REMIX_SESSION_TOKEN || persistedConfig.sessionToken || "",
+  actionApiKey: process.env.REMIX_ACTION_API_KEY || "",
+  actionBaseUrl: trimTrailingSlash(process.env.REMIX_ACTION_BASE_URL || ""),
   defaultProfileId: process.env.REMIX_PROFILE_ID || persistedConfig.profileId || persistedConfig.defaultProfileId || "",
   defaultModelId: process.env.REMIX_DEFAULT_MODEL_ID || "",
   defaultSfwModelId: process.env.REMIX_SFW_MODEL_ID || "nano-banana",
@@ -185,6 +187,20 @@ function requestBaseUrl(req) {
   return `${protocol}://${host}`;
 }
 
+function actionBaseUrl(req) {
+  return config.actionBaseUrl || requestBaseUrl(req);
+}
+
+function requireActionApiKey(req) {
+  if (!config.actionApiKey) {
+    throw httpError(428, "Set REMIX_ACTION_API_KEY before using the ChatGPT Actions bridge routes.");
+  }
+  const authorization = cleanString(req.headers.authorization);
+  if (authorization !== `Bearer ${config.actionApiKey}`) {
+    throw httpError(401, "ChatGPT Actions bridge authentication failed.");
+  }
+}
+
 function sendJson(req, res, status, body) {
   const payload = JSON.stringify(body, null, 2);
   res.writeHead(status, {
@@ -257,6 +273,38 @@ function normalizeCommand(command) {
 
 function isAffirmativeConsent(value) {
   return ["yes", "y", "true", "confirmed", "i consent"].includes(cleanString(value).toLowerCase());
+}
+
+function publicActionResult(result) {
+  if (!result || !Array.isArray(result.results)) {
+    return result;
+  }
+  const displayResults = result.results.map((item) => {
+    if (!item || !item.ok) {
+      return item;
+    }
+    const publicImageUrl = item.productionImageUrl || item.imageUrl;
+    return {
+      ...item,
+      imageUrl: publicImageUrl,
+    };
+  });
+  const successfulImages = displayResults.filter((item) => item?.ok && item.imageUrl);
+  const markdown = successfulImages
+    .map((item, index) => {
+      const suffix = successfulImages.length > 1 ? ` ${index + 1} of ${successfulImages.length}` : "";
+      return `![${result.characterName} ${result.command}${suffix}](${item.imageUrl})`;
+    })
+    .join("\n\n");
+  return {
+    ...result,
+    results: displayResults,
+    markdown,
+    chatgptAction: {
+      imageDelivery: "Use results[].imageUrl or markdown. These URLs are public HTTPS/Remix.Camera URLs when available, not localhost bridge URLs.",
+      generateGuard: "Generate endpoints require yes=true after explicit user confirmation.",
+    },
+  };
 }
 
 function isTruthyValue(value) {
@@ -1331,11 +1379,31 @@ async function route(req, res) {
       version: VERSION,
       hasApiKey: Boolean(config.apiKey),
       hasSessionToken: Boolean(config.sessionToken),
+      hasActionApiKey: Boolean(config.actionApiKey),
       authMode: config.sessionToken ? "design_api_session" : config.apiKey ? "api_key" : "missing",
       apiBaseUrl: config.apiBaseUrl,
       configPath: config.configPath,
       defaultProfileId: config.defaultProfileId || null,
       allowedOrigins: config.allowedOrigins,
+    });
+    return;
+  }
+
+  if (req.method === "GET" && url.pathname === "/chatgpt-actions/openapi.json") {
+    sendJson(req, res, 200, createChatGptActionsOpenApiDocument(actionBaseUrl(req)));
+    return;
+  }
+
+  if (req.method === "GET" && url.pathname === "/chatgpt-actions/health") {
+    requireActionApiKey(req);
+    sendJson(req, res, 200, {
+      ok: true,
+      service: SERVICE,
+      version: VERSION,
+      actionSurface: "chatgpt-actions",
+      hasSessionToken: Boolean(config.sessionToken),
+      hasApiKey: Boolean(config.apiKey),
+      authMode: config.sessionToken ? "design_api_session" : config.apiKey ? "api_key" : "missing",
     });
     return;
   }
@@ -1355,6 +1423,27 @@ async function route(req, res) {
 
   if (req.method === "GET" && url.pathname === "/lobe/manifest.json") {
     sendJson(req, res, 200, createLobeManifest(requestBaseUrl(req)));
+    return;
+  }
+
+  const chatGptActionToolMatch = url.pathname.match(/^\/chatgpt-actions\/v1\/tools\/([^/]+)\/(dry-run|generate)$/);
+  if (req.method === "POST" && chatGptActionToolMatch) {
+    requireActionApiKey(req);
+    const command = decodeURIComponent(chatGptActionToolMatch[1]);
+    const action = chatGptActionToolMatch[2];
+    const body = normalizeBody({
+      ...(await readJsonBody(req)),
+      command,
+    });
+    if (action === "dry-run") {
+      sendJson(req, res, 200, {
+        ok: true,
+        dryRun: true,
+        ...(await buildPlan(body)),
+      });
+      return;
+    }
+    sendJson(req, res, 200, publicActionResult(await generate(body)));
     return;
   }
 
@@ -1406,12 +1495,16 @@ async function route(req, res) {
       "GET /health",
       "GET /schema",
       "GET /openapi.json",
+      "GET /chatgpt-actions/openapi.json",
+      "GET /chatgpt-actions/health",
       "GET /lobe/manifest.json",
       "GET /v1/images/:id",
       "POST /v1/commands/dry-run",
       "POST /v1/commands/generate",
       "POST /v1/tools/:command/dry-run",
       "POST /v1/tools/:command/generate",
+      "POST /chatgpt-actions/v1/tools/:command/dry-run",
+      "POST /chatgpt-actions/v1/tools/:command/generate",
     ],
   });
 }

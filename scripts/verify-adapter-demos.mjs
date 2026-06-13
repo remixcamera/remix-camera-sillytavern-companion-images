@@ -110,6 +110,14 @@ const targets = [
     markers: ["/lobe/manifest.json", "Preview", "yes=true"],
   },
   {
+    id: "chatgpt-actions",
+    title: "ChatGPT Actions",
+    adapterFiles: ["adapters/chatgpt-actions/README.md"],
+    demoFile: "demos/chatgpt-actions/demo.md",
+    setupCommand: "--target=chatgpt-actions",
+    markers: ["Custom GPT Action", "/chatgpt-actions/openapi.json", "REMIX_ACTION_API_KEY", "Auth Type: Bearer"],
+  },
+  {
     id: "agnai",
     title: "Agnai",
     adapterFiles: ["adapters/agnai/remix-camera-agnai.user.js"],
@@ -640,6 +648,18 @@ async function verifyBridgeContracts() {
     }),
   );
 
+  const chatGptOpenApi = await requestBridge("/chatgpt-actions/openapi.json");
+  checks.push(
+    okCheck(
+      "ChatGPT Actions OpenAPI exposes bearer-secured generate endpoints",
+      COMPANION_COMMANDS.every((command) => chatGptOpenApi?.payload?.paths?.[`/chatgpt-actions/v1/tools/${command.name}/generate`]?.post?.security?.[0]?.bearerAuth) &&
+        chatGptOpenApi?.payload?.components?.securitySchemes?.bearerAuth?.scheme === "bearer",
+      {
+        status: chatGptOpenApi?.status,
+      },
+    ),
+  );
+
   const lobe = await requestBridge("/lobe/manifest.json");
   const lobeApis = Array.isArray(lobe?.payload?.api) ? lobe.payload.api : [];
   const lobeHasAllTools = COMPANION_COMMANDS.every(
@@ -681,6 +701,12 @@ async function verifyHostAdapterDryRuns() {
     );
     checks.push(
       okCheck("MCP adapter real dry-run", false, {
+        skipped: true,
+        reason: "No bridge URL provided.",
+      }),
+    );
+    checks.push(
+      okCheck("ChatGPT Actions adapter real dry-run", false, {
         skipped: true,
         reason: "No bridge URL provided.",
       }),
@@ -862,6 +888,8 @@ async function verifyHostAdapterDryRuns() {
     return checks;
   }
 
+  const actionApiKey = String(process.env.REMIX_ACTION_API_KEY || "").trim();
+
   const telegram = await runTelegramRemixCommand(parseTelegramCommand("/preview selfie cozy couch with lamp light"), {
     bridgeUrl,
     profileId: process.env.REMIX_PROFILE_ID || "",
@@ -894,6 +922,29 @@ async function verifyHostAdapterDryRuns() {
       command: "send-selfie",
     }),
   );
+
+  if (actionApiKey) {
+    const chatGptAction = await requestBridge("/chatgpt-actions/v1/tools/send-selfie/dry-run", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${actionApiKey}`,
+      },
+      body: JSON.stringify(commandInputs["send-selfie"]),
+    });
+    checks.push(
+      okCheck("ChatGPT Actions adapter real dry-run", chatGptAction?.payload?.dryRun === true && typeof chatGptAction?.payload?.prompt === "string", {
+        command: "send-selfie",
+        status: chatGptAction?.status,
+      }),
+    );
+  } else {
+    checks.push(
+      okCheck("ChatGPT Actions adapter real dry-run", false, {
+        skipped: true,
+        reason: "Set REMIX_ACTION_API_KEY on the bridge and verifier to test the authenticated ChatGPT Actions route.",
+      }),
+    );
+  }
 
   const discord = await runDiscordRemixInteraction(
     {

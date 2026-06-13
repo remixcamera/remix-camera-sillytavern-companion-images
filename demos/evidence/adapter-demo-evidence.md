@@ -1,6 +1,6 @@
 # Remix.Camera Adapter Demo Verification
 
-Generated at: 2026-06-13T10:51:30.550Z
+Generated at: 2026-06-13T11:15:41.508Z
 Mode: bridge-dry-run
 Bridge URL: http://127.0.0.1:8787
 
@@ -14,6 +14,7 @@ Bridge URL: http://127.0.0.1:8787
 | Open WebUI | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | LibreChat | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | LobeChat | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
+| ChatGPT Actions | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | Agnai | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | Telegram | production bridge evidence | no | Record a real host-delivery demo after platform credentials are present. |
 | Discord | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
@@ -53,7 +54,7 @@ Bridge URL: http://127.0.0.1:8787
 | Amazon Lex V2 | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | IBM watsonx Assistant | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 
-Public demo ready targets: 1/44
+Public demo ready targets: 1/45
 
 ## Targets
 
@@ -116,6 +117,16 @@ Evidence: setup runbook and static adapter preflight. Public demo ready: no.
 - [x] marker present: /lobe/manifest.json
 - [x] marker present: Preview
 - [x] marker present: yes=true
+
+### ChatGPT Actions
+Evidence: setup runbook and static adapter preflight. Public demo ready: no.
+- [x] adapter exists: adapters/chatgpt-actions/README.md
+- [x] demo runbook exists: demos/chatgpt-actions/demo.md
+- [x] demo includes setup target
+- [x] marker present: Custom GPT Action
+- [x] marker present: /chatgpt-actions/openapi.json
+- [x] marker present: REMIX_ACTION_API_KEY
+- [x] marker present: Auth Type: Bearer
 
 ### Agnai
 Evidence: setup runbook and static adapter preflight. Public demo ready: no.
@@ -539,6 +550,7 @@ Evidence: setup runbook and static adapter preflight. Public demo ready: no.
 
 - [x] bridge health (status 200; auth design_api_session)
 - [x] OpenAPI exposes all generate endpoints (status 200)
+- [x] ChatGPT Actions OpenAPI exposes bearer-secured generate endpoints (status 200)
 - [x] Lobe manifest exposes preview and generate tools (status 200; apis 16)
 - [x] bridge dry-run: send-selfie (status 200; template: Realistic Bedroom Selfie Girl Phone Mirror)
 - [x] bridge dry-run: auto-selfie-from-chat (status 200; template: Candid Mirror Selfie Squating)
@@ -553,6 +565,7 @@ Evidence: setup runbook and static adapter preflight. Public demo ready: no.
 
 - [x] Telegram adapter real dry-run (command: send-selfie)
 - [x] MCP adapter real dry-run (command: send-selfie)
+- [x] ChatGPT Actions adapter real dry-run (status 200; command: send-selfie)
 - [x] Discord adapter real dry-run (command: send-selfie)
 - [x] WhatsApp adapter real dry-run (command: send-selfie)
 - [x] WeChat Official Account adapter real dry-run (command: send-selfie)

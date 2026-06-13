@@ -22,6 +22,7 @@ const SUPPORTED_TARGETS = new Set([
   "openwebui",
   "librechat",
   "lobechat",
+  "chatgpt-actions",
   "agnai",
   "telegram",
   "discord",
@@ -73,7 +74,7 @@ Usage:
   npx @remix-camera/sillytavern-setup [options]
 
 Options:
-  --target=sillytavern|mcp|risu|openwebui|librechat|lobechat|agnai|telegram|discord|whatsapp|wechat|viber|slack|line|zalo|kakao|messenger|instagram|teams|twilio|matrix|dify|flowise|botpress|anythingllm|typingmind|poe|langflow|langchain|vercel-ai-sdk|n8n|pipedream|make|zapier|voiceflow|manychat|nomi|kindroid|bot-framework|dialogflow-es|dialogflow-cx|rasa|amazon-lex|watsonx-assistant
+  --target=sillytavern|mcp|risu|openwebui|librechat|lobechat|chatgpt-actions|agnai|telegram|discord|whatsapp|wechat|viber|slack|line|zalo|kakao|messenger|instagram|teams|twilio|matrix|dify|flowise|botpress|anythingllm|typingmind|poe|langflow|langchain|vercel-ai-sdk|n8n|pipedream|make|zapier|voiceflow|manychat|nomi|kindroid|bot-framework|dialogflow-es|dialogflow-cx|rasa|amazon-lex|watsonx-assistant
   --sillytavern-dir=/path/to/SillyTavern  Use a specific local SillyTavern checkout
   --profile-id=profile_id                 Use a specific Remix.Camera character profile
   --character-name="Name"                 Override the Character Card name
@@ -423,6 +424,14 @@ function printTargetInstructions(target, { healthUrl, port, configPath }) {
       "Install a LobeChat custom plugin with this manifest URL:",
       `  ${bridgeUrl}/lobe/manifest.json`,
       "The manifest exposes Preview tools for dry-runs plus guarded generate tools that require yes=true.",
+    ],
+    "chatgpt-actions": [
+      "Create a ChatGPT Custom GPT Action from the Remix.Camera bridge OpenAPI schema:",
+      `  ${bridgeUrl}/chatgpt-actions/openapi.json`,
+      "ChatGPT Actions must call a public HTTPS URL, so expose this local bridge with a tunnel such as ngrok or cloudflared before importing the schema.",
+      "Set REMIX_ACTION_API_KEY on the bridge and configure the GPT Action Authentication as API Key with Auth Type: Bearer.",
+      "Set REMIX_ACTION_BASE_URL=https://your-public-tunnel.example.com so the imported schema points at the public bridge URL.",
+      "Preview actions never spend credits; generate actions require yes=true after the user explicitly asks for an image.",
     ],
     agnai: [
       "Install this userscript in Tampermonkey or a compatible userscript manager:",

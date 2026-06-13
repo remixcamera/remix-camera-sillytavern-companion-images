@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "generatedAt": "2026-06-13T10:51:30.550Z",
+  "generatedAt": "2026-06-13T11:15:41.508Z",
   "mode": "bridge-dry-run",
   "bridgeUrl": "http://127.0.0.1:8787",
   "targets": [
@@ -289,6 +289,54 @@
           "name": "marker present: yes=true",
           "ok": true,
           "marker": "yes=true"
+        }
+      ]
+    },
+    {
+      "id": "chatgpt-actions",
+      "title": "ChatGPT Actions",
+      "demoEvidence": {
+        "status": "runbook-ready",
+        "publicDemoReady": false,
+        "evidenceLevel": "setup runbook and static adapter preflight",
+        "missingArtifacts": [],
+        "nextStep": "Run this target in the real host and add production demo evidence."
+      },
+      "checks": [
+        {
+          "name": "adapter exists: adapters/chatgpt-actions/README.md",
+          "ok": true,
+          "path": "adapters/chatgpt-actions/README.md"
+        },
+        {
+          "name": "demo runbook exists: demos/chatgpt-actions/demo.md",
+          "ok": true,
+          "path": "demos/chatgpt-actions/demo.md"
+        },
+        {
+          "name": "demo includes setup target",
+          "ok": true,
+          "expected": "--target=chatgpt-actions"
+        },
+        {
+          "name": "marker present: Custom GPT Action",
+          "ok": true,
+          "marker": "Custom GPT Action"
+        },
+        {
+          "name": "marker present: /chatgpt-actions/openapi.json",
+          "ok": true,
+          "marker": "/chatgpt-actions/openapi.json"
+        },
+        {
+          "name": "marker present: REMIX_ACTION_API_KEY",
+          "ok": true,
+          "marker": "REMIX_ACTION_API_KEY"
+        },
+        {
+          "name": "marker present: Auth Type: Bearer",
+          "ok": true,
+          "marker": "Auth Type: Bearer"
         }
       ]
     },
@@ -2308,10 +2356,10 @@
     }
   ],
   "demoSummary": {
-    "targetCount": 44,
+    "targetCount": 45,
     "publicDemoReadyCount": 1,
     "productionBridgeEvidenceCount": 1,
-    "runbookOnlyCount": 42
+    "runbookOnlyCount": 43
   },
   "bridgeChecks": [
     {
@@ -2322,6 +2370,11 @@
     },
     {
       "name": "OpenAPI exposes all generate endpoints",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "name": "ChatGPT Actions OpenAPI exposes bearer-secured generate endpoints",
       "ok": true,
       "status": 200
     },
@@ -2390,6 +2443,12 @@
       "name": "MCP adapter real dry-run",
       "ok": true,
       "command": "send-selfie"
+    },
+    {
+      "name": "ChatGPT Actions adapter real dry-run",
+      "ok": true,
+      "command": "send-selfie",
+      "status": 200
     },
     {
       "name": "Discord adapter real dry-run",
