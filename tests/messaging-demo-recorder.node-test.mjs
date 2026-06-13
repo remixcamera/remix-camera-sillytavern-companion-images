@@ -47,6 +47,26 @@ test("messaging recorder parses target-specific preview commands", () => {
   assert.equal(rocketchat.action, "dry-run");
   assert.equal(rocketchat.command, "send-selfie");
   assert.equal(rocketchat.text, "cozy couch");
+
+  const intercom = parseTargetCommand("intercom", "preview selfie cozy couch");
+  assert.equal(intercom.action, "dry-run");
+  assert.equal(intercom.command, "send-selfie");
+  assert.equal(intercom.text, "cozy couch");
+
+  const zendesk = parseTargetCommand("zendesk", "preview selfie cozy couch");
+  assert.equal(zendesk.action, "dry-run");
+  assert.equal(zendesk.command, "send-selfie");
+  assert.equal(zendesk.text, "cozy couch");
+
+  const crisp = parseTargetCommand("crisp", "preview selfie cozy couch");
+  assert.equal(crisp.action, "dry-run");
+  assert.equal(crisp.command, "send-selfie");
+  assert.equal(crisp.text, "cozy couch");
+
+  const tidio = parseTargetCommand("tidio", "preview selfie cozy couch");
+  assert.equal(tidio.action, "dry-run");
+  assert.equal(tidio.command, "send-selfie");
+  assert.equal(tidio.text, "cozy couch");
 });
 
 test("messaging recorder counts planned generations before spending", () => {
@@ -59,6 +79,10 @@ test("messaging recorder counts planned generations before spending", () => {
   assert.equal(plannedGenerationCount("vk", parseTargetCommand("vk", "vacation yes Amalfi coast")), 3);
   assert.equal(plannedGenerationCount("mattermost", parseTargetCommand("mattermost", "vacation yes Amalfi coast")), 3);
   assert.equal(plannedGenerationCount("rocketchat", parseTargetCommand("rocketchat", "snap yes bedroom mirror")), 1);
+  assert.equal(plannedGenerationCount("intercom", parseTargetCommand("intercom", "vacation yes Amalfi coast")), 3);
+  assert.equal(plannedGenerationCount("zendesk", parseTargetCommand("zendesk", "snap yes bedroom mirror")), 1);
+  assert.equal(plannedGenerationCount("crisp", parseTargetCommand("crisp", "selfie couch")), 1);
+  assert.equal(plannedGenerationCount("tidio", parseTargetCommand("tidio", "preview selfie couch")), 0);
 });
 
 test("messaging recorder evidence records no-delivery dry-runs honestly", () => {
@@ -111,6 +135,21 @@ test("messaging recorder includes Instagram and Twilio delivery readiness withou
   const originalRocketChatToken = process.env.ROCKETCHAT_AUTH_TOKEN;
   const originalRocketChatUserId = process.env.ROCKETCHAT_USER_ID;
   const originalRocketChatRoomId = process.env.ROCKETCHAT_ROOM_ID;
+  const originalIntercomAccessToken = process.env.INTERCOM_ACCESS_TOKEN;
+  const originalIntercomAdminId = process.env.INTERCOM_ADMIN_ID;
+  const originalIntercomConversationId = process.env.INTERCOM_CONVERSATION_ID;
+  const originalZendeskSubdomain = process.env.ZENDESK_SUBDOMAIN;
+  const originalZendeskAppId = process.env.ZENDESK_APP_ID;
+  const originalZendeskConversationId = process.env.ZENDESK_CONVERSATION_ID;
+  const originalZendeskKeyId = process.env.ZENDESK_KEY_ID;
+  const originalZendeskSecret = process.env.ZENDESK_SECRET;
+  const originalCrispTokenId = process.env.CRISP_TOKEN_ID;
+  const originalCrispTokenKey = process.env.CRISP_TOKEN_KEY;
+  const originalCrispWebsiteId = process.env.CRISP_WEBSITE_ID;
+  const originalCrispSessionId = process.env.CRISP_SESSION_ID;
+  const originalTidioClientId = process.env.TIDIO_CLIENT_ID;
+  const originalTidioClientSecret = process.env.TIDIO_CLIENT_SECRET;
+  const originalTidioTicketId = process.env.TIDIO_TICKET_ID;
   try {
     process.env.INSTAGRAM_ACCESS_TOKEN = "ig-secret-token";
     delete process.env.INSTAGRAM_RECIPIENT_ID;
@@ -154,6 +193,44 @@ test("messaging recorder includes Instagram and Twilio delivery readiness withou
     assert.deepEqual(rocketchat.requiredEnv, ["ROCKETCHAT_URL", "ROCKETCHAT_AUTH_TOKEN", "ROCKETCHAT_USER_ID", "ROCKETCHAT_ROOM_ID"]);
     assert.deepEqual(rocketchat.missingEnv, ["ROCKETCHAT_ROOM_ID"]);
     assert.equal(Object.values(rocketchat).some((value) => String(value).includes("rocket-secret-token")), false);
+
+    process.env.INTERCOM_ACCESS_TOKEN = "intercom-secret-token";
+    process.env.INTERCOM_ADMIN_ID = "admin_1";
+    delete process.env.INTERCOM_CONVERSATION_ID;
+    const intercom = deliveryReadiness("intercom");
+    assert.equal(intercom.status, "missing-host-delivery-credentials");
+    assert.deepEqual(intercom.requiredEnv, ["INTERCOM_ACCESS_TOKEN", "INTERCOM_ADMIN_ID", "INTERCOM_CONVERSATION_ID"]);
+    assert.deepEqual(intercom.missingEnv, ["INTERCOM_CONVERSATION_ID"]);
+    assert.equal(Object.values(intercom).some((value) => String(value).includes("intercom-secret-token")), false);
+
+    process.env.ZENDESK_SUBDOMAIN = "remix";
+    process.env.ZENDESK_APP_ID = "app_1";
+    process.env.ZENDESK_CONVERSATION_ID = "conv_1";
+    process.env.ZENDESK_KEY_ID = "key_id";
+    process.env.ZENDESK_SECRET = "zendesk-secret";
+    const zendesk = deliveryReadiness("zendesk");
+    assert.equal(zendesk.status, "host-delivery-ready");
+    assert.deepEqual(zendesk.missingEnv, []);
+    assert.equal(Object.values(zendesk).some((value) => String(value).includes("zendesk-secret")), false);
+
+    process.env.CRISP_TOKEN_ID = "token_id";
+    process.env.CRISP_TOKEN_KEY = "crisp-secret";
+    process.env.CRISP_WEBSITE_ID = "website_1";
+    delete process.env.CRISP_SESSION_ID;
+    const crisp = deliveryReadiness("crisp");
+    assert.equal(crisp.status, "missing-host-delivery-credentials");
+    assert.deepEqual(crisp.requiredEnv, ["CRISP_TOKEN_ID", "CRISP_TOKEN_KEY", "CRISP_WEBSITE_ID", "CRISP_SESSION_ID"]);
+    assert.deepEqual(crisp.missingEnv, ["CRISP_SESSION_ID"]);
+    assert.equal(Object.values(crisp).some((value) => String(value).includes("crisp-secret")), false);
+
+    process.env.TIDIO_CLIENT_ID = "client-id";
+    process.env.TIDIO_CLIENT_SECRET = "tidio-secret";
+    process.env.TIDIO_TICKET_ID = "10000";
+    const tidio = deliveryReadiness("tidio");
+    assert.equal(tidio.status, "host-delivery-ready");
+    assert.deepEqual(tidio.requiredEnv, ["TIDIO_CLIENT_ID", "TIDIO_CLIENT_SECRET", "TIDIO_TICKET_ID"]);
+    assert.deepEqual(tidio.missingEnv, []);
+    assert.equal(Object.values(tidio).some((value) => String(value).includes("tidio-secret")), false);
   } finally {
     if (originalInstagramToken === undefined) delete process.env.INSTAGRAM_ACCESS_TOKEN;
     else process.env.INSTAGRAM_ACCESS_TOKEN = originalInstagramToken;
@@ -181,6 +258,36 @@ test("messaging recorder includes Instagram and Twilio delivery readiness withou
     else process.env.ROCKETCHAT_USER_ID = originalRocketChatUserId;
     if (originalRocketChatRoomId === undefined) delete process.env.ROCKETCHAT_ROOM_ID;
     else process.env.ROCKETCHAT_ROOM_ID = originalRocketChatRoomId;
+    if (originalIntercomAccessToken === undefined) delete process.env.INTERCOM_ACCESS_TOKEN;
+    else process.env.INTERCOM_ACCESS_TOKEN = originalIntercomAccessToken;
+    if (originalIntercomAdminId === undefined) delete process.env.INTERCOM_ADMIN_ID;
+    else process.env.INTERCOM_ADMIN_ID = originalIntercomAdminId;
+    if (originalIntercomConversationId === undefined) delete process.env.INTERCOM_CONVERSATION_ID;
+    else process.env.INTERCOM_CONVERSATION_ID = originalIntercomConversationId;
+    if (originalZendeskSubdomain === undefined) delete process.env.ZENDESK_SUBDOMAIN;
+    else process.env.ZENDESK_SUBDOMAIN = originalZendeskSubdomain;
+    if (originalZendeskAppId === undefined) delete process.env.ZENDESK_APP_ID;
+    else process.env.ZENDESK_APP_ID = originalZendeskAppId;
+    if (originalZendeskConversationId === undefined) delete process.env.ZENDESK_CONVERSATION_ID;
+    else process.env.ZENDESK_CONVERSATION_ID = originalZendeskConversationId;
+    if (originalZendeskKeyId === undefined) delete process.env.ZENDESK_KEY_ID;
+    else process.env.ZENDESK_KEY_ID = originalZendeskKeyId;
+    if (originalZendeskSecret === undefined) delete process.env.ZENDESK_SECRET;
+    else process.env.ZENDESK_SECRET = originalZendeskSecret;
+    if (originalCrispTokenId === undefined) delete process.env.CRISP_TOKEN_ID;
+    else process.env.CRISP_TOKEN_ID = originalCrispTokenId;
+    if (originalCrispTokenKey === undefined) delete process.env.CRISP_TOKEN_KEY;
+    else process.env.CRISP_TOKEN_KEY = originalCrispTokenKey;
+    if (originalCrispWebsiteId === undefined) delete process.env.CRISP_WEBSITE_ID;
+    else process.env.CRISP_WEBSITE_ID = originalCrispWebsiteId;
+    if (originalCrispSessionId === undefined) delete process.env.CRISP_SESSION_ID;
+    else process.env.CRISP_SESSION_ID = originalCrispSessionId;
+    if (originalTidioClientId === undefined) delete process.env.TIDIO_CLIENT_ID;
+    else process.env.TIDIO_CLIENT_ID = originalTidioClientId;
+    if (originalTidioClientSecret === undefined) delete process.env.TIDIO_CLIENT_SECRET;
+    else process.env.TIDIO_CLIENT_SECRET = originalTidioClientSecret;
+    if (originalTidioTicketId === undefined) delete process.env.TIDIO_TICKET_ID;
+    else process.env.TIDIO_TICKET_ID = originalTidioTicketId;
   }
 });
 

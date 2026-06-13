@@ -1,8 +1,8 @@
 # Remix.Camera Adapter Demo Verification
 
-Generated at: 2026-06-13T12:17:51.505Z
-Mode: bridge-dry-run
-Bridge URL: http://127.0.0.1:8787
+Generated at: 2026-06-13T12:56:12.201Z
+Mode: static-adapter-demo-preflight
+Bridge URL: not provided
 
 ## Demo Evidence Status
 
@@ -25,6 +25,10 @@ Bridge URL: http://127.0.0.1:8787
 | Slack | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | Mattermost | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | Rocket.Chat | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
+| Intercom | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
+| Zendesk Sunshine Conversations | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
+| Crisp | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
+| Tidio | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | LINE | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | Zalo Official Account | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | KakaoTalk | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
@@ -57,7 +61,7 @@ Bridge URL: http://127.0.0.1:8787
 | Amazon Lex V2 | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 | IBM watsonx Assistant | setup runbook and static adapter preflight | no | Run this target in the real host and add production demo evidence. |
 
-Public demo ready targets: 1/48
+Public demo ready targets: 1/52
 
 ## Targets
 
@@ -248,6 +252,50 @@ Evidence: setup runbook and static adapter preflight. Public demo ready: no.
 - [x] marker present: createRemixRocketChatTool
 - [x] marker present: ROCKETCHAT_URL
 - [x] marker present: chat.postMessage
+- [x] marker present: productionImageUrl
+
+### Intercom
+Evidence: setup runbook and static adapter preflight. Public demo ready: no.
+- [x] adapter exists: adapters/intercom/remix-intercom-tool.mjs
+- [x] adapter exists: adapters/intercom/README.md
+- [x] demo runbook exists: demos/intercom/demo.md
+- [x] demo includes setup target
+- [x] marker present: createRemixIntercomTool
+- [x] marker present: attachment_urls
+- [x] marker present: INTERCOM_ACCESS_TOKEN
+- [x] marker present: productionImageUrl
+
+### Zendesk Sunshine Conversations
+Evidence: setup runbook and static adapter preflight. Public demo ready: no.
+- [x] adapter exists: adapters/zendesk/remix-zendesk-sunshine-tool.mjs
+- [x] adapter exists: adapters/zendesk/README.md
+- [x] demo runbook exists: demos/zendesk/demo.md
+- [x] demo includes setup target
+- [x] marker present: createRemixZendeskTool
+- [x] marker present: content.type=image
+- [x] marker present: ZENDESK_KEY_ID
+- [x] marker present: productionImageUrl
+
+### Crisp
+Evidence: setup runbook and static adapter preflight. Public demo ready: no.
+- [x] adapter exists: adapters/crisp/remix-crisp-tool.mjs
+- [x] adapter exists: adapters/crisp/README.md
+- [x] demo runbook exists: demos/crisp/demo.md
+- [x] demo includes setup target
+- [x] marker present: createRemixCrispTool
+- [x] marker present: type=file
+- [x] marker present: X-Crisp-Tier
+- [x] marker present: productionImageUrl
+
+### Tidio
+Evidence: setup runbook and static adapter preflight. Public demo ready: no.
+- [x] adapter exists: adapters/tidio/remix-tidio-tool.mjs
+- [x] adapter exists: adapters/tidio/README.md
+- [x] demo runbook exists: demos/tidio/demo.md
+- [x] demo includes setup target
+- [x] marker present: verifyTidioSignature
+- [x] marker present: tidioChatApi.messageFromOperator
+- [x] marker present: TIDIO_CLIENT_ID
 - [x] marker present: productionImageUrl
 
 ### LINE
@@ -585,53 +633,46 @@ Evidence: setup runbook and static adapter preflight. Public demo ready: no.
 
 ## Bridge Contracts
 
-- [x] bridge health (status 200; auth design_api_session)
-- [x] OpenAPI exposes all generate endpoints (status 200)
-- [x] ChatGPT Actions OpenAPI exposes bearer-secured generate endpoints (status 200)
-- [x] Lobe manifest exposes preview and generate tools (status 200; apis 16)
-- [x] bridge dry-run: send-selfie (status 200; template: Realistic Bedroom Selfie Girl Phone Mirror)
-- [x] bridge dry-run: auto-selfie-from-chat (status 200; template: Candid Mirror Selfie Squating)
-- [x] bridge dry-run: outfit-try-on (status 200; template: Bedroom Mirror Selfie White Tank Yellow Skirt Braid)
-- [x] bridge dry-run: couple-photo (status 200; template: Realistic Couple Mirror Selfie Black Outfit)
-- [x] bridge dry-run: couples-vacation (status 200; template: Romantic Tropical Beach Couple Golden Hour Kiss)
-- [x] bridge dry-run: date-night (status 200; template: Realistic Couple Restaurant Terrace Evening Warm Light)
-- [x] bridge dry-run: daily-life-snap (status 200; template: Knit Sweater Iced Coffee Cafe Candid)
-- [x] bridge dry-run: private-snap (status 200; template: Adult Woman Cozy Bedroom Mirror Selfie)
+- [ ] bridge dry-run previews - Set REMIX_BRIDGE_URL or pass --bridge-url=http://127.0.0.1:8787 to run real dry-run previews.
 
 ## Host Adapter Dry-Runs
 
-- [x] Telegram adapter real dry-run (command: send-selfie)
-- [x] MCP adapter real dry-run (command: send-selfie)
-- [ ] ChatGPT Actions adapter real dry-run - Set REMIX_ACTION_API_KEY on the bridge and verifier to test the authenticated ChatGPT Actions route.
-- [x] Discord adapter real dry-run (command: send-selfie)
-- [x] WhatsApp adapter real dry-run (command: send-selfie)
-- [x] WeChat Official Account adapter real dry-run (command: send-selfie)
-- [x] Viber adapter real dry-run (command: send-selfie)
-- [x] VK community bot adapter real dry-run (command: send-selfie)
-- [x] Slack adapter real dry-run (command: send-selfie)
-- [x] Mattermost adapter real dry-run (command: send-selfie)
-- [x] Rocket.Chat adapter real dry-run (command: send-selfie)
-- [x] LINE adapter real dry-run (command: send-selfie)
-- [x] Zalo Official Account adapter real dry-run (command: send-selfie)
-- [x] KakaoTalk adapter real dry-run (command: send-selfie)
-- [x] Messenger adapter real dry-run (command: send-selfie)
-- [x] Instagram adapter real dry-run (command: send-selfie)
-- [x] Teams adapter real dry-run (command: send-selfie)
-- [x] Twilio adapter real dry-run (command: send-selfie)
-- [x] Matrix adapter real dry-run (command: send-selfie)
-- [x] LangChain adapter real dry-run (command: send-selfie)
-- [x] Vercel AI SDK adapter real dry-run (command: send-selfie)
-- [x] n8n adapter real dry-run (command: send-selfie)
-- [x] Pipedream adapter real dry-run (command: send-selfie)
-- [x] Make adapter real dry-run (command: send-selfie)
-- [x] Zapier adapter real dry-run (command: send-selfie)
-- [x] Voiceflow adapter real dry-run (command: send-selfie)
-- [x] Manychat adapter real dry-run (command: send-selfie)
-- [x] Nomi adapter real dry-run (command: send-selfie)
-- [x] Kindroid adapter real dry-run (command: send-selfie)
-- [x] Microsoft Bot Framework adapter real dry-run (command: send-selfie)
-- [x] Dialogflow ES adapter real dry-run (command: send-selfie)
-- [x] Dialogflow CX adapter real dry-run (command: send-selfie)
-- [x] Rasa adapter real dry-run (command: send-selfie)
-- [x] Amazon Lex V2 adapter real dry-run (command: send-selfie)
-- [x] IBM watsonx Assistant adapter real dry-run (command: send-selfie)
+- [ ] Telegram adapter real dry-run - No bridge URL provided.
+- [ ] MCP adapter real dry-run - No bridge URL provided.
+- [ ] ChatGPT Actions adapter real dry-run - No bridge URL provided.
+- [ ] Discord adapter real dry-run - No bridge URL provided.
+- [ ] WhatsApp adapter real dry-run - No bridge URL provided.
+- [ ] WeChat Official Account adapter real dry-run - No bridge URL provided.
+- [ ] Viber adapter real dry-run - No bridge URL provided.
+- [ ] VK community bot adapter real dry-run - No bridge URL provided.
+- [ ] Slack adapter real dry-run - No bridge URL provided.
+- [ ] Mattermost adapter real dry-run - No bridge URL provided.
+- [ ] Rocket.Chat adapter real dry-run - No bridge URL provided.
+- [ ] Intercom adapter real dry-run - No bridge URL provided.
+- [ ] Zendesk Sunshine Conversations adapter real dry-run - No bridge URL provided.
+- [ ] Crisp adapter real dry-run - No bridge URL provided.
+- [ ] Tidio adapter real dry-run - No bridge URL provided.
+- [ ] LINE adapter real dry-run - No bridge URL provided.
+- [ ] Zalo Official Account adapter real dry-run - No bridge URL provided.
+- [ ] KakaoTalk adapter real dry-run - No bridge URL provided.
+- [ ] Messenger adapter real dry-run - No bridge URL provided.
+- [ ] Instagram adapter real dry-run - No bridge URL provided.
+- [ ] Teams adapter real dry-run - No bridge URL provided.
+- [ ] Twilio adapter real dry-run - No bridge URL provided.
+- [ ] Matrix adapter real dry-run - No bridge URL provided.
+- [ ] LangChain adapter real dry-run - No bridge URL provided.
+- [ ] Vercel AI SDK adapter real dry-run - No bridge URL provided.
+- [ ] n8n adapter real dry-run - No bridge URL provided.
+- [ ] Pipedream adapter real dry-run - No bridge URL provided.
+- [ ] Make adapter real dry-run - No bridge URL provided.
+- [ ] Zapier adapter real dry-run - No bridge URL provided.
+- [ ] Voiceflow adapter real dry-run - No bridge URL provided.
+- [ ] Manychat adapter real dry-run - No bridge URL provided.
+- [ ] Nomi adapter real dry-run - No bridge URL provided.
+- [ ] Kindroid adapter real dry-run - No bridge URL provided.
+- [ ] Microsoft Bot Framework adapter real dry-run - No bridge URL provided.
+- [ ] Dialogflow ES adapter real dry-run - No bridge URL provided.
+- [ ] Dialogflow CX adapter real dry-run - No bridge URL provided.
+- [ ] Rasa adapter real dry-run - No bridge URL provided.
+- [ ] Amazon Lex V2 adapter real dry-run - No bridge URL provided.
+- [ ] IBM watsonx Assistant adapter real dry-run - No bridge URL provided.

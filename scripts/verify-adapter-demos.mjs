@@ -13,6 +13,7 @@ import { runRemixCameraDialogflowCxWebhook } from "../adapters/dialogflow-cx/rem
 import { runRemixCameraDialogflowEsWebhook } from "../adapters/dialogflow-es/remix-camera-dialogflow-es-webhook.mjs";
 import { runDiscordRemixInteraction } from "../adapters/discord/remix-discord-tool.mjs";
 import { parseInstagramCommand, runInstagramRemixCommand } from "../adapters/instagram/remix-instagram-tool.mjs";
+import { parseIntercomCommand, runIntercomRemixCommand } from "../adapters/intercom/remix-intercom-tool.mjs";
 import { runKakaoRemixSkill } from "../adapters/kakao/remix-kakao-skill.mjs";
 import { createRemixCameraLangChainTools } from "../adapters/langchain/remix-camera-langchain-tools.mjs";
 import { parseLineCommand, runLineRemixCommand } from "../adapters/line/remix-line-tool.mjs";
@@ -29,6 +30,7 @@ import { runRemixCameraPipedreamAction } from "../adapters/pipedream/remix-camer
 import { parseRocketChatCommand, runRocketChatRemixCommand } from "../adapters/rocketchat/remix-rocketchat-tool.mjs";
 import { parseSlackCommand, runSlackRemixCommand } from "../adapters/slack/remix-slack-tool.mjs";
 import { parseTelegramCommand, runTelegramRemixCommand } from "../adapters/telegram/remix-telegram-tool.mjs";
+import { parseTidioCommand, runTidioRemixCommand } from "../adapters/tidio/remix-tidio-tool.mjs";
 import { parseTeamsCommand, runTeamsRemixCommand } from "../adapters/teams/remix-teams-tool.mjs";
 import { parseTwilioCommand, runTwilioRemixCommand } from "../adapters/twilio/remix-twilio-mms-tool.mjs";
 import { createRemixCameraAiSdkTools } from "../adapters/vercel-ai-sdk/remix-camera-ai-sdk-tools.mjs";
@@ -38,7 +40,9 @@ import { runRemixCameraVoiceflowTool } from "../adapters/voiceflow/remix-camera-
 import { runRemixCameraWatsonxAssistantTool } from "../adapters/watsonx-assistant/remix-camera-watsonx-tool.mjs";
 import { parseWeChatCommand, runWeChatRemixCommand } from "../adapters/wechat/remix-wechat-tool.mjs";
 import { parseWhatsAppCommand, runWhatsAppRemixCommand } from "../adapters/whatsapp/remix-whatsapp-tool.mjs";
+import { parseZendeskCommand, runZendeskRemixCommand } from "../adapters/zendesk/remix-zendesk-sunshine-tool.mjs";
 import { parseZaloCommand, runZaloRemixCommand } from "../adapters/zalo/remix-zalo-tool.mjs";
+import { parseCrispCommand, runCrispRemixCommand } from "../adapters/crisp/remix-crisp-tool.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const execFileAsync = promisify(execFile);
@@ -209,6 +213,38 @@ const targets = [
     demoFile: "demos/rocketchat/demo.md",
     setupCommand: "--target=rocketchat",
     markers: ["createRemixRocketChatTool", "ROCKETCHAT_URL", "chat.postMessage", "productionImageUrl"],
+  },
+  {
+    id: "intercom",
+    title: "Intercom",
+    adapterFiles: ["adapters/intercom/remix-intercom-tool.mjs", "adapters/intercom/README.md"],
+    demoFile: "demos/intercom/demo.md",
+    setupCommand: "--target=intercom",
+    markers: ["createRemixIntercomTool", "attachment_urls", "INTERCOM_ACCESS_TOKEN", "productionImageUrl"],
+  },
+  {
+    id: "zendesk",
+    title: "Zendesk Sunshine Conversations",
+    adapterFiles: ["adapters/zendesk/remix-zendesk-sunshine-tool.mjs", "adapters/zendesk/README.md"],
+    demoFile: "demos/zendesk/demo.md",
+    setupCommand: "--target=zendesk",
+    markers: ["createRemixZendeskTool", "content.type=image", "ZENDESK_KEY_ID", "productionImageUrl"],
+  },
+  {
+    id: "crisp",
+    title: "Crisp",
+    adapterFiles: ["adapters/crisp/remix-crisp-tool.mjs", "adapters/crisp/README.md"],
+    demoFile: "demos/crisp/demo.md",
+    setupCommand: "--target=crisp",
+    markers: ["createRemixCrispTool", "type=file", "X-Crisp-Tier", "productionImageUrl"],
+  },
+  {
+    id: "tidio",
+    title: "Tidio",
+    adapterFiles: ["adapters/tidio/remix-tidio-tool.mjs", "adapters/tidio/README.md"],
+    demoFile: "demos/tidio/demo.md",
+    setupCommand: "--target=tidio",
+    markers: ["verifyTidioSignature", "tidioChatApi.messageFromOperator", "TIDIO_CLIENT_ID", "productionImageUrl"],
   },
   {
     id: "line",
@@ -787,6 +823,30 @@ async function verifyHostAdapterDryRuns() {
       }),
     );
     checks.push(
+      okCheck("Intercom adapter real dry-run", false, {
+        skipped: true,
+        reason: "No bridge URL provided.",
+      }),
+    );
+    checks.push(
+      okCheck("Zendesk Sunshine Conversations adapter real dry-run", false, {
+        skipped: true,
+        reason: "No bridge URL provided.",
+      }),
+    );
+    checks.push(
+      okCheck("Crisp adapter real dry-run", false, {
+        skipped: true,
+        reason: "No bridge URL provided.",
+      }),
+    );
+    checks.push(
+      okCheck("Tidio adapter real dry-run", false, {
+        skipped: true,
+        reason: "No bridge URL provided.",
+      }),
+    );
+    checks.push(
       okCheck("LINE adapter real dry-run", false, {
         skipped: true,
         reason: "No bridge URL provided.",
@@ -1087,6 +1147,50 @@ async function verifyHostAdapterDryRuns() {
   checks.push(
     okCheck("Rocket.Chat adapter real dry-run", rocketchat?.payload?.dryRun === true && /Preview ready/i.test(rocketchat.text), {
       command: rocketchat?.command,
+    }),
+  );
+
+  const intercom = await runIntercomRemixCommand(parseIntercomCommand("preview selfie cozy couch with lamp light"), {
+    bridgeUrl,
+    profileId: process.env.REMIX_PROFILE_ID || "",
+    characterName: "Lily",
+  });
+  checks.push(
+    okCheck("Intercom adapter real dry-run", intercom?.payload?.dryRun === true && /Preview ready/i.test(intercom.text), {
+      command: intercom?.command,
+    }),
+  );
+
+  const zendesk = await runZendeskRemixCommand(parseZendeskCommand("preview selfie cozy couch with lamp light"), {
+    bridgeUrl,
+    profileId: process.env.REMIX_PROFILE_ID || "",
+    characterName: "Lily",
+  });
+  checks.push(
+    okCheck("Zendesk Sunshine Conversations adapter real dry-run", zendesk?.payload?.dryRun === true && /Preview ready/i.test(zendesk.text), {
+      command: zendesk?.command,
+    }),
+  );
+
+  const crisp = await runCrispRemixCommand(parseCrispCommand("preview selfie cozy couch with lamp light"), {
+    bridgeUrl,
+    profileId: process.env.REMIX_PROFILE_ID || "",
+    characterName: "Lily",
+  });
+  checks.push(
+    okCheck("Crisp adapter real dry-run", crisp?.payload?.dryRun === true && /Preview ready/i.test(crisp.text), {
+      command: crisp?.command,
+    }),
+  );
+
+  const tidio = await runTidioRemixCommand(parseTidioCommand("preview selfie cozy couch with lamp light"), {
+    bridgeUrl,
+    profileId: process.env.REMIX_PROFILE_ID || "",
+    characterName: "Lily",
+  });
+  checks.push(
+    okCheck("Tidio adapter real dry-run", tidio?.payload?.dryRun === true && /Preview ready/i.test(tidio.text), {
+      command: tidio?.command,
     }),
   );
 

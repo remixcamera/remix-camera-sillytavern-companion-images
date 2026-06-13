@@ -1,8 +1,8 @@
 {
   "ok": true,
-  "generatedAt": "2026-06-13T12:17:51.505Z",
-  "mode": "bridge-dry-run",
-  "bridgeUrl": "http://127.0.0.1:8787",
+  "generatedAt": "2026-06-13T12:56:12.201Z",
+  "mode": "static-adapter-demo-preflight",
+  "bridgeUrl": null,
   "targets": [
     {
       "id": "sillytavern",
@@ -907,6 +907,218 @@
           "name": "marker present: chat.postMessage",
           "ok": true,
           "marker": "chat.postMessage"
+        },
+        {
+          "name": "marker present: productionImageUrl",
+          "ok": true,
+          "marker": "productionImageUrl"
+        }
+      ]
+    },
+    {
+      "id": "intercom",
+      "title": "Intercom",
+      "demoEvidence": {
+        "status": "runbook-ready",
+        "publicDemoReady": false,
+        "evidenceLevel": "setup runbook and static adapter preflight",
+        "missingArtifacts": [],
+        "nextStep": "Run this target in the real host and add production demo evidence."
+      },
+      "checks": [
+        {
+          "name": "adapter exists: adapters/intercom/remix-intercom-tool.mjs",
+          "ok": true,
+          "path": "adapters/intercom/remix-intercom-tool.mjs"
+        },
+        {
+          "name": "adapter exists: adapters/intercom/README.md",
+          "ok": true,
+          "path": "adapters/intercom/README.md"
+        },
+        {
+          "name": "demo runbook exists: demos/intercom/demo.md",
+          "ok": true,
+          "path": "demos/intercom/demo.md"
+        },
+        {
+          "name": "demo includes setup target",
+          "ok": true,
+          "expected": "--target=intercom"
+        },
+        {
+          "name": "marker present: createRemixIntercomTool",
+          "ok": true,
+          "marker": "createRemixIntercomTool"
+        },
+        {
+          "name": "marker present: attachment_urls",
+          "ok": true,
+          "marker": "attachment_urls"
+        },
+        {
+          "name": "marker present: INTERCOM_ACCESS_TOKEN",
+          "ok": true,
+          "marker": "INTERCOM_ACCESS_TOKEN"
+        },
+        {
+          "name": "marker present: productionImageUrl",
+          "ok": true,
+          "marker": "productionImageUrl"
+        }
+      ]
+    },
+    {
+      "id": "zendesk",
+      "title": "Zendesk Sunshine Conversations",
+      "demoEvidence": {
+        "status": "runbook-ready",
+        "publicDemoReady": false,
+        "evidenceLevel": "setup runbook and static adapter preflight",
+        "missingArtifacts": [],
+        "nextStep": "Run this target in the real host and add production demo evidence."
+      },
+      "checks": [
+        {
+          "name": "adapter exists: adapters/zendesk/remix-zendesk-sunshine-tool.mjs",
+          "ok": true,
+          "path": "adapters/zendesk/remix-zendesk-sunshine-tool.mjs"
+        },
+        {
+          "name": "adapter exists: adapters/zendesk/README.md",
+          "ok": true,
+          "path": "adapters/zendesk/README.md"
+        },
+        {
+          "name": "demo runbook exists: demos/zendesk/demo.md",
+          "ok": true,
+          "path": "demos/zendesk/demo.md"
+        },
+        {
+          "name": "demo includes setup target",
+          "ok": true,
+          "expected": "--target=zendesk"
+        },
+        {
+          "name": "marker present: createRemixZendeskTool",
+          "ok": true,
+          "marker": "createRemixZendeskTool"
+        },
+        {
+          "name": "marker present: content.type=image",
+          "ok": true,
+          "marker": "content.type=image"
+        },
+        {
+          "name": "marker present: ZENDESK_KEY_ID",
+          "ok": true,
+          "marker": "ZENDESK_KEY_ID"
+        },
+        {
+          "name": "marker present: productionImageUrl",
+          "ok": true,
+          "marker": "productionImageUrl"
+        }
+      ]
+    },
+    {
+      "id": "crisp",
+      "title": "Crisp",
+      "demoEvidence": {
+        "status": "runbook-ready",
+        "publicDemoReady": false,
+        "evidenceLevel": "setup runbook and static adapter preflight",
+        "missingArtifacts": [],
+        "nextStep": "Run this target in the real host and add production demo evidence."
+      },
+      "checks": [
+        {
+          "name": "adapter exists: adapters/crisp/remix-crisp-tool.mjs",
+          "ok": true,
+          "path": "adapters/crisp/remix-crisp-tool.mjs"
+        },
+        {
+          "name": "adapter exists: adapters/crisp/README.md",
+          "ok": true,
+          "path": "adapters/crisp/README.md"
+        },
+        {
+          "name": "demo runbook exists: demos/crisp/demo.md",
+          "ok": true,
+          "path": "demos/crisp/demo.md"
+        },
+        {
+          "name": "demo includes setup target",
+          "ok": true,
+          "expected": "--target=crisp"
+        },
+        {
+          "name": "marker present: createRemixCrispTool",
+          "ok": true,
+          "marker": "createRemixCrispTool"
+        },
+        {
+          "name": "marker present: type=file",
+          "ok": true,
+          "marker": "type=file"
+        },
+        {
+          "name": "marker present: X-Crisp-Tier",
+          "ok": true,
+          "marker": "X-Crisp-Tier"
+        },
+        {
+          "name": "marker present: productionImageUrl",
+          "ok": true,
+          "marker": "productionImageUrl"
+        }
+      ]
+    },
+    {
+      "id": "tidio",
+      "title": "Tidio",
+      "demoEvidence": {
+        "status": "runbook-ready",
+        "publicDemoReady": false,
+        "evidenceLevel": "setup runbook and static adapter preflight",
+        "missingArtifacts": [],
+        "nextStep": "Run this target in the real host and add production demo evidence."
+      },
+      "checks": [
+        {
+          "name": "adapter exists: adapters/tidio/remix-tidio-tool.mjs",
+          "ok": true,
+          "path": "adapters/tidio/remix-tidio-tool.mjs"
+        },
+        {
+          "name": "adapter exists: adapters/tidio/README.md",
+          "ok": true,
+          "path": "adapters/tidio/README.md"
+        },
+        {
+          "name": "demo runbook exists: demos/tidio/demo.md",
+          "ok": true,
+          "path": "demos/tidio/demo.md"
+        },
+        {
+          "name": "demo includes setup target",
+          "ok": true,
+          "expected": "--target=tidio"
+        },
+        {
+          "name": "marker present: verifyTidioSignature",
+          "ok": true,
+          "marker": "verifyTidioSignature"
+        },
+        {
+          "name": "marker present: tidioChatApi.messageFromOperator",
+          "ok": true,
+          "marker": "tidioChatApi.messageFromOperator"
+        },
+        {
+          "name": "marker present: TIDIO_CLIENT_ID",
+          "ok": true,
+          "marker": "TIDIO_CLIENT_ID"
         },
         {
           "name": "marker present: productionImageUrl",
@@ -2520,261 +2732,253 @@
     }
   ],
   "demoSummary": {
-    "targetCount": 48,
+    "targetCount": 52,
     "publicDemoReadyCount": 1,
     "productionBridgeEvidenceCount": 1,
-    "runbookOnlyCount": 46
+    "runbookOnlyCount": 50
   },
   "bridgeChecks": [
     {
-      "name": "bridge health",
-      "ok": true,
-      "status": 200,
-      "authMode": "design_api_session"
-    },
-    {
-      "name": "OpenAPI exposes all generate endpoints",
-      "ok": true,
-      "status": 200
-    },
-    {
-      "name": "ChatGPT Actions OpenAPI exposes bearer-secured generate endpoints",
-      "ok": true,
-      "status": 200
-    },
-    {
-      "name": "Lobe manifest exposes preview and generate tools",
-      "ok": true,
-      "status": 200,
-      "apiCount": 16
-    },
-    {
-      "name": "bridge dry-run: send-selfie",
-      "ok": true,
-      "status": 200,
-      "promptTemplate": "Realistic Bedroom Selfie Girl Phone Mirror"
-    },
-    {
-      "name": "bridge dry-run: auto-selfie-from-chat",
-      "ok": true,
-      "status": 200,
-      "promptTemplate": "Candid Mirror Selfie Squating"
-    },
-    {
-      "name": "bridge dry-run: outfit-try-on",
-      "ok": true,
-      "status": 200,
-      "promptTemplate": "Bedroom Mirror Selfie White Tank Yellow Skirt Braid"
-    },
-    {
-      "name": "bridge dry-run: couple-photo",
-      "ok": true,
-      "status": 200,
-      "promptTemplate": "Realistic Couple Mirror Selfie Black Outfit"
-    },
-    {
-      "name": "bridge dry-run: couples-vacation",
-      "ok": true,
-      "status": 200,
-      "promptTemplate": "Romantic Tropical Beach Couple Golden Hour Kiss"
-    },
-    {
-      "name": "bridge dry-run: date-night",
-      "ok": true,
-      "status": 200,
-      "promptTemplate": "Realistic Couple Restaurant Terrace Evening Warm Light"
-    },
-    {
-      "name": "bridge dry-run: daily-life-snap",
-      "ok": true,
-      "status": 200,
-      "promptTemplate": "Knit Sweater Iced Coffee Cafe Candid"
-    },
-    {
-      "name": "bridge dry-run: private-snap",
-      "ok": true,
-      "status": 200,
-      "promptTemplate": "Adult Woman Cozy Bedroom Mirror Selfie"
+      "name": "bridge dry-run previews",
+      "ok": false,
+      "skipped": true,
+      "reason": "Set REMIX_BRIDGE_URL or pass --bridge-url=http://127.0.0.1:8787 to run real dry-run previews."
     }
   ],
   "hostAdapterChecks": [
     {
       "name": "Telegram adapter real dry-run",
-      "ok": true,
-      "command": "send-selfie"
+      "ok": false,
+      "skipped": true,
+      "reason": "No bridge URL provided."
     },
     {
       "name": "MCP adapter real dry-run",
-      "ok": true,
-      "command": "send-selfie"
+      "ok": false,
+      "skipped": true,
+      "reason": "No bridge URL provided."
     },
     {
       "name": "ChatGPT Actions adapter real dry-run",
       "ok": false,
       "skipped": true,
-      "reason": "Set REMIX_ACTION_API_KEY on the bridge and verifier to test the authenticated ChatGPT Actions route."
+      "reason": "No bridge URL provided."
     },
     {
       "name": "Discord adapter real dry-run",
-      "ok": true,
-      "command": "send-selfie"
+      "ok": false,
+      "skipped": true,
+      "reason": "No bridge URL provided."
     },
     {
       "name": "WhatsApp adapter real dry-run",
-      "ok": true,
-      "command": "send-selfie"
+      "ok": false,
+      "skipped": true,
+      "reason": "No bridge URL provided."
     },
     {
       "name": "WeChat Official Account adapter real dry-run",
-      "ok": true,
-      "command": "send-selfie"
+      "ok": false,
+      "skipped": true,
+      "reason": "No bridge URL provided."
     },
     {
       "name": "Viber adapter real dry-run",
-      "ok": true,
-      "command": "send-selfie"
+      "ok": false,
+      "skipped": true,
+      "reason": "No bridge URL provided."
     },
     {
       "name": "VK community bot adapter real dry-run",
-      "ok": true,
-      "command": "send-selfie"
+      "ok": false,
+      "skipped": true,
+      "reason": "No bridge URL provided."
     },
     {
       "name": "Slack adapter real dry-run",
-      "ok": true,
-      "command": "send-selfie"
+      "ok": false,
+      "skipped": true,
+      "reason": "No bridge URL provided."
     },
     {
       "name": "Mattermost adapter real dry-run",
-      "ok": true,
-      "command": "send-selfie"
+      "ok": false,
+      "skipped": true,
+      "reason": "No bridge URL provided."
     },
     {
       "name": "Rocket.Chat adapter real dry-run",
-      "ok": true,
-      "command": "send-selfie"
+      "ok": false,
+      "skipped": true,
+      "reason": "No bridge URL provided."
+    },
+    {
+      "name": "Intercom adapter real dry-run",
+      "ok": false,
+      "skipped": true,
+      "reason": "No bridge URL provided."
+    },
+    {
+      "name": "Zendesk Sunshine Conversations adapter real dry-run",
+      "ok": false,
+      "skipped": true,
+      "reason": "No bridge URL provided."
+    },
+    {
+      "name": "Crisp adapter real dry-run",
+      "ok": false,
+      "skipped": true,
+      "reason": "No bridge URL provided."
+    },
+    {
+      "name": "Tidio adapter real dry-run",
+      "ok": false,
+      "skipped": true,
+      "reason": "No bridge URL provided."
     },
     {
       "name": "LINE adapter real dry-run",
-      "ok": true,
-      "command": "send-selfie"
+      "ok": false,
+      "skipped": true,
+      "reason": "No bridge URL provided."
     },
     {
       "name": "Zalo Official Account adapter real dry-run",
-      "ok": true,
-      "command": "send-selfie"
+      "ok": false,
+      "skipped": true,
+      "reason": "No bridge URL provided."
     },
     {
       "name": "KakaoTalk adapter real dry-run",
-      "ok": true,
-      "command": "send-selfie"
+      "ok": false,
+      "skipped": true,
+      "reason": "No bridge URL provided."
     },
     {
       "name": "Messenger adapter real dry-run",
-      "ok": true,
-      "command": "send-selfie"
+      "ok": false,
+      "skipped": true,
+      "reason": "No bridge URL provided."
     },
     {
       "name": "Instagram adapter real dry-run",
-      "ok": true,
-      "command": "send-selfie"
+      "ok": false,
+      "skipped": true,
+      "reason": "No bridge URL provided."
     },
     {
       "name": "Teams adapter real dry-run",
-      "ok": true,
-      "command": "send-selfie"
+      "ok": false,
+      "skipped": true,
+      "reason": "No bridge URL provided."
     },
     {
       "name": "Twilio adapter real dry-run",
-      "ok": true,
-      "command": "send-selfie"
+      "ok": false,
+      "skipped": true,
+      "reason": "No bridge URL provided."
     },
     {
       "name": "Matrix adapter real dry-run",
-      "ok": true,
-      "command": "send-selfie"
+      "ok": false,
+      "skipped": true,
+      "reason": "No bridge URL provided."
     },
     {
       "name": "LangChain adapter real dry-run",
-      "ok": true,
-      "command": "send-selfie"
+      "ok": false,
+      "skipped": true,
+      "reason": "No bridge URL provided."
     },
     {
       "name": "Vercel AI SDK adapter real dry-run",
-      "ok": true,
-      "command": "send-selfie"
+      "ok": false,
+      "skipped": true,
+      "reason": "No bridge URL provided."
     },
     {
       "name": "n8n adapter real dry-run",
-      "ok": true,
-      "command": "send-selfie"
+      "ok": false,
+      "skipped": true,
+      "reason": "No bridge URL provided."
     },
     {
       "name": "Pipedream adapter real dry-run",
-      "ok": true,
-      "command": "send-selfie"
+      "ok": false,
+      "skipped": true,
+      "reason": "No bridge URL provided."
     },
     {
       "name": "Make adapter real dry-run",
-      "ok": true,
-      "command": "send-selfie"
+      "ok": false,
+      "skipped": true,
+      "reason": "No bridge URL provided."
     },
     {
       "name": "Zapier adapter real dry-run",
-      "ok": true,
-      "command": "send-selfie"
+      "ok": false,
+      "skipped": true,
+      "reason": "No bridge URL provided."
     },
     {
       "name": "Voiceflow adapter real dry-run",
-      "ok": true,
-      "command": "send-selfie"
+      "ok": false,
+      "skipped": true,
+      "reason": "No bridge URL provided."
     },
     {
       "name": "Manychat adapter real dry-run",
-      "ok": true,
-      "command": "send-selfie"
+      "ok": false,
+      "skipped": true,
+      "reason": "No bridge URL provided."
     },
     {
       "name": "Nomi adapter real dry-run",
-      "ok": true,
-      "command": "send-selfie",
-      "mediaDelivery": "external-bot-sidecar"
+      "ok": false,
+      "skipped": true,
+      "reason": "No bridge URL provided."
     },
     {
       "name": "Kindroid adapter real dry-run",
-      "ok": true,
-      "command": "send-selfie",
-      "mediaDelivery": "external-bot-sidecar"
+      "ok": false,
+      "skipped": true,
+      "reason": "No bridge URL provided."
     },
     {
       "name": "Microsoft Bot Framework adapter real dry-run",
-      "ok": true,
-      "command": "send-selfie"
+      "ok": false,
+      "skipped": true,
+      "reason": "No bridge URL provided."
     },
     {
       "name": "Dialogflow ES adapter real dry-run",
-      "ok": true,
-      "command": "send-selfie"
+      "ok": false,
+      "skipped": true,
+      "reason": "No bridge URL provided."
     },
     {
       "name": "Dialogflow CX adapter real dry-run",
-      "ok": true,
-      "command": "send-selfie"
+      "ok": false,
+      "skipped": true,
+      "reason": "No bridge URL provided."
     },
     {
       "name": "Rasa adapter real dry-run",
-      "ok": true,
-      "command": "send-selfie"
+      "ok": false,
+      "skipped": true,
+      "reason": "No bridge URL provided."
     },
     {
       "name": "Amazon Lex V2 adapter real dry-run",
-      "ok": true,
-      "command": "send-selfie"
+      "ok": false,
+      "skipped": true,
+      "reason": "No bridge URL provided."
     },
     {
       "name": "IBM watsonx Assistant adapter real dry-run",
-      "ok": true,
-      "command": "send-selfie"
+      "ok": false,
+      "skipped": true,
+      "reason": "No bridge URL provided."
     }
   ],
   "outputs": {

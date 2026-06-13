@@ -9,7 +9,7 @@ The integration has two parts:
 - `bridge/`: a local Node.js bridge that stores `REMIX_SESSION_TOKEN` server-side and calls the Remix.Camera API.
 - `extension/`: a SillyTavern extension that adds image buttons and optional function tools for a character.
 - `characters/`: importable Character Card V2 examples with Remix.Camera visual metadata.
-- `adapters/`: wrappers for MCP clients, RisuAI, Open WebUI, LibreChat, LobeChat, ChatGPT Actions, Agnai, Telegram, Discord, WhatsApp, WeChat Official Account, Viber, VK community bots, Slack, Mattermost, Rocket.Chat, LINE, Zalo Official Account, KakaoTalk, Messenger, Instagram DMs, Microsoft Teams, Microsoft Bot Framework, Twilio SMS/MMS, Matrix, Dify, Flowise, Botpress, AnythingLLM, TypingMind, Poe, Langflow, LangChain JS, the Vercel AI SDK, n8n, Pipedream, Make, Zapier, Voiceflow, Manychat, Nomi, Kindroid, Dialogflow ES, Dialogflow CX, Rasa, Amazon Lex V2, and IBM watsonx Assistant.
+- `adapters/`: wrappers for MCP clients, RisuAI, Open WebUI, LibreChat, LobeChat, ChatGPT Actions, Agnai, Telegram, Discord, WhatsApp, WeChat Official Account, Viber, VK community bots, Slack, Mattermost, Rocket.Chat, Intercom, Zendesk Sunshine Conversations, Crisp, Tidio, LINE, Zalo Official Account, KakaoTalk, Messenger, Instagram DMs, Microsoft Teams, Microsoft Bot Framework, Twilio SMS/MMS, Matrix, Dify, Flowise, Botpress, AnythingLLM, TypingMind, Poe, Langflow, LangChain JS, the Vercel AI SDK, n8n, Pipedream, Make, Zapier, Voiceflow, Manychat, Nomi, Kindroid, Dialogflow ES, Dialogflow CX, Rasa, Amazon Lex V2, and IBM watsonx Assistant.
 
 ## What It Enables
 
@@ -75,6 +75,10 @@ npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=slack
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=mattermost
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=rocketchat
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=intercom
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=zendesk
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=crisp
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=tidio
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=line
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=zalo
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=kakao
@@ -133,6 +137,10 @@ Adapter files:
 - Slack Lily proof of concept: `adapters/slack/lily-slash-command-server.mjs`
 - Mattermost reusable tool: `adapters/mattermost/remix-mattermost-tool.mjs`
 - Rocket.Chat reusable tool: `adapters/rocketchat/remix-rocketchat-tool.mjs`
+- Intercom reusable tool: `adapters/intercom/remix-intercom-tool.mjs`
+- Zendesk Sunshine Conversations reusable tool: `adapters/zendesk/remix-zendesk-sunshine-tool.mjs`
+- Crisp reusable tool: `adapters/crisp/remix-crisp-tool.mjs`
+- Tidio reusable tool: `adapters/tidio/remix-tidio-tool.mjs`
 - LINE reusable tool: `adapters/line/remix-line-tool.mjs`
 - LINE Lily proof of concept: `adapters/line/lily-webhook-server.mjs`
 - Zalo Official Account reusable tool: `adapters/zalo/remix-zalo-tool.mjs`
@@ -178,7 +186,7 @@ Popular hosted companion apps are tracked separately from supported adapters:
 - Character.AI: popular consumer companion app, but not a production adapter target until there is an official API, plugin, or partner integration surface.
 - JanitorAI: popular roleplay host that can connect to outside model APIs, but this package does not yet have a first-party tool callback surface inside JanitorAI itself.
 - Chub/Venus: strong character-card and API-provider ecosystem; use Remix.Camera character setup plus SillyTavern/Risu/Open WebUI today, and treat direct Chub/Venus chat insertion as pending a supported host surface.
-- MCP clients, ChatGPT Actions, AnythingLLM, TypingMind, Poe, Langflow, LangChain JS, the Vercel AI SDK, n8n, Pipedream, Make, Zapier, Voiceflow, Manychat, Nomi, Kindroid, Microsoft Bot Framework, Dialogflow ES, Dialogflow CX, Rasa, Amazon Lex V2, and IBM watsonx Assistant: supported through local stdio MCP, ChatGPT Custom GPT Actions, official custom skill, plugin, server-bot, custom component, framework tool, workflow, custom app, API tool, external request, official companion API sidecar, activity handler, webhook, custom action, Lambda code hook, or OpenAPI custom-extension surfaces.
+- MCP clients, ChatGPT Actions, AnythingLLM, TypingMind, Poe, Langflow, LangChain JS, the Vercel AI SDK, n8n, Pipedream, Make, Zapier, Voiceflow, Manychat, Nomi, Kindroid, Microsoft Bot Framework, Dialogflow ES, Dialogflow CX, Rasa, Amazon Lex V2, IBM watsonx Assistant, Intercom, Zendesk Sunshine Conversations, Crisp, and Tidio: supported through local stdio MCP, ChatGPT Custom GPT Actions, official custom skill, plugin, server-bot, custom component, framework tool, workflow, custom app, API tool, external request, official companion API sidecar, activity handler, webhook, custom action, Lambda code hook, OpenAPI custom-extension, or support-chat message APIs.
 - SpicyChat, CrushOn, Candy, Backyard AI, and similar hosted apps: watchlist targets. Support should be added only through official import/export, bot, webhook, tool, or browser-extension surfaces that can be tested without scraping or fake screenshots. Nomi and Kindroid are supported as official API sidecars for wrapping bots, not as native media-injection adapters inside their first-party apps.
 
 Do not label a host as supported until the package can run through that host's real UI, API, webhook, OpenAPI action, custom tool, or bot interface and produce non-mocked evidence.

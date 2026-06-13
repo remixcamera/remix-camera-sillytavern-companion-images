@@ -28,6 +28,10 @@ Targets:
 - `slack/`: Slack slash-command tool plus Lily proof-of-concept demo.
 - `mattermost/`: Mattermost slash-command, outgoing-webhook, and incoming-webhook demo.
 - `rocketchat/`: Rocket.Chat outgoing-integration, Apps-Engine command, and REST delivery demo.
+- `intercom/`: Intercom Conversations Reply API demo.
+- `zendesk/`: Zendesk Sunshine Conversations message API demo.
+- `crisp/`: Crisp conversation message API demo.
+- `tidio/`: Tidio webhook, ticket-reply, and widget sidecar demo.
 - `line/`: LINE Messaging API tool plus Lily proof-of-concept webhook demo.
 - `zalo/`: Zalo Official Account webhook and consultation-message demo.
 - `kakao/`: KakaoTalk Kakao i/Open Builder Skill demo.
@@ -104,7 +108,7 @@ The verifier does not fabricate generated image outputs. Real video demos should
 
 ## Messaging Host Demo Recorder
 
-Use the messaging recorder to create per-host, non-mocked demo evidence for Telegram, Discord, WhatsApp, Slack, Mattermost, Rocket.Chat, LINE, Messenger, Instagram, Twilio, Matrix, and VK.
+Use the messaging recorder to create per-host, non-mocked demo evidence for Telegram, Discord, WhatsApp, Slack, Mattermost, Rocket.Chat, Intercom, Zendesk Sunshine Conversations, Crisp, Tidio, LINE, Messenger, Instagram, Twilio, Matrix, and VK.
 
 No-spend bridge evidence for every messaging adapter:
 
@@ -145,6 +149,10 @@ Delivery environment variables:
 | Slack | `SLACK_BOT_TOKEN`, `SLACK_CHANNEL_ID` |
 | Mattermost | `MATTERMOST_WEBHOOK_URL` |
 | Rocket.Chat | `ROCKETCHAT_URL`, `ROCKETCHAT_AUTH_TOKEN`, `ROCKETCHAT_USER_ID`, `ROCKETCHAT_ROOM_ID` |
+| Intercom | `INTERCOM_ACCESS_TOKEN`, `INTERCOM_ADMIN_ID`, `INTERCOM_CONVERSATION_ID` |
+| Zendesk Sunshine Conversations | `ZENDESK_SUBDOMAIN`, `ZENDESK_APP_ID`, `ZENDESK_CONVERSATION_ID`, `ZENDESK_KEY_ID`, `ZENDESK_SECRET` |
+| Crisp | `CRISP_TOKEN_ID`, `CRISP_TOKEN_KEY`, `CRISP_WEBSITE_ID`, `CRISP_SESSION_ID` |
+| Tidio | `TIDIO_CLIENT_ID`, `TIDIO_CLIENT_SECRET`, `TIDIO_TICKET_ID` |
 | LINE | `LINE_CHANNEL_ACCESS_TOKEN`, `LINE_TO` |
 | Messenger | `MESSENGER_PAGE_ACCESS_TOKEN`, `MESSENGER_RECIPIENT_ID` |
 | Matrix | `MATRIX_HOMESERVER_URL`, `MATRIX_ACCESS_TOKEN`, `MATRIX_ROOM_ID` |
