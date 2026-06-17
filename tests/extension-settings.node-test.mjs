@@ -7,6 +7,8 @@ import { test } from "node:test";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const packageRoot = path.resolve(__dirname, "..");
 const extensionPath = path.join(packageRoot, "extension", "remix-camera-companion-images", "index.js");
+const manifestPath = path.join(packageRoot, "extension", "remix-camera-companion-images", "manifest.json");
+const stylePath = path.join(packageRoot, "extension", "remix-camera-companion-images", "style.css");
 
 test("extension scopes character overrides by SillyTavern card identity before placeholder profile id", async () => {
   const source = await readFile(extensionPath, "utf8");
@@ -79,8 +81,112 @@ test("extension exposes moment tools and snap controls", async () => {
     "remix-camera-daily-snap-button",
     "remix-camera-private-snap-button",
     "remix-camera-proactive-snaps",
-    "remix-camera-snap-ttl",
   ].forEach((needle) => {
     assert.match(source, new RegExp(needle.replaceAll("-", "\\-")), `${needle} should be present in the extension source.`);
   });
+});
+
+test("extension registers opt-in natural language image interceptor", async () => {
+  const [source, manifestSource, styleSource] = await Promise.all([
+    readFile(extensionPath, "utf8"),
+    readFile(manifestPath, "utf8"),
+    readFile(stylePath, "utf8"),
+  ]);
+  const manifest = JSON.parse(manifestSource);
+
+  assert.equal(
+    manifest.generate_interceptor,
+    "remixCameraCompanionImagesGenerateInterceptor",
+    "manifest should expose the SillyTavern generate interceptor hook.",
+  );
+  assert.match(
+    source,
+    /window\.remixCameraCompanionImagesGenerateInterceptor = naturalLanguageImageInterceptor;/,
+    "extension should publish the interceptor function on window for SillyTavern.",
+  );
+  assert.match(
+    source,
+    /if \(!settings\(\)\.allowToolCalls \|\| naturalLanguageGenerationInProgress\)/,
+    "natural language image generation should stay gated behind the existing tool-call opt-in.",
+  );
+  assert.match(
+    source,
+    /classifyNaturalLanguageImageRequest/,
+    "extension should classify explicit user image requests before generating.",
+  );
+  assert.match(
+    source,
+    /hasMatureImageIntent/,
+    "extension should classify explicit mature image requests such as nude/private/nsfw as image intents.",
+  );
+  assert.match(
+    source,
+    /isFollowupImageRequest/,
+    "extension should classify contextual follow-up prompts like send it.",
+  );
+  assert.match(
+    source,
+    /previousClassifiedImageRequest/,
+    "contextual follow-up prompts should reuse the most recent explicit image request.",
+  );
+  assert.ok(
+    source.indexOf("const hasMatureImageIntent") > source.indexOf("const hasImageVerb") &&
+      source.indexOf("if (hasMatureImageIntent &&") < source.indexOf("if (!hasImageNoun"),
+    "mature image intent should be routed before the generic image-noun gate.",
+  );
+  assert.match(
+    source,
+    /progressReplyForCommand/,
+    "natural language image generation should send a short companion acknowledgement before generation starts.",
+  );
+  assert.match(
+    source,
+    /Mmm\. Give me a minute - I'll make it worth the wait\./,
+    "private-snap acknowledgement should feel conversational instead of literal.",
+  );
+  assert.match(
+    source,
+    /is making this one just for you/,
+    "private-snap pending text should avoid robotic tool-status wording.",
+  );
+  assert.doesNotMatch(
+    source,
+    /is taking a private snap|I'm taking that for you now/,
+    "private-snap waiting copy should not use literal tool-status wording.",
+  );
+  assert.doesNotMatch(
+    source,
+    /scheduleSnapExpiry|expiredSnapMessageHtml|snapExpired|Snap expired|snapTtlSeconds|remix-camera-snap-ttl/,
+    "private snaps should persist in chat instead of auto-expiring.",
+  );
+  assert.doesNotMatch(
+    styleSource,
+    /remix-camera-snap-expired/,
+    "extension CSS should not include expired private-snap states.",
+  );
+  assert.match(
+    source,
+    /GENERATION_TIMEOUT_MS/,
+    "generation requests should have a timeout so pending bubbles cannot hang forever.",
+  );
+  assert.match(
+    source,
+    /markStalePendingMessages/,
+    "stale pending image messages should be marked retryable after reloads or interruptions.",
+  );
+  assert.match(
+    source,
+    /scheduleStalePendingCleanup/,
+    "stale pending cleanup should retry after SillyTavern finishes hydrating the active chat.",
+  );
+  assert.match(
+    source,
+    /insertPendingImageMessage/,
+    "natural language image generation should insert a pending image message while Remix.Camera runs.",
+  );
+  assert.match(
+    styleSource,
+    /\.remix-camera-pending/,
+    "extension CSS should style the pending image message.",
+  );
 });

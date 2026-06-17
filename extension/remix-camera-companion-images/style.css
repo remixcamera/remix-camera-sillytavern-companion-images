@@ -202,6 +202,40 @@
   border-radius: 8px;
 }
 
+.remix-camera-feedback {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: min(100%, 520px);
+  margin-top: 6px;
+}
+
+.remix-camera-feedback-button {
+  appearance: none;
+  min-width: 44px;
+  min-height: 26px;
+  padding: 3px 9px;
+  border: 1px solid color-mix(in srgb, var(--SmartThemeBorderColor, #555) 80%, transparent);
+  border-radius: 999px;
+  color: var(--SmartThemeBodyColor, #ddd);
+  background: color-mix(in srgb, var(--SmartThemeBlurTintColor, #111) 76%, transparent);
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.remix-camera-feedback-button:hover:not(:disabled),
+.remix-camera-feedback-button[data-selected="true"] {
+  border-color: color-mix(in srgb, var(--SmartThemeQuoteColor, #8bd6ff) 75%, white);
+  background: color-mix(in srgb, var(--SmartThemeQuoteColor, #8bd6ff) 22%, var(--SmartThemeBlurTintColor, #111));
+}
+
+.remix-camera-feedback-button:disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+
 .remix-camera-snap {
   position: relative;
   display: inline-block;
@@ -220,10 +254,49 @@
   font-weight: 700;
 }
 
-.remix-camera-snap-expired {
-  display: inline-block;
-  padding: 8px 10px;
+.remix-camera-pending {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: min(100%, 520px);
+  padding: 10px 12px;
   border: 1px solid var(--SmartThemeBorderColor, #555);
   border-radius: 8px;
-  color: var(--SmartThemeQuoteColor, #aaa);
+  color: var(--SmartThemeBodyColor, #ddd);
+  background: color-mix(in srgb, var(--SmartThemeBlurTintColor, #111) 82%, transparent);
+}
+
+.remix-camera-pending-name {
+  font-weight: 700;
+}
+
+.remix-camera-pending-dots::after {
+  display: inline-block;
+  min-width: 1.5em;
+  content: "";
+  animation: remix-camera-pending-dots 1.2s steps(4, end) infinite;
+}
+
+.remix-camera-pending--error {
+  border-color: #b73a3a;
+  color: #ffb8b8;
+}
+
+@keyframes remix-camera-pending-dots {
+  0% {
+    content: "";
+  }
+
+  25% {
+    content: ".";
+  }
+
+  50% {
+    content: "..";
+  }
+
+  75%,
+  100% {
+    content: "...";
+  }
 }

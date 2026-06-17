@@ -31,7 +31,6 @@ import { saveSettingsDebounced } from "../../../../script.js";
     matureContent: false,
     allowToolCalls: false,
     autoInsertResult: true,
-    snapTtlSeconds: 45,
     proactiveSnapsEnabled: false,
     proactiveSnapIntervalMinutes: 240,
     proactiveSnapDailyLimit: 1,
@@ -55,10 +54,15 @@ import { saveSettingsDebounced } from "../../../../script.js";
   ];
   const REFERENCE_UPLOAD_TARGET_BYTES = Math.floor(3.6 * 1024 * 1024);
   const REFERENCE_UPLOAD_MAX_DIMENSION = 2048;
+  const GENERATION_TIMEOUT_MS = 4 * 60 * 1000;
+  const STALE_PENDING_MS = 5 * 60 * 1000;
   let functionToolsRegistered = false;
   let lifecycleEventsBound = false;
+  let feedbackEventsBound = false;
   let coupleReferenceFile = null;
   let proactiveSnapTimer = null;
+  let naturalLanguageGenerationInProgress = false;
+  let lastNaturalLanguageImageRequest = "";
 
   function getContext() {
     try {
@@ -274,7 +278,6 @@ import { saveSettingsDebounced } from "../../../../script.js";
         typeof saved.autoInsertResult === "boolean"
           ? saved.autoInsertResult
           : DEFAULT_SETTINGS.autoInsertResult,
-      snapTtlSeconds: Math.max(5, Math.min(600, Number(saved.snapTtlSeconds || DEFAULT_SETTINGS.snapTtlSeconds))),
       proactiveSnapsEnabled:
         typeof saved.proactiveSnapsEnabled === "boolean"
           ? saved.proactiveSnapsEnabled
@@ -364,13 +367,6 @@ import { saveSettingsDebounced } from "../../../../script.js";
       .replaceAll("'", "&#39;");
   }
 
-  function cssEscape(value) {
-    if (window.CSS && typeof window.CSS.escape === "function") {
-      return window.CSS.escape(value);
-    }
-    return String(value || "").replaceAll("\\", "\\\\").replaceAll('"', '\\"');
-  }
-
   function successfulGeneratedImages(payload) {
     if (!Array.isArray(payload?.results)) {
       return [];
@@ -385,71 +381,63 @@ import { saveSettingsDebounced } from "../../../../script.js";
       }));
   }
 
+  function generatedImageFeedbackHtml(generationId, command) {
+    const id = cleanString(generationId);
+    if (!id) {
+      return "";
+    }
+    return [
+      `<div class="remix-camera-feedback" data-remix-camera-generation-id="${escapeHtml(id)}" data-remix-camera-command="${escapeHtml(command || "image")}">`,
+      `<button class="remix-camera-feedback-button" type="button" data-remix-camera-feedback-signal="thumbs_up" title="Good image" aria-label="Good image">Good</button>`,
+      `<button class="remix-camera-feedback-button" type="button" data-remix-camera-feedback-signal="thumbs_down" title="Bad image" aria-label="Bad image">Bad</button>`,
+      "</div>",
+    ].join("");
+  }
+
   function generatedImageMessageHtml(markdown, images, command) {
-    const urls = (Array.isArray(images) ? images : [{ imageUrl: images }])
-      .map((image) => cleanString(typeof image === "string" ? image : image?.imageUrl))
-      .filter(Boolean);
-    if (!urls.length) {
+    const items = (Array.isArray(images) ? images : [{ imageUrl: images }])
+      .map((image) => ({
+        imageUrl: cleanString(typeof image === "string" ? image : image?.imageUrl),
+        id: cleanString(typeof image === "string" ? "" : image?.id),
+      }))
+      .filter((image) => image.imageUrl);
+    if (!items.length) {
       return markdown;
     }
     const label = `${settings().characterName || "Remix.Camera"} ${command || "image"}`.trim();
-    return urls
-      .map((url, index) => {
-        const imageLabel = urls.length > 1 ? `${label} ${index + 1}` : label;
+    return items
+      .map((item, index) => {
+        const url = item.imageUrl;
+        const imageLabel = items.length > 1 ? `${label} ${index + 1}` : label;
         const imageHtml = [
           `<a class="remix-camera-chat-image-link" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">`,
           `<img class="remix-camera-chat-image" src="${escapeHtml(url)}" alt="${escapeHtml(imageLabel)}" loading="eager" decoding="sync">`,
           "</a>",
         ].join("");
+        const feedbackHtml = generatedImageFeedbackHtml(item.id, command);
         if (command !== "private-snap") {
-          return imageHtml;
+          return imageHtml + feedbackHtml;
         }
         return [
           `<div class="remix-camera-snap" data-remix-camera-image-url="${escapeHtml(url)}">`,
           imageHtml,
           `<span class="remix-camera-snap-badge">Snap</span>`,
           "</div>",
+          feedbackHtml,
         ].join("");
       })
       .join("");
   }
 
-  function expiredSnapMessageHtml() {
-    return `<em class="remix-camera-snap-expired">Snap expired.</em>`;
-  }
-
-  function scheduleSnapExpiry(message, imageUrl, ttlSeconds) {
-    const ttl = Math.max(5, Math.min(600, Number(ttlSeconds || settings().snapTtlSeconds || DEFAULT_SETTINGS.snapTtlSeconds)));
-    window.setTimeout(() => {
-      message.mes = expiredSnapMessageHtml();
-      if (message.extra && typeof message.extra === "object") {
-        delete message.extra.image;
-        delete message.extra.images;
-        delete message.extra.productionImageUrl;
-        delete message.extra.productionImageUrls;
-        delete message.extra.bridgeImageIds;
-        delete message.extra.generationIds;
-        message.extra.snapExpired = true;
-      }
-      const selector = `.remix-camera-snap[data-remix-camera-image-url="${cssEscape(imageUrl)}"]`;
-      document.querySelectorAll(selector).forEach((node) => {
-        node.outerHTML = expiredSnapMessageHtml();
-      });
-      const context = getContext();
-      if (typeof context?.saveChat === "function") {
-        context.saveChat();
-      }
-    }, ttl * 1000);
-  }
-
-  function hydrateGeneratedImage(imageUrl, command) {
+  function hydrateGeneratedImage(imageUrl, command, inserted = null) {
     const url = cleanString(imageUrl);
     if (!url) {
       return;
     }
     window.setTimeout(async () => {
+      const target = inserted?.element?.isConnected ? inserted.element : inserted?.message ? messageElementFor(inserted.message) : null;
       const messages = [...document.querySelectorAll("#chat .mes")];
-      const message = messages.at(-1);
+      const message = target || messages.at(-1);
       const body = message?.querySelector(".mes_text") || message?.querySelector(".mes_block") || message;
       if (
         !body ||
@@ -519,7 +507,6 @@ import { saveSettingsDebounced } from "../../../../script.js";
       userReferenceImageName: args.userReferenceImageName || "",
       userReferenceImageMimeType: args.userReferenceImageMimeType || "",
       theme: args.theme || "",
-      snapTtlSeconds: Number(args.snapTtlSeconds || current.snapTtlSeconds || DEFAULT_SETTINGS.snapTtlSeconds),
       matureContent: typeof args.matureContent === "boolean" ? args.matureContent : current.matureContent,
       chatText: args.chatText || recentChatText(),
       memory: args.memory || "",
@@ -527,18 +514,83 @@ import { saveSettingsDebounced } from "../../../../script.js";
     };
   }
 
-  async function bridgeFetch(pathname, body) {
+  async function bridgeFetch(pathname, body, options = {}) {
     const current = settings();
-    const response = await fetch(`${current.bridgeUrl.replace(/\/+$/, "")}${pathname}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    const payload = await response.json().catch(() => null);
-    if (!response.ok) {
-      throw new Error(payload?.error || `Bridge request failed with ${response.status}`);
+    const timeoutMs = Math.max(0, Number(options.timeoutMs || 0));
+    const controller = timeoutMs ? new AbortController() : null;
+    const timeout = controller
+      ? window.setTimeout(() => controller.abort(), timeoutMs)
+      : null;
+    try {
+      const response = await fetch(`${current.bridgeUrl.replace(/\/+$/, "")}${pathname}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+        signal: controller?.signal,
+      });
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(payload?.error || `Bridge request failed with ${response.status}`);
+      }
+      return payload;
+    } catch (error) {
+      if (error?.name === "AbortError") {
+        throw new Error("Remix.Camera is taking longer than expected. Try sending it again.");
+      }
+      throw error;
+    } finally {
+      if (timeout) {
+        window.clearTimeout(timeout);
+      }
     }
-    return payload;
+  }
+
+  async function sendImageFeedback(button) {
+    const container = button.closest(".remix-camera-feedback");
+    const generationId = cleanString(container?.dataset?.remixCameraGenerationId);
+    const signal = cleanString(button.dataset?.remixCameraFeedbackSignal);
+    if (!generationId || !["thumbs_up", "thumbs_down"].includes(signal)) {
+      return;
+    }
+
+    const buttons = [...container.querySelectorAll(".remix-camera-feedback-button")];
+    buttons.forEach((item) => {
+      item.disabled = true;
+      item.removeAttribute("data-selected");
+    });
+    try {
+      await bridgeFetch("/v1/feedback", {
+        generationId,
+        signal,
+        command: cleanString(container.dataset?.remixCameraCommand),
+        surface: "sillytavern",
+        sourceRoute: "sillytavern_inline_feedback",
+      }, { timeoutMs: 30_000 });
+      button.dataset.selected = "true";
+      container.dataset.feedbackState = "saved";
+      setLog("Feedback saved.", "success");
+    } catch (error) {
+      buttons.forEach((item) => {
+        item.disabled = false;
+      });
+      container.dataset.feedbackState = "error";
+      setLog(error.message || "Feedback failed.", "error");
+    }
+  }
+
+  function bindFeedbackEvents() {
+    if (feedbackEventsBound) {
+      return;
+    }
+    document.addEventListener("click", (event) => {
+      const button = event.target?.closest?.(".remix-camera-feedback-button");
+      if (!button) {
+        return;
+      }
+      event.preventDefault();
+      void sendImageFeedback(button);
+    });
+    feedbackEventsBound = true;
   }
 
   async function checkHealth() {
@@ -551,7 +603,110 @@ import { saveSettingsDebounced } from "../../../../script.js";
     return payload;
   }
 
-  async function insertGeneratedResult(payload) {
+  function lastChatMessageElement() {
+    return [...document.querySelectorAll("#chat .mes")].at(-1) || null;
+  }
+
+  function messageElementFor(message) {
+    const elements = [...document.querySelectorAll("#chat .mes")];
+    return elements.find((element) => element.__remixCameraMessage === message) || null;
+  }
+
+  function insertCompanionMessage(content, options = {}) {
+    const context = getContext();
+    if (!context || typeof context.addOneMessage !== "function") {
+      return null;
+    }
+    const message = {
+      name: settings().characterName || "Remix.Camera",
+      is_user: false,
+      is_system: false,
+      mes: options.html ? String(content || "") : escapeHtml(content),
+      send_date: new Date().toISOString(),
+      extra: options.extra && typeof options.extra === "object" ? options.extra : {},
+    };
+    if (Array.isArray(context.chat)) {
+      context.chat.push(message);
+    }
+    context.addOneMessage(message);
+    const element = lastChatMessageElement();
+    if (element) {
+      element.__remixCameraMessage = message;
+    }
+    if (typeof context.saveChat === "function") {
+      context.saveChat();
+    }
+    return { message, element };
+  }
+
+  function pendingImageMessageHtml(command) {
+    const characterName = settings().characterName || "Remix.Camera";
+    const action = command === "private-snap"
+      ? "is making this one just for you"
+      : command === "couples-vacation"
+        ? "is bringing the trip to life"
+        : "is making the photo feel right";
+    return [
+      `<div class="remix-camera-pending" data-remix-camera-command="${escapeHtml(command || "image")}">`,
+      `<span class="remix-camera-pending-name">${escapeHtml(characterName)}</span> ${escapeHtml(action)}`,
+      `<span class="remix-camera-pending-dots" aria-hidden="true"></span>`,
+      "</div>",
+    ].join("");
+  }
+
+  function insertPendingImageMessage(command) {
+    return insertCompanionMessage(pendingImageMessageHtml(command), {
+      html: true,
+      extra: {
+        type: "remix_camera_pending",
+        generationType: command || "remix-camera",
+      },
+    });
+  }
+
+  function updateInsertedMessage(inserted, html, extra = {}) {
+    if (!inserted?.message) {
+      return false;
+    }
+
+    inserted.message.mes = html;
+    inserted.message.extra = {
+      ...(inserted.message.extra && typeof inserted.message.extra === "object" ? inserted.message.extra : {}),
+      ...extra,
+    };
+
+    const element = inserted.element?.isConnected ? inserted.element : messageElementFor(inserted.message);
+    const body = element?.querySelector(".mes_text") || element?.querySelector(".mes_block") || element;
+    if (body) {
+      body.innerHTML = html;
+    }
+
+    const context = getContext();
+    if (typeof context?.saveChat === "function") {
+      context.saveChat();
+    }
+    return Boolean(body);
+  }
+
+  function imageResultExtra(payload, generatedImages, markdown, imageUrls, productionImageUrls, bridgeImageIds, generationIds, imageUrl, productionImageUrl) {
+    return {
+      type: "remix_camera_image",
+      image: imageUrl || undefined,
+      images: imageUrls.length ? imageUrls : undefined,
+      productionImageUrl: productionImageUrl || undefined,
+      productionImageUrls: productionImageUrls.length ? productionImageUrls : undefined,
+      bridgeImageIds: bridgeImageIds.length ? bridgeImageIds : undefined,
+      generationIds: generationIds.length ? generationIds : undefined,
+      markdown,
+      modelId: payload?.modelId || undefined,
+      matureContent: payload?.matureContent === true || undefined,
+      title: payload?.prompt || markdown,
+      generationType: payload?.command || "remix-camera",
+      resultCount: generatedImages.length || undefined,
+    };
+  }
+
+  async function insertGeneratedResult(payload, options = {}) {
     const generatedImages = successfulGeneratedImages(payload);
     const imageUrls = generatedImages.map((image) => image.imageUrl).filter(Boolean);
     const productionImageUrls = generatedImages.map((image) => image.productionImageUrl).filter(Boolean);
@@ -570,40 +725,36 @@ import { saveSettingsDebounced } from "../../../../script.js";
       return "none";
     }
 
+    const messageHtml = generatedImageMessageHtml(markdown, generatedImages, payload?.command);
+    const extra = imageResultExtra(payload, generatedImages, markdown, imageUrls, productionImageUrls, bridgeImageIds, generationIds, imageUrl, productionImageUrl);
+
+    if (options.pendingMessage && updateInsertedMessage(options.pendingMessage, messageHtml, extra)) {
+      for (const url of imageUrls) {
+        hydrateGeneratedImage(url, payload?.command, options.pendingMessage);
+      }
+      return "inserted";
+    }
+
     const context = getContext();
     if (settings().autoInsertResult && context && typeof context.addOneMessage === "function") {
       const message = {
         name: settings().characterName || "Remix.Camera",
         is_user: false,
         is_system: false,
-        mes: generatedImageMessageHtml(markdown, generatedImages, payload?.command),
+        mes: messageHtml,
         send_date: new Date().toISOString(),
-        extra: {
-          type: "remix_camera_image",
-          image: imageUrl || undefined,
-          images: imageUrls.length ? imageUrls : undefined,
-          productionImageUrl: productionImageUrl || undefined,
-          productionImageUrls: productionImageUrls.length ? productionImageUrls : undefined,
-          bridgeImageIds: bridgeImageIds.length ? bridgeImageIds : undefined,
-          generationIds: generationIds.length ? generationIds : undefined,
-          markdown,
-          modelId: payload?.modelId || undefined,
-          matureContent: payload?.matureContent === true || undefined,
-          title: payload?.prompt || markdown,
-          generationType: payload?.command || "remix-camera",
-        },
+        extra,
       };
       if (Array.isArray(context.chat)) {
         context.chat.push(message);
       }
       context.addOneMessage(message);
+      const element = lastChatMessageElement();
+      if (element) {
+        element.__remixCameraMessage = message;
+      }
       for (const url of imageUrls) {
         hydrateGeneratedImage(url, payload?.command);
-      }
-      if (payload?.command === "private-snap") {
-        for (const url of imageUrls) {
-          scheduleSnapExpiry(message, url, payload?.snapTtlSeconds || settings().snapTtlSeconds);
-        }
       }
       if (typeof context.saveChat === "function") {
         context.saveChat();
@@ -624,10 +775,86 @@ import { saveSettingsDebounced } from "../../../../script.js";
     return "none";
   }
 
-  async function generate(command, args = {}) {
+  function progressReplyForCommand(command) {
+    if (command === "private-snap") {
+      return "Mmm. Give me a minute - I'll make it worth the wait.";
+    }
+    if (command === "couples-vacation") {
+      return "Give me a minute - I want these to feel like a real getaway.";
+    }
+    if (command === "couple-photo") {
+      return "Okay, I'm making this one feel like us.";
+    }
+    return "Give me a second - I want this one to look right.";
+  }
+
+  function updatePendingWithError(inserted, message) {
+    const safeMessage = escapeHtml(message || "Image generation failed.");
+    updateInsertedMessage(
+      inserted,
+      `<div class="remix-camera-pending remix-camera-pending--error">${safeMessage}</div>`,
+      {
+        type: "remix_camera_error",
+        error: message || "Image generation failed.",
+      },
+    );
+  }
+
+  function messageTimeMs(message) {
+    const parsed = Date.parse(message?.send_date || "");
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  function markStalePendingMessages() {
+    const context = getContext();
+    const chat = Array.isArray(context?.chat) ? context.chat : [];
+    let changed = false;
+    chat.forEach((message, index) => {
+      if (message?.extra?.type !== "remix_camera_pending") {
+        return;
+      }
+      const createdAt = messageTimeMs(message);
+      if (createdAt && Date.now() - createdAt < STALE_PENDING_MS) {
+        return;
+      }
+      const element = document.querySelector(`#chat .mes[mesid="${index}"]`);
+      updateInsertedMessage(
+        { message, element },
+        `<div class="remix-camera-pending remix-camera-pending--error">That photo got interrupted before it finished. Send it again and I'll retry.</div>`,
+        {
+          type: "remix_camera_error",
+          error: "Generation interrupted before completion.",
+        },
+      );
+      changed = true;
+    });
+    if (changed && typeof context?.saveChat === "function") {
+      context.saveChat();
+    }
+  }
+
+  function scheduleStalePendingCleanup() {
+    for (const delayMs of [0, 1000, 4000]) {
+      window.setTimeout(markStalePendingMessages, delayMs);
+    }
+  }
+
+  async function generate(command, args = {}, options = {}) {
     setLog(`Generating ${command}...`);
-    const payload = await bridgeFetch("/v1/commands/generate", requestBody(command, args));
-    const insertion = await insertGeneratedResult(payload);
+    const pendingMessage = options.pendingMessage === false
+      ? null
+      : options.pendingMessage || insertPendingImageMessage(command);
+    let payload;
+    try {
+      payload = await bridgeFetch("/v1/commands/generate", requestBody(command, args), { timeoutMs: GENERATION_TIMEOUT_MS });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error || "Image generation failed.");
+      if (pendingMessage) {
+        updatePendingWithError(pendingMessage, message);
+      }
+      throw error;
+    }
+    const insertion = await insertGeneratedResult(payload, { pendingMessage });
     if (insertion === "inserted") {
       setLog("Image generated and inserted into chat.", "success");
     } else if (insertion === "copied") {
@@ -637,6 +864,193 @@ import { saveSettingsDebounced } from "../../../../script.js";
     }
     return payload.markdown || JSON.stringify(payload);
   }
+
+  function plainMessageText(value) {
+    return String(value || "")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function latestUserMessage(chat) {
+    const messages = Array.isArray(chat) ? chat : getContext()?.chat;
+    if (!Array.isArray(messages)) {
+      return null;
+    }
+
+    for (let index = messages.length - 1; index >= 0; index -= 1) {
+      const message = messages[index];
+      if (message?.is_user) {
+        const text = plainMessageText(message.mes || message.message || message.content);
+        return text ? { index, text } : null;
+      }
+    }
+    return null;
+  }
+
+  function classifyNaturalLanguageImageRequest(text) {
+    const lower = cleanString(text).toLowerCase();
+    if (!lower) {
+      return null;
+    }
+
+    const hasImageNoun = /\b(selfie|photo|picture|pic|image|snap|shot|portrait|nude|nudes)\b/.test(lower);
+    const hasImageVerb = /\b(send|take|show|make|create|generate|give|share|post|see|want|need)\b/.test(lower);
+    const hasMatureImageIntent = /\b(private|sexy|spicy|risqu[eé]|nsfw|nude|nudes|naked|intimate|lewd|explicit|thirst\s*trap|snap)\b/.test(lower);
+    if (hasMatureImageIntent && (hasImageVerb || /\b(nude|nudes|snap)\b/.test(lower))) {
+      return {
+        command: "private-snap",
+        args: {
+          mood: text,
+          matureContent: true,
+        },
+      };
+    }
+
+    if (!hasImageNoun || (!hasImageVerb && !/\b(selfie|snap)\b/.test(lower))) {
+      return null;
+    }
+
+    if (/\b(couple|together|with me|you and me|us\b|our photo|our picture)\b/.test(lower)) {
+      if (/\b(vacation|trip|getaway|holiday|travel|weekend)\b/.test(lower)) {
+        return {
+          command: "couples-vacation",
+          args: {
+            userConsent: "yes",
+            userDescription: "the user, a consenting adult",
+            theme: text,
+            location: text,
+            maxGenerations: /\b(3|three|set|series|photos|pictures|pics)\b/.test(lower) ? 3 : 1,
+          },
+        };
+      }
+      return {
+        command: "couple-photo",
+        args: {
+          userConsent: "yes",
+          userDescription: "the user, a consenting adult",
+          location: text,
+        },
+      };
+    }
+
+    if (/\b(outfit|try[- ]?on|wear|wearing|dress|clothes|wardrobe|lingerie|bikini)\b/.test(lower)) {
+      return { command: "outfit-try-on", args: { outfit: text, mood: text } };
+    }
+
+    if (/\b(date|dinner|restaurant|bar|night out|date night)\b/.test(lower)) {
+      return { command: "date-night", args: { location: text, mood: text } };
+    }
+
+    if (hasMatureImageIntent) {
+      return {
+        command: "private-snap",
+        args: {
+          mood: text,
+          matureContent: true,
+        },
+      };
+    }
+
+    if (/\b(scene|around you|where you are|what we were talking|from chat|our chat|moment)\b/.test(lower)) {
+      return { command: "auto-selfie-from-chat", args: { mood: text } };
+    }
+
+    return { command: "send-selfie", args: { mood: text } };
+  }
+
+  function isFollowupImageRequest(text) {
+    const lower = cleanString(text).toLowerCase();
+    return /\b(send|show|make|do|generate|create)\s+(it|that|this|one)\b/.test(lower) ||
+      /^(yes|yeah|yep|ok|okay|please|pls|go ahead|do it|send it|show me|send that|send this|send one)[.!? ]*$/.test(lower);
+  }
+
+  function previousClassifiedImageRequest(messages, latestIndex) {
+    if (!Array.isArray(messages)) {
+      return null;
+    }
+    const startIndex = Math.min(Number(latestIndex) - 1, messages.length - 1);
+    const stopIndex = Math.max(0, startIndex - 12);
+    for (let index = startIndex; index >= stopIndex; index -= 1) {
+      const message = messages[index];
+      if (!message?.is_user) {
+        continue;
+      }
+      const text = plainMessageText(message.mes || message.message || message.content);
+      const request = classifyNaturalLanguageImageRequest(text);
+      if (request) {
+        return {
+          ...request,
+          args: {
+            ...request.args,
+            chatText: recentChatText(),
+          },
+        };
+      }
+    }
+    return null;
+  }
+
+  function classifyImageRequestFromChat(latest, messages) {
+    const direct = classifyNaturalLanguageImageRequest(latest?.text || "");
+    if (direct) {
+      return direct;
+    }
+    if (!latest || !isFollowupImageRequest(latest.text)) {
+      return null;
+    }
+    return previousClassifiedImageRequest(messages, latest.index);
+  }
+
+  function insertCompanionTextMessage(text) {
+    return Boolean(insertCompanionMessage(text, { extra: { type: "remix_camera_status" } }));
+  }
+
+  async function naturalLanguageImageInterceptor(chat, contextSize, abort) {
+    if (!settings().allowToolCalls || naturalLanguageGenerationInProgress) {
+      return;
+    }
+
+    const latest = latestUserMessage(chat);
+    const request = latest ? classifyImageRequestFromChat(latest, chat) : null;
+    if (!latest || !request) {
+      return;
+    }
+
+    const signature = `${latest.index}:${latest.text}`;
+    if (signature === lastNaturalLanguageImageRequest) {
+      return;
+    }
+
+    lastNaturalLanguageImageRequest = signature;
+    naturalLanguageGenerationInProgress = true;
+    if (typeof abort === "function") {
+      abort(true);
+    }
+
+    try {
+      insertCompanionTextMessage(progressReplyForCommand(request.command));
+      const pendingMessage = insertPendingImageMessage(request.command);
+      generate(request.command, {
+        ...request.args,
+        chatText: recentChatText(),
+        maxGenerations: request.args?.maxGenerations || settings().maxGenerations,
+      }, { pendingMessage }).catch((error) => {
+        const message = error instanceof Error ? error.message : String(error || "Unknown error");
+        setLog(message, "error");
+        insertCompanionTextMessage(`I tried to create that image with Remix.Camera, but it failed: ${message}`);
+      }).finally(() => {
+        naturalLanguageGenerationInProgress = false;
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error || "Unknown error");
+      setLog(message, "error");
+      insertCompanionTextMessage(`I tried to create that image with Remix.Camera, but it failed: ${message}`);
+      naturalLanguageGenerationInProgress = false;
+    }
+  }
+
+  window.remixCameraCompanionImagesGenerateInterceptor = naturalLanguageImageInterceptor;
 
   async function dryRun(command, args = {}) {
     setLog(`Previewing ${command}...`);
@@ -729,7 +1143,6 @@ import { saveSettingsDebounced } from "../../../../script.js";
         location: current.location || "private setting that fits the recent chat",
         maxGenerations: 1,
         matureContent: true,
-        snapTtlSeconds: current.snapTtlSeconds,
       });
       recordProactiveSnapSent();
     } catch (error) {
@@ -768,7 +1181,6 @@ import { saveSettingsDebounced } from "../../../../script.js";
       matureContent: inputChecked("remix-camera-mature-content"),
       allowToolCalls: inputChecked("remix-camera-allow-tool-calls"),
       autoInsertResult: inputChecked("remix-camera-auto-insert"),
-      snapTtlSeconds: Math.max(5, Math.min(600, Number(inputValue("remix-camera-snap-ttl") || DEFAULT_SETTINGS.snapTtlSeconds))),
       proactiveSnapsEnabled: inputChecked("remix-camera-proactive-snaps"),
       proactiveSnapIntervalMinutes: Math.max(30, Math.min(1440, Number(inputValue("remix-camera-proactive-interval") || DEFAULT_SETTINGS.proactiveSnapIntervalMinutes))),
       proactiveSnapDailyLimit: Math.max(0, Math.min(6, Number(inputValue("remix-camera-proactive-daily-limit") || DEFAULT_SETTINGS.proactiveSnapDailyLimit))),
@@ -799,7 +1211,6 @@ import { saveSettingsDebounced } from "../../../../script.js";
     setInputChecked("remix-camera-mature-content", current.matureContent);
     setInputChecked("remix-camera-allow-tool-calls", current.allowToolCalls);
     setInputChecked("remix-camera-auto-insert", current.autoInsertResult);
-    setInputValue("remix-camera-snap-ttl", Number(current.snapTtlSeconds || DEFAULT_SETTINGS.snapTtlSeconds));
     setInputChecked("remix-camera-proactive-snaps", current.proactiveSnapsEnabled);
     setInputValue("remix-camera-proactive-interval", Number(current.proactiveSnapIntervalMinutes || DEFAULT_SETTINGS.proactiveSnapIntervalMinutes));
     setInputValue("remix-camera-proactive-daily-limit", Number(current.proactiveSnapDailyLimit || DEFAULT_SETTINGS.proactiveSnapDailyLimit));
@@ -847,7 +1258,6 @@ import { saveSettingsDebounced } from "../../../../script.js";
             <label>Outfit<input id="remix-camera-outfit" type="text" value="${escapeHtml(current.outfit)}"></label>
             <label>Location<input id="remix-camera-location" type="text" value="${escapeHtml(current.location)}"></label>
             <label>Style<input id="remix-camera-style" type="text" value="${escapeHtml(current.style)}"></label>
-            <label>Snap seconds<input id="remix-camera-snap-ttl" type="number" min="5" max="600" value="${Number(current.snapTtlSeconds || DEFAULT_SETTINGS.snapTtlSeconds)}"></label>
             <label>Proactive interval<input id="remix-camera-proactive-interval" type="number" min="30" max="1440" value="${Number(current.proactiveSnapIntervalMinutes || DEFAULT_SETTINGS.proactiveSnapIntervalMinutes)}"></label>
             <label>Proactive daily cap<input id="remix-camera-proactive-daily-limit" type="number" min="0" max="6" value="${Number(current.proactiveSnapDailyLimit || DEFAULT_SETTINGS.proactiveSnapDailyLimit)}"></label>
           </div>
@@ -1014,14 +1424,13 @@ import { saveSettingsDebounced } from "../../../../script.js";
 
     document.getElementById("remix-camera-private-snap-button")?.addEventListener("click", async () => {
       saveFromUi();
-      if (!window.confirm("Generate a mature private snap and hide it from the chat view after the snap timer?")) {
+      if (!window.confirm("Generate a mature private snap?")) {
         setLog("Private snap canceled.", "warn");
         return;
       }
       try {
         await generate("private-snap", {
           matureContent: true,
-          snapTtlSeconds: settings().snapTtlSeconds,
         });
       } catch (error) {
         setLog(error.message, "error");
@@ -1030,6 +1439,7 @@ import { saveSettingsDebounced } from "../../../../script.js";
 
     updateCoupleReferenceUi();
     scheduleProactiveSnaps();
+    scheduleStalePendingCleanup();
   }
 
   function addSettingsPanel() {
@@ -1084,7 +1494,6 @@ import { saveSettingsDebounced } from "../../../../script.js";
           userReferenceImageKey: { type: "string", description: "Optional Remix.Camera reference image s3Key for the user in couple photos." },
           userReferenceImageUrl: { type: "string", description: "Optional image URL to upload and use as the user reference in couple photos." },
           theme: { type: "string", description: "Theme or destination for a cohesive photo set." },
-          snapTtlSeconds: { type: "number", description: "Seconds before a private snap is hidden from the chat view." },
           ...parameterProperties,
         },
       },
@@ -1126,7 +1535,7 @@ import { saveSettingsDebounced } from "../../../../script.js";
       }),
       toolDefinition(TOOL_NAMES[5], "date-night", "Date night", "Create an in-character date-night image that matches the conversation."),
       toolDefinition(TOOL_NAMES[6], "daily-life-snap", "Daily life snap", "Create a casual in-the-moment snap from recent chat context."),
-      toolDefinition(TOOL_NAMES[7], "private-snap", "Private snap", "Create an opted-in mature private snap with ephemeral display metadata."),
+      toolDefinition(TOOL_NAMES[7], "private-snap", "Private snap", "Create an opted-in mature private snap."),
     ].forEach((definition) => {
       try {
         register(definition);
@@ -1187,6 +1596,7 @@ import { saveSettingsDebounced } from "../../../../script.js";
     getRootSettings();
     addSettingsPanel();
     refreshUiFromSettings();
+    bindFeedbackEvents();
     bindLifecycleEvents();
     if (!registerFunctionTools()) {
       window.setTimeout(registerFunctionTools, 1000);

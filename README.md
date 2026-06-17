@@ -2,7 +2,7 @@
 
 This package connects a SillyTavern character to the Remix.Camera AI Companion Image Toolset without putting a Remix.Camera credential in the browser.
 
-Image prompts are not invented from scratch. For every image action, the bridge searches Remix.Camera's proven prompt/template packs, selects a relevant prompt, and adapts that template to the active character, chat context, user reference photo, and SFW/NSFW model route. This is what keeps outputs aligned with Remix.Camera's best-performing prompt library instead of generic chatbot prompt text.
+Image prompts are template-first. For every image action, the bridge searches Remix.Camera's proven prompt/template packs, selects a strong relevant match, and adapts that template to the active character, chat context, user reference photo, and SFW/NSFW model route. If no strong template match exists, the bridge can generate from an ad-hoc fallback prompt and marks that response as `promptTemplateDecision: "ad_hoc_fallback"` so the output can be reviewed before it becomes part of the future prompt library.
 
 The integration has two parts:
 
@@ -20,7 +20,7 @@ The integration has two parts:
 - `couples-vacation`: create a cohesive 3-photo trip set with the user after explicit consent.
 - `date-night`: send a date-scene image that matches the current conversation.
 - `daily-life-snap`: send a casual "what I am doing right now" photo from chat context.
-- `private-snap`: send an opted-in mature snap that auto-hides from the chat view after a timer.
+- `private-snap`: send an opted-in mature snap that stays in the chat like other generated images.
 
 ## Requirements
 
@@ -471,7 +471,7 @@ curl -X POST http://127.0.0.1:8787/v1/commands/generate \
 
 ### Date, Day Snap, And Private Snap
 
-These are the companion-chat continuity tools. `date-night` makes a specific date-scene image, `daily-life-snap` turns recent chat into a casual update photo, and `private-snap` uses mature routing plus `snapTtlSeconds` metadata so the extension can hide it from the chat view after the timer.
+These are the companion-chat continuity tools. `date-night` makes a specific date-scene image, `daily-life-snap` turns recent chat into a casual update photo, and `private-snap` uses mature routing for opted-in adult chat images. Private snaps stay in the SillyTavern chat like other generated images unless the user deletes the message.
 
 ```bash
 curl -X POST http://127.0.0.1:8787/v1/commands/generate \
@@ -482,12 +482,11 @@ curl -X POST http://127.0.0.1:8787/v1/commands/generate \
     "characterName": "Avery",
     "profileId": "your_remix_profile_id",
     "visualIdentity": "consistent adult companion from the Remix.Camera profile photos",
-    "snapTtlSeconds": 45,
     "maxGenerations": 1
   }'
 ```
 
-Private snaps auto-hide in the SillyTavern chat view. They are not a cryptographic deletion guarantee; the local bridge, browser cache, logs, or remote production image URL may still exist for review/debug depending on your environment.
+Private snaps are private in the companion-chat sense, not disappearing media. The local bridge, browser cache, logs, and remote production image URL may exist for review/debug depending on your environment.
 
 ## Environment Variables
 
@@ -501,7 +500,7 @@ Private snaps auto-hide in the SillyTavern chat view. They are not a cryptograph
 - `REMIX_CHARACTER_VISUAL_IDENTITY`: optional default visual identity used when neither SillyTavern nor the request provides one.
 - `REMIX_NEGATIVE_PROMPT`: optional default avoid-list appended to prompts.
 - `REMIX_PROMPT_TEMPLATES`: defaults to enabled. Set to `false` only for local debugging; production-quality prompts should use Remix.Camera prompt/template packs.
-- `REMIX_ALLOW_AD_HOC_PROMPT_FALLBACK`: defaults to disabled. Set to `true` only if you would rather generate from a local fallback prompt when prompt-template lookup fails.
+- `REMIX_ALLOW_AD_HOC_PROMPT_FALLBACK`: defaults to enabled after template search rejects weak matches. Set to `false` to fail closed instead of generating from an ad-hoc fallback prompt.
 - `REMIX_BRIDGE_HOST`: defaults to `127.0.0.1`.
 - `REMIX_BRIDGE_PORT`: defaults to `8787`.
 - `REMIX_ALLOWED_ORIGINS`: optional comma-separated browser origins allowed to call the bridge. Defaults to `http://127.0.0.1:8000,http://localhost:8000,http://[::1]:8000`.
@@ -513,12 +512,12 @@ Private snaps auto-hide in the SillyTavern chat view. They are not a cryptograph
 - Keep the bridge local unless you add authentication. It exposes a generation endpoint.
 - The bridge rejects browser requests whose `Origin` is not in `REMIX_ALLOWED_ORIGINS`; update that variable if your SillyTavern runs on a different local host or port.
 - Do not put Remix.Camera credentials into SillyTavern custom JavaScript or character cards.
-- The bridge refuses to silently fall back to ad hoc prompts by default. If prompt-template lookup fails, fix auth/search or use Preview Prompt again before spending credits.
+- The bridge searches templates first, boosts best/excellent packs, and treats concrete scene terms such as bath, shower, tennis, cafe, couch, kitchen, beach, gym, office, and car as required fit signals. If no strong match remains, it uses an explicit ad-hoc fallback unless `REMIX_ALLOW_AD_HOC_PROMPT_FALLBACK=false`.
 - SFW prompt-only generations use `nano-banana` by default. Mature mode or NSFW prompt language uses `seedream-v4.5-edit`; SFW source-image remixes follow Remix.Camera's standard extension route contract.
 - Character cards can include `data.extensions.remix_camera.referenceImageKey`; the bridge forwards it to SFW Nano requests so untrained reference-photo profiles can still produce character-consistent images.
 - `couple-photo` requires affirmative `userConsent`, such as `"yes"`, and should only be used when the user clearly wants to appear with the character. If a user photo is selected, it is uploaded to Remix.Camera and used as the user's identity reference, not as a fake output.
 - `couples-vacation` uses the same explicit-consent and multi-reference behavior as `couple-photo`, then generates a cohesive 3-photo set by default.
-- `private-snap` is adult-only in intent, routes to `seedream-v4.5-edit` by default, and auto-hides only in the SillyTavern UI.
+- `private-snap` is adult-only in intent, routes to `seedream-v4.5-edit` by default, and stays visible in the SillyTavern chat unless the user deletes it.
 - The bundled `examples/mila-real-outputs/` images are archived real Remix.Camera outputs for visual review and demo recording. They are not a substitute for `npm run test:live -- --yes` when validating a live paid generation path.
 
 ## Local Verification

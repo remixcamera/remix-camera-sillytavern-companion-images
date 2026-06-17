@@ -21,12 +21,14 @@ test("Telegram parser maps slash commands to bridge commands", () => {
     action: "generate",
     command: "send-selfie",
     text: "cafe mirror",
+    userConsent: undefined,
   });
   assert.deepEqual(parseTelegramCommand("/preview date restaurant booth"), {
     type: "image",
     action: "dry-run",
     command: "date-night",
     text: "restaurant booth",
+    userConsent: undefined,
   });
   assert.deepEqual(parseTelegramCommand("/help"), { type: "help" });
 });
@@ -48,7 +50,78 @@ test("Telegram routing helpers identify only Remix.Camera commands", () => {
   assert.equal(shouldHandleTelegramUpdate({ message: { chat: { id: 123 }, text: "/unknown" } }), false);
 });
 
-test("Telegram bridge input requires explicit yes for couple and private generation", () => {
+test("Telegram parser accepts natural SillyTavern-style photo requests", () => {
+  assert.deepEqual(parseTelegramCommand("send me a bath selfie"), {
+    type: "image",
+    action: "generate",
+    command: "send-selfie",
+    text: "send me a bath selfie",
+    natural: true,
+    userConsent: undefined,
+  });
+
+  assert.deepEqual(parseTelegramCommand("send a sexy nude playing tennis"), {
+    type: "image",
+    action: "generate",
+    command: "private-snap",
+    text: "send a sexy nude playing tennis",
+    natural: true,
+    userConsent: undefined,
+  });
+
+  assert.deepEqual(parseTelegramCommand("now take it off"), {
+    type: "image",
+    action: "generate",
+    command: "private-snap",
+    text: "now take it off",
+    natural: true,
+    userConsent: undefined,
+    contextualSourceImage: true,
+  });
+});
+
+test("contextual undress requests pass the last generated image to the bridge", async () => {
+  const calls = [];
+  const tool = createRemixTelegramTool({
+    characterName: "Lily",
+    fetchImpl: async (url, options) => {
+      calls.push({ url, body: JSON.parse(options.body) });
+      return new Response(
+        JSON.stringify({
+          ok: true,
+          dryRun: true,
+          command: "private-snap",
+          modelId: "seedream-v4.5-edit",
+          matureContent: true,
+          usesImageToImage: true,
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      );
+    },
+  });
+
+  const details = await tool.handleUpdateDetailed(
+    {
+      message: {
+        chat: { id: 123 },
+        text: "preview now take it off",
+      },
+    },
+    {
+      autoSend: false,
+      lastGeneratedImageUrl: "https://remix.camera/api/s3-file?key=lily-private.jpg",
+    },
+  );
+
+  assert.equal(details.handled, true);
+  assert.equal(details.parsed.command, "private-snap");
+  assert.equal(calls[0].url, "http://127.0.0.1:8787/v1/tools/private-snap/dry-run");
+  assert.equal(calls[0].body.sourceImageUrl, "https://remix.camera/api/s3-file?key=lily-private.jpg");
+  assert.equal(calls[0].body.matureContent, true);
+  assert.equal(calls[0].body.yes, undefined);
+});
+
+test("Telegram bridge input routes couple and private generation like natural chat", () => {
   const couple = parseTelegramCommand("/couple yes coffee shop booth");
   const coupleInput = buildBridgeInputFromTelegram(couple, {
     profileId: "profile_lily",
@@ -63,22 +136,28 @@ test("Telegram bridge input requires explicit yes for couple and private generat
   const privateInput = buildBridgeInputFromTelegram(privateSnap, {
     characterName: "Lily",
   });
-  assert.equal(privateInput.yes, undefined);
+  assert.equal(privateInput.yes, true);
   assert.equal(privateInput.matureContent, true);
-  assert.equal(privateInput.snapTtlSeconds, 120);
+  assert.equal(privateInput.snapTtlSeconds, undefined);
 });
 
-test("Telegram run returns an instruction instead of spending when consent is missing", async () => {
-  let called = false;
+test("Telegram private generation does not require a literal yes token", async () => {
+  const calls = [];
   const result = await runTelegramRemixCommand(parseTelegramCommand("/vacation Amalfi coast"), {
-    fetchImpl: async () => {
-      called = true;
+    fetchImpl: async (url, options) => {
+      calls.push({ url, body: JSON.parse(options.body) });
+      return new Response(JSON.stringify({ ok: true, dryRun: false, results: [] }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
     },
   });
 
-  assert.equal(called, false);
-  assert.equal(result.type, "text");
-  assert.match(result.text, /explicit yes/);
+  assert.equal(result.type, "bridge");
+  assert.equal(calls[0].url, "http://127.0.0.1:8787/v1/tools/couples-vacation/generate");
+  assert.equal(calls[0].body.yes, true);
+  assert.equal(calls[0].body.userConsent, "yes");
+  assert.equal(calls[0].body.maxGenerations, 3);
 });
 
 test("Telegram run calls bridge and extracts generated image URLs", async () => {
@@ -111,7 +190,7 @@ test("Telegram run calls bridge and extracts generated image URLs", async () => 
   assert.deepEqual(result.imageUrls, ["http://127.0.0.1:8787/v1/images/photo_1"]);
 });
 
-test("Telegram sender uploads local bridge images instead of passing 127.0.0.1 URLs to Telegram", async (t) => {
+test("Telegram sender refuses local-only bridge image URLs", async (t) => {
   const originalFetch = globalThis.fetch;
   const calls = [];
   t.after(() => {
@@ -120,16 +199,11 @@ test("Telegram sender uploads local bridge images instead of passing 127.0.0.1 U
 
   globalThis.fetch = async (url, options = {}) => {
     calls.push({ url: String(url), options });
-    if (String(url).startsWith("http://127.0.0.1:8787/v1/images/")) {
-      return new Response(new Uint8Array([0xff, 0xd8, 0xff, 0xd9]), {
-        status: 200,
-        headers: { "Content-Type": "image/jpeg" },
-      });
-    }
-    assert.equal(String(url), "https://api.telegram.org/botbot_token/sendPhoto");
+    assert.equal(String(url), "https://api.telegram.org/botbot_token/sendMessage");
     assert.equal(options.method, "POST");
-    assert.equal(options.body.get("chat_id"), "123");
-    assert.ok(options.body.get("photo") instanceof Blob);
+    const body = JSON.parse(options.body);
+    assert.equal(body.chat_id, 123);
+    assert.match(body.text, /Telegram cannot fetch 127\.0\.0\.1 URLs/);
     return new Response(JSON.stringify({ ok: true, result: { message_id: 9 } }), {
       status: 200,
       headers: { "Content-Type": "application/json" },
@@ -147,7 +221,7 @@ test("Telegram sender uploads local bridge images instead of passing 127.0.0.1 U
   });
 
   assert.equal(sent[0].message_id, 9);
-  assert.equal(calls.length, 2);
+  assert.equal(calls.length, 1);
 });
 
 test("Telegram detailed update handler can run without auto-sending for existing bots", async () => {
@@ -186,36 +260,32 @@ test("Telegram detailed update handler can run without auto-sending for existing
   assert.deepEqual(details.sentMessages, []);
 });
 
-test("Telegram detailed update handler returns sent message records when auto-send is enabled", async (t) => {
-  const originalFetch = globalThis.fetch;
+test("Telegram detailed update handler returns sent message records when auto-send is enabled", async () => {
   const telegramCalls = [];
-  t.after(() => {
-    globalThis.fetch = originalFetch;
-  });
-
-  globalThis.fetch = async (url, options = {}) => {
-    telegramCalls.push({ url: String(url), options });
-    assert.equal(String(url), "https://api.telegram.org/botbot_token/sendPhoto");
-    assert.equal(options.body.get("chat_id"), "123");
-    assert.equal(options.body.get("photo"), "https://cdn.example.test/photo_1.jpg");
-    return new Response(JSON.stringify({ ok: true, result: { message_id: 99 } }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
-  };
-
   const tool = createRemixTelegramTool({
     botToken: "bot_token",
     bridgeUrl: "http://127.0.0.1:8787",
-    fetchImpl: async () =>
-      new Response(
+    fetchImpl: async (url, options = {}) => {
+      if (String(url).startsWith("https://api.telegram.org/")) {
+        telegramCalls.push({ url: String(url), options });
+        assert.equal(String(url), "https://api.telegram.org/botbot_token/sendPhoto");
+        const body = JSON.parse(options.body);
+        assert.equal(body.chat_id, 123);
+        assert.equal(body.photo, "https://cdn.example.test/photo_1.jpg");
+        return new Response(JSON.stringify({ ok: true, result: { message_id: 99 } }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+      return new Response(
         JSON.stringify({
           ok: true,
           markdown: "![Lily send-selfie](https://cdn.example.test/photo_1.jpg)",
           results: [{ ok: true, imageUrl: "https://cdn.example.test/photo_1.jpg" }],
         }),
         { status: 200, headers: { "Content-Type": "application/json" } },
-      ),
+      );
+    },
   });
 
   const details = await tool.handleUpdateDetailed({

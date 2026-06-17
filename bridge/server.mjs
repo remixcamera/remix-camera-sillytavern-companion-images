@@ -23,6 +23,7 @@ const COMMANDS = new Set([
 ]);
 const USER_INCLUDED_COMMANDS = new Set(["couple-photo", "couples-vacation"]);
 const PRIVATE_SNAP_COMMANDS = new Set(["private-snap"]);
+const SOURCE_IMAGE_COMMANDS = new Set(["outfit-try-on", "private-snap", ...USER_INCLUDED_COMMANDS]);
 const PHOTO_SET_SHOTS = {
   "couples-vacation": [
     "Photo 1 of 3: a wide establishing couples vacation photo that clearly shows the destination, weather, and shared travel mood.",
@@ -44,6 +45,7 @@ const PROMPT_TEMPLATE_SEARCH_PAGE_SIZE = 8;
 const PROMPT_TEMPLATE_DETAIL_LIMIT = 6;
 const PROMPT_TEMPLATE_MAX_TEXT_LENGTH = 1400;
 const PROMPT_TEMPLATE_QUERY_MAX_LENGTH = 260;
+const PROMPT_TEMPLATE_STRONG_MATCH_MIN_SCORE = 25;
 const PREFERRED_PROMPT_TEMPLATE_QUALITY_STATUSES = new Set(["best", "excellent"]);
 const PROMPT_TEMPLATE_QUALITY_SCORES = new Map([
   ["best", 160],
@@ -54,6 +56,129 @@ const PROMPT_TEMPLATE_QUALITY_SCORES = new Map([
   ["low", -90],
   ["bad", -90],
   ["hide", -120],
+]);
+const PROMPT_TEMPLATE_INTENT_GROUPS = [
+  {
+    id: "bathroom",
+    label: "bathroom, bath, or shower",
+    requested: /\b(bath|bathtub|bathroom|bubble\s*bath|shower|showering|wet\s*hair|towel|steam|steamy)\b/i,
+    candidate: /\b(bath|bathtub|bathroom|bubble\s*bath|shower|showering|wet\s*hair|towel|steam|steamy)\b/i,
+  },
+  {
+    id: "beach_pool",
+    label: "beach, pool, or swim setting",
+    requested: /\b(beach|pool|swim|swimming|bikini|swimsuit|ocean|sea|lake|resort|cabana)\b/i,
+    candidate: /\b(beach|pool|swim|swimming|bikini|swimsuit|ocean|sea|lake|resort|cabana)\b/i,
+  },
+  {
+    id: "bedroom",
+    label: "bedroom or bed setting",
+    requested: /\b(bedroom|bed|blanket|pillow|sheets?)\b/i,
+    candidate: /\b(bedroom|bed|blanket|pillow|sheets?)\b/i,
+  },
+  {
+    id: "cafe",
+    label: "cafe or coffee setting",
+    requested: /\b(cafe|coffee|latte|espresso|drink|cup|table)\b/i,
+    candidate: /\b(cafe|coffee|latte|espresso|drink|cup|table)\b/i,
+  },
+  {
+    id: "living_room",
+    label: "couch or living-room setting",
+    requested: /\b(couch|sofa|living\s*room|lamp|blanket|apartment)\b/i,
+    candidate: /\b(couch|sofa|living\s*room|lamp|blanket|apartment)\b/i,
+  },
+  {
+    id: "kitchen",
+    label: "kitchen or cooking setting",
+    requested: /\b(kitchen|cook|cooking|baking|counter|stove|breakfast|dinner)\b/i,
+    candidate: /\b(kitchen|cook|cooking|baking|counter|stove|breakfast|dinner)\b/i,
+  },
+  {
+    id: "restaurant_bar",
+    label: "restaurant, bar, or date-night setting",
+    requested: /\b(restaurant|bar|dinner|date\s*night|booth|cocktail|wine)\b/i,
+    candidate: /\b(restaurant|bar|dinner|date\s*night|booth|cocktail|wine)\b/i,
+  },
+  {
+    id: "gym",
+    label: "gym or workout setting",
+    requested: /\b(gym|workout|fitness|yoga|pilates|weights?|treadmill|sports?\s*bra)\b/i,
+    candidate: /\b(gym|workout|fitness|yoga|pilates|weights?|treadmill|sports?\s*bra)\b/i,
+  },
+  {
+    id: "tennis",
+    label: "tennis setting",
+    requested: /\b(tennis|court|racket|racquet)\b/i,
+    candidate: /\b(tennis|court|racket|racquet)\b/i,
+  },
+  {
+    id: "car",
+    label: "car or driving setting",
+    requested: /\b(car|driver'?s?\s*seat|passenger\s*seat|road\s*trip|dashboard)\b/i,
+    candidate: /\b(car|driver'?s?\s*seat|passenger\s*seat|road\s*trip|dashboard)\b/i,
+  },
+  {
+    id: "office",
+    label: "office or work setting",
+    requested: /\b(office|desk|work|coworking|laptop|meeting)\b/i,
+    candidate: /\b(office|desk|work|coworking|laptop|meeting)\b/i,
+  },
+];
+const PROMPT_TEMPLATE_GENERIC_USER_TOKENS = new Set([
+  "send",
+  "take",
+  "show",
+  "make",
+  "create",
+  "generate",
+  "give",
+  "share",
+  "post",
+  "want",
+  "need",
+  "please",
+  "selfie",
+  "photo",
+  "picture",
+  "image",
+  "snap",
+  "shot",
+  "portrait",
+  "quick",
+  "realistic",
+  "companion",
+  "character",
+  "camera",
+  "phone",
+  "mirror",
+  "natural",
+  "warm",
+  "mood",
+  "style",
+  "look",
+  "looks",
+  "adult",
+  "private",
+  "sexy",
+  "nude",
+  "naked",
+  "wearing",
+  "outfit",
+  "clothes",
+  "with",
+  "from",
+  "that",
+  "this",
+  "your",
+  "you",
+  "and",
+  "the",
+  "for",
+  "around",
+  "what",
+  "were",
+  "talking",
 ]);
 const DEFAULT_ALLOWED_ORIGINS = [
   "http://127.0.0.1:8000",
@@ -77,7 +202,7 @@ const config = {
   defaultSfwModelId: process.env.REMIX_SFW_MODEL_ID || "nano-banana",
   defaultMatureModelId: process.env.REMIX_NSFW_MODEL_ID || "seedream-v4.5-edit",
   promptTemplatesEnabled: process.env.REMIX_PROMPT_TEMPLATES !== "false",
-  allowAdHocPromptFallback: process.env.REMIX_ALLOW_AD_HOC_PROMPT_FALLBACK === "true",
+  allowAdHocPromptFallback: process.env.REMIX_ALLOW_AD_HOC_PROMPT_FALLBACK !== "false",
   defaultVisualIdentity: process.env.REMIX_CHARACTER_VISUAL_IDENTITY || "",
   defaultNegativePrompt: process.env.REMIX_NEGATIVE_PROMPT || "",
   allowedOrigins: parseAllowedOrigins(
@@ -412,9 +537,8 @@ function tokenizeText(value) {
   );
 }
 
-function promptTemplateSearchQuery(input) {
-  const commandQuery = PROMPT_TEMPLATE_QUERIES[input.command] || PROMPT_TEMPLATE_QUERIES["send-selfie"];
-  const situation = [
+function promptTemplateUserSituationText(input) {
+  return [
     input.theme,
     input.location,
     input.outfit,
@@ -426,7 +550,42 @@ function promptTemplateSearchQuery(input) {
     .map((part) => cleanString(part))
     .filter(Boolean)
     .join(" ");
-  return clipText(`${commandQuery} ${situation}`, PROMPT_TEMPLATE_QUERY_MAX_LENGTH);
+}
+
+function promptTemplateSpecificRequestText(input) {
+  const mood = cleanString(input.mood);
+  const moodLooksLikeImageRequest =
+    /\b(selfie|photo|picture|pic|image|snap|shot|portrait)\b/i.test(mood) ||
+    PROMPT_TEMPLATE_INTENT_GROUPS.some((group) => group.requested.test(mood));
+  return [
+    input.theme,
+    input.location,
+    input.command === "outfit-try-on" ? "" : input.outfit,
+    input.pose,
+    input.chatText,
+    input.memory,
+    moodLooksLikeImageRequest ? mood : "",
+  ]
+    .map((part) => cleanString(part))
+    .filter(Boolean)
+    .join(" ");
+}
+
+function promptTemplateIntentGroups(input) {
+  const situation = promptTemplateUserSituationText(input);
+  if (!situation) {
+    return [];
+  }
+  return PROMPT_TEMPLATE_INTENT_GROUPS.filter((group) => group.requested.test(situation));
+}
+
+function promptTemplateSearchQuery(input) {
+  const commandQuery = PROMPT_TEMPLATE_QUERIES[input.command] || PROMPT_TEMPLATE_QUERIES["send-selfie"];
+  const situation = promptTemplateUserSituationText(input);
+  const intentText = promptTemplateIntentGroups(input)
+    .map((group) => group.label)
+    .join(" ");
+  return clipText(`${situation} ${intentText} ${commandQuery}`, PROMPT_TEMPLATE_QUERY_MAX_LENGTH);
 }
 
 function normalizeTemplatePrompt(entry) {
@@ -507,6 +666,75 @@ function promptTemplateCommandFitScore(input, text) {
   return 0;
 }
 
+function promptTemplateIntentFitScore(input, text) {
+  const groups = promptTemplateIntentGroups(input);
+  if (!groups.length) {
+    return {
+      score: 0,
+      requestedIntentGroups: [],
+      matchedIntentGroups: [],
+      missingIntentGroups: [],
+    };
+  }
+
+  let score = 0;
+  const matchedIntentGroups = [];
+  const missingIntentGroups = [];
+  for (const group of groups) {
+    if (group.candidate.test(text)) {
+      score += 85;
+      matchedIntentGroups.push(group.id);
+    } else {
+      score -= 220;
+      missingIntentGroups.push(group.id);
+    }
+  }
+
+  return {
+    score,
+    requestedIntentGroups: groups.map((group) => group.id),
+    matchedIntentGroups,
+    missingIntentGroups,
+  };
+}
+
+function promptTemplateSpecificUserTokens(input) {
+  return [...tokenizeText(promptTemplateSpecificRequestText(input))]
+    .filter((token) => !PROMPT_TEMPLATE_GENERIC_USER_TOKENS.has(token))
+    .slice(0, 12);
+}
+
+function promptTemplateSpecificTokenFitScore(input, promptTokens) {
+  const specificTokens = promptTemplateSpecificUserTokens(input);
+  if (!specificTokens.length) {
+    return {
+      score: 0,
+      specificUserTokens: [],
+      matchedSpecificUserTokens: [],
+      missingSpecificUserTokens: [],
+    };
+  }
+
+  const matchedSpecificUserTokens = specificTokens.filter((token) => promptTokens.has(token));
+  const missingSpecificUserTokens = specificTokens.filter((token) => !promptTokens.has(token));
+  const matchRatio = matchedSpecificUserTokens.length / specificTokens.length;
+  let score = matchedSpecificUserTokens.length * 16;
+  if (specificTokens.length >= 2 && matchedSpecificUserTokens.length === 0) {
+    score -= 180;
+  } else if (specificTokens.length === 1 && matchedSpecificUserTokens.length === 0) {
+    score -= 70;
+  } else if (specificTokens.length >= 3 && matchRatio < 0.34) {
+    score -= 80;
+  }
+
+  return {
+    score,
+    specificUserTokens: specificTokens,
+    matchedSpecificUserTokens,
+    missingSpecificUserTokens,
+  };
+}
+
 function scorePromptTemplate({ query, input, pack, prompt }) {
   const queryTokens = tokenizeText(query);
   const searchableText = [pack.title, pack.description, prompt.text].join(" ");
@@ -519,15 +747,32 @@ function scorePromptTemplate({ query, input, pack, prompt }) {
   }
   const searchableLower = searchableText.toLowerCase();
   const commandScore = promptTemplateCommandFitScore(input, searchableLower);
+  const intentFit = promptTemplateIntentFitScore(input, searchableLower);
+  const specificTokenFit = promptTemplateSpecificTokenFitScore(input, promptTokens);
   const lengthScore = prompt.text.length > 180 ? 2 : 0;
   const rawQualityScore = promptTemplateQualityScore(pack);
   const qualityScore = commandScore > 0 || textScore >= 8 ? rawQualityScore : Math.min(rawQualityScore, 10);
   const missingCommandPenalty = commandScore > 0 ? 0 : -12;
-  const score = textScore + commandScore + lengthScore + qualityScore + missingCommandPenalty;
+  const score =
+    textScore +
+    commandScore +
+    lengthScore +
+    qualityScore +
+    missingCommandPenalty +
+    intentFit.score +
+    specificTokenFit.score;
   return {
     score,
     textScore,
     commandScore,
+    intentScore: intentFit.score,
+    specificTokenScore: specificTokenFit.score,
+    requestedIntentGroups: intentFit.requestedIntentGroups,
+    matchedIntentGroups: intentFit.matchedIntentGroups,
+    missingIntentGroups: intentFit.missingIntentGroups,
+    specificUserTokens: specificTokenFit.specificUserTokens,
+    matchedSpecificUserTokens: specificTokenFit.matchedSpecificUserTokens,
+    missingSpecificUserTokens: specificTokenFit.missingSpecificUserTokens,
     qualityScore,
     qualityStatus: promptTemplateQualityStatus(pack),
     preferredQuality: isPreferredPromptTemplateQuality(pack),
@@ -602,16 +847,36 @@ async function resolvePromptTemplate(input) {
     }
   }
 
-  if (best) {
-    return best;
+  if (
+    best &&
+    best.score >= PROMPT_TEMPLATE_STRONG_MATCH_MIN_SCORE &&
+    (!Array.isArray(best.missingIntentGroups) || best.missingIntentGroups.length === 0)
+  ) {
+    return {
+      ...best,
+      matchStrength: "strong",
+    };
   }
 
   if (config.allowAdHocPromptFallback) {
     return null;
   }
-  throw httpError(502, "No Remix.Camera prompt template was found for this SillyTavern image request.", {
+  throw httpError(502, "No strong Remix.Camera prompt template match was found for this SillyTavern image request.", {
     query,
     packsReturned: packs.length,
+    bestCandidate: best
+      ? {
+          packId: best.packId,
+          packTitle: best.packTitle,
+          score: best.score,
+          requestedIntentGroups: best.requestedIntentGroups,
+          missingIntentGroups: best.missingIntentGroups,
+          specificUserTokens: best.specificUserTokens,
+          matchedSpecificUserTokens: best.matchedSpecificUserTokens,
+          missingSpecificUserTokens: best.missingSpecificUserTokens,
+          qualityStatus: best.qualityStatus,
+        }
+      : null,
   });
 }
 
@@ -875,9 +1140,7 @@ async function buildPlan(input) {
   const prompt = buildPrompt(input, promptTemplate);
   const modelId = resolveModelId(input);
   const sourceImageUrl = input.sourceImageUrl || input.referenceImageUrl;
-  const usesImageToImage = Boolean(
-    sourceImageUrl && (input.command === "outfit-try-on" || USER_INCLUDED_COMMANDS.has(input.command)),
-  );
+  const usesImageToImage = Boolean(sourceImageUrl && SOURCE_IMAGE_COMMANDS.has(input.command));
 
   const warnings = [];
   if (!input.profileId) {
@@ -893,7 +1156,7 @@ async function buildPlan(input) {
     warnings.push(`${input.command} requires explicit affirmative user consent, for example userConsent: "yes".`);
   }
   if (!promptTemplate && config.promptTemplatesEnabled) {
-    warnings.push("No Remix.Camera prompt template was used; enable template search or fix the template lookup before spending credits.");
+    warnings.push("No strong Remix.Camera prompt-template match was found; this will use an ad-hoc fallback prompt.");
   }
 
   return {
@@ -914,6 +1177,12 @@ async function buildPlan(input) {
     referenceImageKey: input.referenceImageKey || null,
     userReferenceImageKey: input.userReferenceImageKey || null,
     hasUserReferenceImage: hasUserReference(input),
+    promptTemplateDecision: config.promptTemplatesEnabled
+      ? promptTemplate
+        ? "template"
+        : "ad_hoc_fallback"
+      : "templates_disabled",
+    promptTemplateSearchQuery: config.promptTemplatesEnabled ? promptTemplateSearchQuery(input) : null,
     selectedReferenceImages:
       USER_INCLUDED_COMMANDS.has(input.command) &&
       input.profileId &&
@@ -933,9 +1202,32 @@ async function buildPlan(input) {
           preferredQuality: promptTemplate.preferredQuality === true,
           promptIndex: Number.isInteger(promptTemplate.promptIndex) ? promptTemplate.promptIndex : null,
           matchedText: promptTemplate.matchedText || null,
+          matchStrength: promptTemplate.matchStrength || null,
           score: typeof promptTemplate.score === "number" ? promptTemplate.score : null,
           textScore: typeof promptTemplate.textScore === "number" ? promptTemplate.textScore : null,
           commandScore: typeof promptTemplate.commandScore === "number" ? promptTemplate.commandScore : null,
+          intentScore: typeof promptTemplate.intentScore === "number" ? promptTemplate.intentScore : null,
+          specificTokenScore: typeof promptTemplate.specificTokenScore === "number"
+            ? promptTemplate.specificTokenScore
+            : null,
+          requestedIntentGroups: Array.isArray(promptTemplate.requestedIntentGroups)
+            ? promptTemplate.requestedIntentGroups
+            : [],
+          matchedIntentGroups: Array.isArray(promptTemplate.matchedIntentGroups)
+            ? promptTemplate.matchedIntentGroups
+            : [],
+          missingIntentGroups: Array.isArray(promptTemplate.missingIntentGroups)
+            ? promptTemplate.missingIntentGroups
+            : [],
+          specificUserTokens: Array.isArray(promptTemplate.specificUserTokens)
+            ? promptTemplate.specificUserTokens
+            : [],
+          matchedSpecificUserTokens: Array.isArray(promptTemplate.matchedSpecificUserTokens)
+            ? promptTemplate.matchedSpecificUserTokens
+            : [],
+          missingSpecificUserTokens: Array.isArray(promptTemplate.missingSpecificUserTokens)
+            ? promptTemplate.missingSpecificUserTokens
+            : [],
           qualityScore: typeof promptTemplate.qualityScore === "number" ? promptTemplate.qualityScore : null,
           aspectRatio: promptTemplate.aspectRatio || null,
           cropStyle: promptTemplate.cropStyle || null,
@@ -1000,7 +1292,7 @@ function schemaResponse() {
         name: "private-snap",
         description: "Generate an opted-in mature private snap with ephemeral display metadata.",
         required: [],
-        optional: ["profileId", "characterName", "mood", "outfit", "location", "pose", "style", "visualIdentity", "negativePrompt", "memory", "chatText", "snapTtlSeconds"],
+        optional: ["profileId", "characterName", "sourceImageUrl", "mood", "outfit", "location", "pose", "style", "visualIdentity", "negativePrompt", "memory", "chatText", "snapTtlSeconds"],
       },
     ],
   };
@@ -1153,11 +1445,49 @@ async function resolveProfileId(profileId) {
   return selected.id;
 }
 
+function promptTemplateRequestMetadata(plan) {
+  const template = plan.promptTemplate && typeof plan.promptTemplate === "object" ? plan.promptTemplate : null;
+  return {
+    source: "sillytavern_companion_images",
+    companionCommand: plan.command,
+    promptTemplateDecision: plan.promptTemplateDecision || null,
+    promptTemplateSearchQuery: plan.promptTemplateSearchQuery || null,
+    ...(template
+      ? {
+          promptTemplate: template,
+          promptTemplatePackId: template.packId || null,
+          promptTemplatePackSlug: template.packSlug || null,
+          promptTemplatePackTitle: template.packTitle || null,
+          promptTemplatePromptIndex: Number.isInteger(template.promptIndex) ? template.promptIndex : null,
+          promptTemplateQualityStatus: template.qualityStatus || null,
+          promptTemplateAdminPriorityStatus: template.adminPriorityStatus || null,
+          promptTemplateQualityRating: template.qualityRating || null,
+          promptTemplatePreferredQuality: template.preferredQuality === true,
+          promptTemplateMatchStrength: template.matchStrength || null,
+          promptTemplateScore: typeof template.score === "number" ? template.score : null,
+          promptTemplateMatchedText: template.matchedText || null,
+          promptTemplateAspectRatio: template.aspectRatio || null,
+          promptTemplateCropStyle: template.cropStyle || null,
+          promptTemplatePoseType: template.poseType || null,
+          promptTemplateModelType: template.modelType || null,
+          promptTemplatePrompt: template.prompt || null,
+          promptTemplateRequestedIntentGroups: Array.isArray(template.requestedIntentGroups) ? template.requestedIntentGroups : [],
+          promptTemplateMatchedIntentGroups: Array.isArray(template.matchedIntentGroups) ? template.matchedIntentGroups : [],
+          promptTemplateMissingIntentGroups: Array.isArray(template.missingIntentGroups) ? template.missingIntentGroups : [],
+          promptTemplateSpecificUserTokens: Array.isArray(template.specificUserTokens) ? template.specificUserTokens : [],
+          promptTemplateMatchedSpecificUserTokens: Array.isArray(template.matchedSpecificUserTokens) ? template.matchedSpecificUserTokens : [],
+          promptTemplateMissingSpecificUserTokens: Array.isArray(template.missingSpecificUserTokens) ? template.missingSpecificUserTokens : [],
+        }
+      : {}),
+  };
+}
+
 async function submitGeneration(plan) {
   const profileId = await resolveProfileId(plan.profileId);
   const commonBody = {
     profileId,
     prompt: plan.prompt,
+    ...promptTemplateRequestMetadata(plan),
   };
 
   if (plan.modelId && (!plan.usesImageToImage || plan.referenceImageKey)) {
@@ -1204,6 +1534,28 @@ async function submitGeneration(plan) {
 
 function generationIdFromPayload(payload) {
   return payload?.id || payload?.generationId || payload?.generation?.id || null;
+}
+
+async function submitFeedback(input) {
+  const generationId = cleanString(input.generationId);
+  const signal = cleanString(input.signal);
+  if (!generationId) {
+    throw httpError(400, "generationId is required.");
+  }
+  if (!["thumbs_up", "thumbs_down"].includes(signal)) {
+    throw httpError(400, "signal must be thumbs_up or thumbs_down.");
+  }
+
+  return remixFetch(`/api/v1/design/generations/${encodeURIComponent(generationId)}/feedback`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      signal,
+      surface: cleanString(input.surface) || "sillytavern",
+      sourceRoute: cleanString(input.sourceRoute) || "sillytavern_inline_feedback",
+      command: cleanString(input.command) || null,
+    }),
+  });
 }
 
 async function fetchGenerationStatus(id) {
@@ -1452,6 +1804,11 @@ async function route(req, res) {
     return;
   }
 
+  if (req.method === "POST" && url.pathname === "/v1/feedback") {
+    sendJson(req, res, 200, await submitFeedback(await readJsonBody(req)));
+    return;
+  }
+
   if (req.method === "POST" && url.pathname === "/v1/commands/dry-run") {
     const body = normalizeBody(await readJsonBody(req));
     sendJson(req, res, 200, {
@@ -1499,6 +1856,7 @@ async function route(req, res) {
       "GET /chatgpt-actions/health",
       "GET /lobe/manifest.json",
       "GET /v1/images/:id",
+      "POST /v1/feedback",
       "POST /v1/commands/dry-run",
       "POST /v1/commands/generate",
       "POST /v1/tools/:command/dry-run",
