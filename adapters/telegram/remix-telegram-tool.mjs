@@ -1,295 +1,422 @@
+import crypto from "node:crypto";
 import {
-  callBridgeCommand,
-  commandHelpLines,
-  defaultInputForHost,
-  imageUrlsFromBridgePayload,
-  summarizeBridgePayload,
-} from "../shared/bridge-client.mjs";
+  buildCompanionBridgeInput,
+  companionHelpText,
+  companionNonImageText,
+  companionProgressText,
+  isPublicHttpsUrl,
+  parseCompanionSurfaceCommand,
+  publicImageUrlsFromCompanionResult,
+  runCompanionBridgeCommand,
+} from "../shared/companion-surface-controller.mjs";
 
-const SLASH_COMMANDS = new Map([
-  ["selfie", "send-selfie"],
-  ["auto_selfie", "auto-selfie-from-chat"],
-  ["outfit", "outfit-try-on"],
-  ["couple", "couple-photo"],
-  ["vacation", "couples-vacation"],
-  ["date", "date-night"],
-  ["daily", "daily-life-snap"],
-  ["snap", "private-snap"],
-  ["private", "private-snap"],
-]);
+const TELEGRAM_PHOTO_UPLOAD_MAX_BYTES = 10 * 1024 * 1024;
+
+function timingSafeStringEqual(expected, received) {
+  const expectedBuffer = Buffer.from(String(expected || ""), "utf8");
+  const receivedBuffer = Buffer.from(String(received || ""), "utf8");
+  return expectedBuffer.length === receivedBuffer.length && crypto.timingSafeEqual(expectedBuffer, receivedBuffer);
+}
 
 export function telegramHelpText(characterName = "Lily") {
-  return [
-    `${characterName} can send Remix.Camera companion images from this chat.`,
-    "",
-    "Commands:",
-    "/selfie cafe mirror selfie",
-    "/date quiet restaurant booth",
-    "/daily morning coffee on the couch",
-    "/outfit https://example.com/outfit.jpg red sundress",
-    "/couple yes coffee shop booth with me",
-    "/vacation yes Amalfi coast weekend",
-    "/snap yes warm bedroom mirror snap",
-    "/preview selfie cozy couch with lamp light",
-    "",
-    "Couple and private commands require the word yes in the command. Preview never spends credits.",
-    "",
-    "Bridge tools:",
-    ...commandHelpLines().map((line) => `- ${line}`),
-  ].join("\n");
+  return companionHelpText(characterName, { previewExample: "/preview send me a bath selfie" });
+}
+
+export function telegramNonImageText(characterName = "Lily") {
+  return companionNonImageText(characterName);
 }
 
 export function parseTelegramCommand(text) {
-  const cleaned = String(text || "").trim();
-  if (!cleaned.startsWith("/")) {
-    return null;
-  }
-  const [rawCommand, ...restParts] = cleaned.slice(1).split(/\s+/);
-  const slash = rawCommand.split("@")[0].toLowerCase();
-  const rest = restParts.join(" ").trim();
-
-  if (slash === "start" || slash === "help") {
-    return { type: "help" };
-  }
-
-  if (slash === "preview") {
-    const [requested, ...previewParts] = rest.split(/\s+/);
-    const normalized = String(requested || "selfie").toLowerCase().replace(/-/g, "_");
-    const command = SLASH_COMMANDS.get(normalized) || "send-selfie";
-    return {
-      type: "image",
-      action: "dry-run",
-      command,
-      text: previewParts.join(" ").trim(),
-    };
-  }
-
-  const command = SLASH_COMMANDS.get(slash);
-  if (!command) {
-    return null;
-  }
-
-  return {
-    type: "image",
-    action: "generate",
-    command,
-    text: rest,
-  };
-}
-
-export function getTelegramMessage(update) {
-  return update?.message || update?.edited_message || null;
+  return parseCompanionSurfaceCommand(text);
 }
 
 export function isRemixTelegramCommand(text) {
   return parseTelegramCommand(text) !== null;
 }
 
+export function extractTelegramMessage(update) {
+  return update?.message || update?.edited_message || update?.channel_post || update?.edited_channel_post || null;
+}
+
+export const getTelegramMessage = extractTelegramMessage;
+
+export function extractTelegramText(update) {
+  const message = extractTelegramMessage(update);
+  return String(message?.text || message?.caption || update?.callback_query?.data || "").trim();
+}
+
+export function extractTelegramChatId(update) {
+  const message = extractTelegramMessage(update) || update?.callback_query?.message || null;
+  return message?.chat?.id ?? null;
+}
+
 export function shouldHandleTelegramUpdate(update) {
-  const message = getTelegramMessage(update);
-  return isRemixTelegramCommand(message?.text || "");
+  return isRemixTelegramCommand(extractTelegramText(update));
 }
 
-function firstUrl(text) {
-  return String(text || "").match(/https?:\/\/\S+/i)?.[0] || "";
-}
-
-function withoutFirstUrl(text) {
-  const url = firstUrl(text);
-  return url ? String(text || "").replace(url, "").trim() : String(text || "").trim();
+export function verifyTelegramSecret({ expectedSecret, receivedSecret }) {
+  if (!expectedSecret) {
+    return true;
+  }
+  return timingSafeStringEqual(expectedSecret, receivedSecret);
 }
 
 export function buildBridgeInputFromTelegram(parsed, options = {}) {
-  const text = parsed?.text || "";
-  const lowerText = text.toLowerCase();
-  const hasYes = /\byes\b/.test(lowerText);
-  const sourceImageUrl = firstUrl(text);
-  const promptText = withoutFirstUrl(text);
-  const input = {
-    profileId: options.profileId,
-    characterName: options.characterName,
-    visualIdentity: options.visualIdentity,
-    chatText: promptText,
-    mood: promptText,
-    location: promptText,
-    outfit: parsed?.command === "outfit-try-on" ? promptText : undefined,
-    sourceImageUrl,
-    userConsent: ["couple-photo", "couples-vacation"].includes(parsed?.command) && hasYes ? "yes" : undefined,
-    theme: parsed?.command === "couples-vacation" ? promptText : undefined,
-    matureContent: parsed?.command === "private-snap" ? true : options.matureContent,
-    maxGenerations: parsed?.command === "couples-vacation" ? 3 : 1,
-    snapTtlSeconds: parsed?.command === "private-snap" ? Number(options.snapTtlSeconds || 120) : undefined,
-  };
-
-  if (parsed?.action === "generate") {
-    input.yes = true;
-  }
-  if (parsed?.command === "private-snap" && !hasYes && parsed?.action === "generate") {
-    delete input.yes;
-  }
-
-  return defaultInputForHost(input);
+  return buildCompanionBridgeInput(parsed, options);
 }
 
 export async function runTelegramRemixCommand(parsed, options = {}) {
-  if (!parsed || parsed.type === "help") {
-    return {
-      type: "help",
-      text: telegramHelpText(options.characterName),
-    };
-  }
+  return runCompanionBridgeCommand(parsed, {
+    previewExample: "/preview send me a bath selfie",
+    ...options,
+  });
+}
 
-  if (parsed.action === "generate" && ["couple-photo", "couples-vacation", "private-snap"].includes(parsed.command)) {
-    const hasConsent = /\byes\b/i.test(parsed.text || "");
-    if (!hasConsent) {
-      return {
-        type: "text",
-        text: `${parsed.command} needs explicit yes in the command before spending credits. Use /preview first, or send the command again with yes.`,
-      };
+function publicImageUrlsFromResult(result) {
+  return publicImageUrlsFromCompanionResult(result);
+}
+
+function telegramPhotoMessagesFromResult(result, chatId) {
+  const messages = [];
+  const seen = new Set();
+  const append = (photo, fallbackPhotoUrl) => {
+    if (!isPublicHttpsUrl(photo) || seen.has(photo)) {
+      return;
+    }
+    seen.add(photo);
+    messages.push({
+      method: "sendPhoto",
+      fallbackPhotoUrl: cleanString(fallbackPhotoUrl),
+      body: {
+        ...chatIdPayload(chatId),
+        photo,
+        caption: undefined,
+      },
+    });
+  };
+
+  for (const item of Array.isArray(result?.payload?.results) ? result.payload.results : []) {
+    append(item?.productionImageUrl, item?.imageUrl);
+    if (!item?.productionImageUrl) {
+      append(item?.imageUrl, "");
     }
   }
+  for (const photo of Array.isArray(result?.imageUrls) ? result.imageUrls : []) {
+    append(photo, "");
+  }
+  return messages;
+}
 
-  const input = buildBridgeInputFromTelegram(parsed, options);
-  const payload = await callBridgeCommand({
-    bridgeUrl: options.bridgeUrl,
-    command: parsed.command,
-    action: parsed.action,
-    input,
-    fetchImpl: options.fetchImpl,
-  });
+function chatIdPayload(chatId) {
+  return chatId === undefined || chatId === null ? {} : { chat_id: chatId };
+}
 
+export function telegramMessagesForResult(result, options = {}) {
+  const chatId = options.chatId ?? result?.chatId;
+  const publicImageUrls = publicImageUrlsFromResult(result);
+  const imageUrls = Array.isArray(result?.imageUrls) ? result.imageUrls : [];
+  const hasLocalOnlyImages = imageUrls.length > 0 && publicImageUrls.length === 0;
+
+  if (hasLocalOnlyImages) {
+    return [
+      {
+        method: "sendMessage",
+        body: {
+          ...chatIdPayload(chatId),
+          text: "Remix.Camera generated a local bridge image, but Telegram cannot fetch 127.0.0.1 URLs. Use productionImageUrl delivery or a public bridge.",
+          disable_web_page_preview: true,
+        },
+      },
+    ];
+  }
+
+  if (!publicImageUrls.length) {
+    return [
+      {
+        method: "sendMessage",
+        body: {
+          ...chatIdPayload(chatId),
+          text: result?.text || telegramHelpText(options.characterName),
+          disable_web_page_preview: true,
+        },
+      },
+    ];
+  }
+
+  return telegramPhotoMessagesFromResult(result, chatId);
+}
+
+export function telegramProgressText(characterName = "Lily", parsed = {}) {
+  return companionProgressText(characterName, parsed);
+}
+
+function cleanString(value) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function bridgeResultId(result) {
+  return cleanString(result?.id || result?.generationId || result?.raw?.id || result?.raw?.generationId);
+}
+
+export function telegramImageContextFromResult(result = {}) {
+  const candidates = Array.isArray(result?.payload?.results) ? result.payload.results : [];
+  const selected = candidates.find((item) => item?.ok !== false && (item?.productionImageUrl || item?.imageUrl));
+  if (!selected) {
+    return null;
+  }
+  const sourceImageUrl = cleanString(selected.productionImageUrl || selected.imageUrl);
+  if (!sourceImageUrl) {
+    return null;
+  }
   return {
-    type: "bridge",
-    command: parsed.command,
-    input,
-    payload,
-    text: summarizeBridgePayload(payload),
-    imageUrls: imageUrlsFromBridgePayload(payload),
-    deleteAfterSeconds: parsed.command === "private-snap" ? Number(input.snapTtlSeconds || options.snapTtlSeconds || 120) : 0,
+    sourceImageUrl,
+    fallbackImageUrl: cleanString(selected.imageUrl),
+    generationId: bridgeResultId(selected) || null,
+    updatedAt: new Date().toISOString(),
   };
 }
 
-async function telegramRequest(botToken, method, body) {
-  const response = await fetch(`https://api.telegram.org/bot${botToken}/${method}`, {
+export function telegramResultMetadataForLog(details = {}) {
+  const payload = details?.result?.payload || {};
+  const parsed = details?.parsed || {};
+  const results = Array.isArray(payload?.results) ? payload.results : [];
+  const responseMessages = Array.isArray(details?.responseMessages) ? details.responseMessages : [];
+  const promptTemplate = payload?.promptTemplate && typeof payload.promptTemplate === "object"
+    ? payload.promptTemplate
+    : {};
+
+  return {
+    command: cleanString(parsed.command || payload.command) || null,
+    action: cleanString(parsed.action) || null,
+    modelId: cleanString(payload.modelId) || null,
+    matureContent: payload.matureContent === true,
+    promptTemplateDecision: cleanString(payload.promptTemplateDecision) || null,
+    promptTemplatePackSlug: cleanString(promptTemplate.packSlug || payload.promptTemplatePackSlug) || null,
+    promptTemplateMatchStrength: cleanString(promptTemplate.matchStrength || payload.promptTemplateMatchStrength) || null,
+    resultCount: results.length,
+    okResultCount: results.filter((result) => result?.ok !== false && (result?.imageUrl || result?.productionImageUrl)).length,
+    generationIds: results.map(bridgeResultId).filter(Boolean),
+    publicPhotoCount: responseMessages.filter((message) => message?.method === "sendPhoto").length,
+  };
+}
+
+async function telegramApiRequest({
+  botToken,
+  method,
+  body,
+  fetchImpl = globalThis.fetch,
+}) {
+  if (!botToken) {
+    throw new Error("Telegram bot token is required.");
+  }
+  const response = await fetchImpl(`https://api.telegram.org/bot${botToken}/${method}`, {
     method: "POST",
-    body,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body || {}),
   });
   const payload = await response.json().catch(() => ({}));
-  if (!response.ok || payload.ok === false) {
-    throw new Error(payload?.description || `Telegram ${method} failed with ${response.status}`);
+  if (!response.ok || payload?.ok === false) {
+    throw new Error(payload?.description || payload?.error || `Telegram request failed with ${response.status}`);
   }
-  return payload.result;
+  return payload?.result ?? payload;
 }
 
-export async function sendTelegramText({ botToken, chatId, text, parseMode = "" }) {
-  const form = new FormData();
-  form.set("chat_id", String(chatId));
-  form.set("text", text);
-  if (parseMode) {
-    form.set("parse_mode", parseMode);
+async function telegramMultipartRequest({
+  botToken,
+  method,
+  formData,
+  fetchImpl = globalThis.fetch,
+}) {
+  if (!botToken) {
+    throw new Error("Telegram bot token is required.");
   }
-  return telegramRequest(botToken, "sendMessage", form);
+  const response = await fetchImpl(`https://api.telegram.org/bot${botToken}/${method}`, {
+    method: "POST",
+    body: formData,
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok || payload?.ok === false) {
+    throw new Error(payload?.description || payload?.error || `Telegram request failed with ${response.status}`);
+  }
+  return payload?.result ?? payload;
 }
 
-export async function sendTelegramPhoto({ botToken, chatId, imageUrl, caption = "" }) {
-  const form = new FormData();
-  form.set("chat_id", String(chatId));
-  form.set("caption", caption.slice(0, 1024));
+async function fetchPhotoForTelegramUpload(photoUrl, fetchImpl) {
+  const response = await fetchImpl(photoUrl, {
+    headers: {
+      Accept: "image/avif,image/webp,image/png,image/jpeg,image/*;q=0.8",
+    },
+  });
+  if (!response.ok) {
+    throw new Error(`Could not fetch generated image for Telegram upload: ${response.status}`);
+  }
+  const contentLength = Number(response.headers.get("content-length") || 0);
+  if (contentLength > TELEGRAM_PHOTO_UPLOAD_MAX_BYTES) {
+    throw new Error("Generated image is too large for Telegram photo upload.");
+  }
+  const bytes = Buffer.from(await response.arrayBuffer());
+  if (bytes.byteLength > TELEGRAM_PHOTO_UPLOAD_MAX_BYTES) {
+    throw new Error("Generated image is too large for Telegram photo upload.");
+  }
+  const mimeType = cleanString(response.headers.get("content-type")).split(";")[0] || "image/jpeg";
+  return {
+    bytes,
+    mimeType,
+  };
+}
 
-  if (/^https?:\/\/(127\.0\.0\.1|localhost|\[::1\])[:/]/i.test(imageUrl)) {
-    const imageResponse = await fetch(imageUrl);
-    if (!imageResponse.ok) {
-      throw new Error(`Failed to fetch local bridge image: ${imageResponse.status}`);
+async function sendTelegramPhoto({
+  botToken,
+  body,
+  fallbackPhotoUrl,
+  fetchImpl = globalThis.fetch,
+}) {
+  try {
+    return await telegramApiRequest({
+      botToken,
+      method: "sendPhoto",
+      body,
+      fetchImpl,
+    });
+  } catch (error) {
+    const photoUrl = cleanString(body?.photo);
+    const shouldUploadBytes =
+      /^https?:\/\//i.test(photoUrl) &&
+      /failed to get HTTP URL content|wrong file identifier|bad request/i.test(String(error?.message || ""));
+    if (!shouldUploadBytes) {
+      throw error;
     }
-    const mimeType = imageResponse.headers.get("content-type") || "image/jpeg";
-    const blob = new Blob([await imageResponse.arrayBuffer()], { type: mimeType });
-    form.set("photo", blob, "remix-camera.jpg");
-  } else {
-    form.set("photo", imageUrl);
-  }
 
-  return telegramRequest(botToken, "sendPhoto", form);
+    const uploadUrl = cleanString(fallbackPhotoUrl) || photoUrl;
+    const photo = await fetchPhotoForTelegramUpload(uploadUrl, fetchImpl);
+    const formData = new FormData();
+    for (const [key, value] of Object.entries(body || {})) {
+      if (key !== "photo" && value !== undefined && value !== null) {
+        formData.set(key, String(value));
+      }
+    }
+    formData.set("photo", new Blob([photo.bytes], { type: photo.mimeType }), "remix-camera.jpg");
+    return telegramMultipartRequest({
+      botToken,
+      method: "sendPhoto",
+      formData,
+      fetchImpl,
+    });
+  }
 }
 
-export async function deleteTelegramMessage({ botToken, chatId, messageId }) {
-  const form = new FormData();
-  form.set("chat_id", String(chatId));
-  form.set("message_id", String(messageId));
-  return telegramRequest(botToken, "deleteMessage", form);
+export async function sendTelegramText({
+  botToken,
+  chatId,
+  text,
+  fetchImpl = globalThis.fetch,
+}) {
+  return telegramApiRequest({
+    botToken,
+    method: "sendMessage",
+    body: {
+      chat_id: chatId,
+      text,
+      disable_web_page_preview: true,
+    },
+    fetchImpl,
+  });
 }
 
-export async function sendTelegramRemixResult({ botToken, chatId, result }) {
-  if (result.type === "help" || result.type === "text" || !result.imageUrls?.length) {
-    return [await sendTelegramText({ botToken, chatId, text: result.text || telegramHelpText() })];
+export async function sendTelegramRemixResult({
+  botToken,
+  chatId,
+  result,
+  fetchImpl = globalThis.fetch,
+}) {
+  const messages = telegramMessagesForResult(result, { chatId });
+  if (!botToken || !chatId) {
+    return messages;
   }
-
   const sent = [];
-  for (let index = 0; index < result.imageUrls.length; index += 1) {
-    const caption = index === 0 ? "Remix.Camera" : "";
-    sent.push(await sendTelegramPhoto({ botToken, chatId, imageUrl: result.imageUrls[index], caption }));
-  }
-
-  if (result.deleteAfterSeconds > 0) {
-    for (const message of sent) {
-      setTimeout(() => {
-        void deleteTelegramMessage({ botToken, chatId, messageId: message.message_id }).catch(() => {});
-      }, result.deleteAfterSeconds * 1000);
+  for (const message of messages) {
+    if (message.method === "sendPhoto") {
+      sent.push(await sendTelegramPhoto({
+        botToken,
+        body: message.body,
+        fallbackPhotoUrl: message.fallbackPhotoUrl,
+        fetchImpl,
+      }));
+    } else {
+      sent.push(await telegramApiRequest({
+        botToken,
+        method: message.method,
+        body: message.body,
+        fetchImpl,
+      }));
     }
   }
-
   return sent;
 }
 
 export function createRemixTelegramTool(options = {}) {
   const handleUpdateDetailed = async (update, overrides = {}) => {
-    const message = getTelegramMessage(update);
-    const text = message?.text || "";
-    const chatId = message?.chat?.id;
-    if (!chatId) {
+    const merged = { ...options, ...overrides };
+    if (!verifyTelegramSecret({
+      expectedSecret: merged.expectedSecret || merged.secretToken,
+      receivedSecret: merged.receivedSecret,
+    })) {
+      const message = extractTelegramMessage(update);
       return {
         handled: false,
-        reason: "missing-chat",
+        reason: "invalid-secret",
+        chatId: extractTelegramChatId(update),
+        messageId: message?.message_id,
+        text: extractTelegramText(update),
         parsed: null,
         result: null,
+        responseMessages: [],
         sentMessages: [],
       };
     }
+
+    const text = extractTelegramText(update);
     const parsed = parseTelegramCommand(text);
     if (!parsed) {
+      const message = extractTelegramMessage(update);
       return {
         handled: false,
         reason: "unknown-command",
-        chatId,
+        chatId: extractTelegramChatId(update),
         messageId: message?.message_id,
         text,
         parsed: null,
         result: null,
+        responseMessages: [],
         sentMessages: [],
       };
     }
-    const merged = { ...options, ...overrides };
+
+    const chatId = extractTelegramChatId(update) ?? merged.chatId;
     const result = await runTelegramRemixCommand(parsed, merged);
+    const responseMessages = telegramMessagesForResult(result, { ...merged, chatId });
     const sentMessages =
-      merged.autoSend === false || !merged.botToken
+      merged.autoSend === false || !merged.botToken || !chatId
         ? []
-        : await sendTelegramRemixResult({
-            botToken: merged.botToken,
-            chatId,
-            result,
-          });
+        : await sendTelegramRemixResult({ ...merged, chatId, result });
+
     return {
       handled: true,
       chatId,
-      messageId: message?.message_id,
+      messageId: extractTelegramMessage(update)?.message_id,
+      userId: extractTelegramMessage(update)?.from?.id || update?.callback_query?.from?.id || null,
       text,
       parsed,
       result,
+      responseMessages,
       sentMessages,
     };
   };
 
   return {
     helpText: () => telegramHelpText(options.characterName),
+    nonImageText: () => telegramNonImageText(options.characterName),
+    progressText: (parsed) => telegramProgressText(options.characterName, parsed),
     parseCommand: parseTelegramCommand,
     isCommand: isRemixTelegramCommand,
     shouldHandleUpdate: shouldHandleTelegramUpdate,

@@ -64,6 +64,24 @@ const mockPromptPacks = {
     prompt:
       "A cinematic but natural phone-camera mirror selfie in a detailed lived-in bedroom, warm window light, expressive eye contact, carefully styled outfit, visible environment, premium social photo realism, no text overlay.",
   },
+  bathSelfie: {
+    id: "pack_bath_selfie",
+    slug: "bathroom-bubble-bath-selfie",
+    title: "Bathroom Bubble Bath Selfie Pack",
+    adminPriorityStatus: "good",
+    qualityRating: "good",
+    prompt:
+      "A realistic bathroom mirror selfie after a bubble bath, soft steam in the room, wet hair, towel on the counter, bathtub visible in the background, natural phone-camera framing, intimate but SFW social photo realism.",
+  },
+  livingRoom: {
+    id: "pack_living_room",
+    slug: "living-room-couch-selfie",
+    title: "Living Room Couch Selfie Pack",
+    adminPriorityStatus: "excellent",
+    qualityRating: "great",
+    prompt:
+      "A realistic phone-camera selfie from a cozy living room couch, warm lamp light, soft blanket, apartment background visible, relaxed in-the-moment companion update, no text overlay.",
+  },
   outfit: {
     id: "pack_outfit",
     slug: "proven-outfit-try-on",
@@ -123,6 +141,13 @@ const mockPromptPacks = {
 function chooseMockPromptPacks(query) {
   const text = String(query || "").toLowerCase();
   if (text.includes("excellent-first-test")) return [mockPromptPacks.genericSelfie, mockPromptPacks.excellentSelfie];
+  if (text.includes("spaceship") || text.includes("astronaut")) return [mockPromptPacks.excellentSelfie];
+  if (text.includes("bath") || text.includes("bathroom") || text.includes("shower")) {
+    return [mockPromptPacks.excellentSelfie, mockPromptPacks.bathSelfie];
+  }
+  if (text.includes("couch") || text.includes("sofa") || text.includes("living-room") || text.includes("living room")) {
+    return [mockPromptPacks.selfie, mockPromptPacks.livingRoom];
+  }
   if (text.startsWith("couple vacation")) return [mockPromptPacks.vacation];
   if (text.startsWith("date night")) return [mockPromptPacks.date];
   if (text.startsWith("daily life")) return [mockPromptPacks.daily];
@@ -219,6 +244,18 @@ async function startMockRemixApi() {
           status: "generating",
           imageUrl: null,
         },
+      });
+      return;
+    }
+
+    const feedbackMatch = url.pathname.match(/^\/api\/v1\/design\/generations\/([^/]+)\/feedback$/);
+    if (req.method === "POST" && feedbackMatch) {
+      assert.equal(feedbackMatch[1], "photo_mock_1");
+      assert.ok(["thumbs_up", "thumbs_down"].includes(body.signal));
+      sendJson(res, 200, {
+        ok: true,
+        signal: body.signal,
+        candidateKey: "pfc_mock_feedback",
       });
       return;
     }
@@ -546,6 +583,93 @@ test("bridge prefers excellent selfie templates over weaker generic selfie match
   }
 });
 
+test("bridge prefers scene-matched bath templates over generic high-quality selfies", async () => {
+  const mockApi = await startMockRemixApi();
+  const bridge = await startBridge({
+    REMIX_API_KEY: "rc_live_test.secret",
+    REMIX_PROFILE_ID: "profile_seraphina",
+    REMIX_API_BASE_URL: mockApi.baseUrl,
+  });
+
+  try {
+    const response = await fetch(`${bridge.url}/v1/commands/dry-run`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        command: "send-selfie",
+        characterName: "Seraphina",
+        visualIdentity: "long pastel-pink hair, amber eyes, black sundress, emerald vine magic",
+        mood: "send me a bath selfie",
+      }),
+    });
+    const payload = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.equal(payload.ok, true);
+    assert.equal(payload.promptTemplateDecision, "template");
+    assert.equal(payload.promptTemplate.packId, "pack_bath_selfie");
+    assert.equal(payload.promptTemplate.matchStrength, "strong");
+    assert.deepEqual(payload.promptTemplate.requestedIntentGroups, ["bathroom"]);
+    assert.deepEqual(payload.promptTemplate.matchedIntentGroups, ["bathroom"]);
+    assert.deepEqual(payload.promptTemplate.missingIntentGroups, []);
+    assert.match(payload.promptTemplateSearchQuery, /^send me a bath selfie/i);
+    assert.match(payload.prompt, /bubble bath/);
+    assert.match(payload.prompt, /bathtub visible/);
+    assert.deepEqual(
+      mockApi.calls.map((call) => call.pathname),
+      [
+        "/api/v1/design/packs/search",
+        "/api/v1/design/packs/pack_excellent_selfie",
+        "/api/v1/design/packs/pack_bath_selfie",
+      ],
+    );
+  } finally {
+    await bridge.close();
+    await mockApi.close();
+  }
+});
+
+test("bridge falls back to ad-hoc prompts when no strong template matches the user request", async () => {
+  const mockApi = await startMockRemixApi();
+  const bridge = await startBridge({
+    REMIX_API_KEY: "rc_live_test.secret",
+    REMIX_PROFILE_ID: "profile_seraphina",
+    REMIX_API_BASE_URL: mockApi.baseUrl,
+  });
+
+  try {
+    const response = await fetch(`${bridge.url}/v1/commands/dry-run`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        command: "send-selfie",
+        characterName: "Seraphina",
+        visualIdentity: "long pastel-pink hair, amber eyes, black sundress, emerald vine magic",
+        mood: "send me an astronaut spaceship selfie",
+      }),
+    });
+    const payload = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.equal(payload.ok, true);
+    assert.equal(payload.promptTemplateDecision, "ad_hoc_fallback");
+    assert.equal(payload.promptTemplate, null);
+    assert.match(payload.promptTemplateSearchQuery, /^send me an astronaut spaceship selfie/i);
+    assert.match(payload.prompt, /astronaut spaceship selfie/);
+    assert.ok(payload.warnings.some((warning) => /No strong Remix\.Camera prompt-template match/.test(warning)));
+    assert.deepEqual(
+      mockApi.calls.map((call) => call.pathname),
+      [
+        "/api/v1/design/packs/search",
+        "/api/v1/design/packs/pack_excellent_selfie",
+      ],
+    );
+  } finally {
+    await bridge.close();
+    await mockApi.close();
+  }
+});
+
 test("bridge allows the default local SillyTavern browser origin", async () => {
   const mockApi = await startMockRemixApi();
   const bridge = await startBridge({
@@ -642,6 +766,13 @@ test("bridge generate polls Remix API and returns chat markdown", async () => {
     assert.equal(mockApi.calls[0].authorization, "Bearer rc_live_test.secret");
     const generationCall = mockApi.calls.find((call) => call.pathname === "/api/v1/design/generations");
     assert.equal(generationCall.body.modelId, "nano-banana");
+    assert.equal(generationCall.body.source, "sillytavern_companion_images");
+    assert.equal(generationCall.body.companionCommand, "send-selfie");
+    assert.equal(generationCall.body.promptTemplateDecision, "template");
+    assert.equal(generationCall.body.promptTemplatePackId, "pack_selfie");
+    assert.equal(generationCall.body.promptTemplatePromptIndex, 0);
+    assert.equal(generationCall.body.promptTemplate.packId, "pack_selfie");
+    assert.match(generationCall.body.promptTemplatePrompt, /cozy cafe corner/);
     assert.deepEqual(
       mockApi.calls.map((call) => call.pathname),
       [
@@ -653,6 +784,41 @@ test("bridge generate polls Remix API and returns chat markdown", async () => {
         "/generated/seraphina.jpg",
       ],
     );
+  } finally {
+    await bridge.close();
+    await mockApi.close();
+  }
+});
+
+test("bridge forwards SillyTavern inline feedback to Remix API", async () => {
+  const mockApi = await startMockRemixApi();
+  const bridge = await startBridge({
+    REMIX_API_KEY: "rc_live_test.secret",
+    REMIX_API_BASE_URL: mockApi.baseUrl,
+  });
+
+  try {
+    const response = await fetch(`${bridge.url}/v1/feedback`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        generationId: "photo_mock_1",
+        signal: "thumbs_up",
+        command: "send-selfie",
+        surface: "sillytavern",
+        sourceRoute: "sillytavern_inline_feedback",
+      }),
+    });
+    const payload = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.equal(payload.ok, true);
+    assert.equal(payload.candidateKey, "pfc_mock_feedback");
+    const feedbackCall = mockApi.calls.find((call) => call.pathname === "/api/v1/design/generations/photo_mock_1/feedback");
+    assert.equal(feedbackCall.authorization, "Bearer rc_live_test.secret");
+    assert.equal(feedbackCall.body.signal, "thumbs_up");
+    assert.equal(feedbackCall.body.surface, "sillytavern");
+    assert.equal(feedbackCall.body.sourceRoute, "sillytavern_inline_feedback");
   } finally {
     await bridge.close();
     await mockApi.close();
@@ -836,6 +1002,46 @@ test("bridge source-image mature path forces Seedream remix", async () => {
   }
 });
 
+test("private-snap with source image uses Seedream remix edit", async () => {
+  const mockApi = await startMockRemixApi();
+  const bridge = await startBridge({
+    REMIX_API_KEY: "rc_live_test.secret",
+    REMIX_PROFILE_ID: "profile_seraphina",
+    REMIX_API_BASE_URL: mockApi.baseUrl,
+  });
+
+  try {
+    const response = await fetch(`${bridge.url}/v1/commands/generate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        yes: true,
+        command: "private-snap",
+        characterName: "Seraphina",
+        sourceImageUrl: "https://example.com/private-snap.jpg",
+        visualIdentity: "long pastel-pink hair, amber eyes, black sundress, emerald vine magic",
+        maxGenerations: 1,
+      }),
+    });
+    const payload = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.equal(payload.ok, true);
+    assert.equal(payload.command, "private-snap");
+    assert.equal(payload.matureContent, true);
+    assert.equal(payload.usesImageToImage, true);
+    assert.equal(payload.modelId, "seedream-v4.5-edit");
+    const remixCall = mockApi.calls.find((call) => call.pathname === "/api/v1/design/remix-from-image");
+    const generationCall = mockApi.calls.find((call) => call.pathname === "/api/v1/design/generations");
+    assert.equal(generationCall, undefined);
+    assert.equal(remixCall.body.modelId, "seedream-v4.5-edit");
+    assert.equal(remixCall.body.imageUrl, "https://example.com/private-snap.jpg");
+  } finally {
+    await bridge.close();
+    await mockApi.close();
+  }
+});
+
 test("couple-photo uploads the user's photo as the male reference", async () => {
   const mockApi = await startMockRemixApi();
   const bridge = await startBridge({
@@ -1008,7 +1214,7 @@ test("bridge maps each companion command to a Remix prompt-template family", asy
 
   const cases = [
     ["send-selfie", { command: "send-selfie" }, "pack_selfie"],
-    ["auto-selfie-from-chat", { command: "auto-selfie-from-chat", chatText: "Send a quick mirror selfie from the couch." }, "pack_selfie"],
+    ["auto-selfie-from-chat", { command: "auto-selfie-from-chat", chatText: "Send a quick mirror selfie from the couch." }, "pack_living_room"],
     ["outfit-try-on", { command: "outfit-try-on", outfit: "black evening dress" }, "pack_outfit"],
     ["couple-photo", { command: "couple-photo", userConsent: "yes" }, "pack_couple"],
     ["couples-vacation", { command: "couples-vacation", userConsent: "yes", theme: "Amalfi coast vacation" }, "pack_vacation"],
