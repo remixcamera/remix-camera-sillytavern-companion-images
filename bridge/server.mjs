@@ -216,6 +216,8 @@ const proxiedImages = new Map();
 const PROXIED_IMAGE_TTL_MS = 60 * 60 * 1000;
 const JSON_BODY_MAX_BYTES = 7 * 1024 * 1024;
 const REFERENCE_UPLOAD_MAX_BYTES = 4 * 1024 * 1024;
+const RECENT_QA_EVENT_LIMIT = 50;
+const recentQaEvents = [];
 
 async function loadBridgeConfig() {
   const configPath = process.env.REMIX_CONFIG_FILE || DEFAULT_CONFIG_PATH;
@@ -334,6 +336,24 @@ function sendJson(req, res, status, body) {
     "Content-Length": Buffer.byteLength(payload),
   });
   res.end(payload);
+}
+
+function sendHtml(req, res, status, html) {
+  res.writeHead(status, {
+    ...corsHeaders(req),
+    "Content-Type": "text/html; charset=utf-8",
+    "Content-Length": Buffer.byteLength(html),
+  });
+  res.end(html);
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
 
 function sendOptions(req, res) {
@@ -497,7 +517,6 @@ function normalizeBody(body) {
         body.userImageMimeType,
     ),
     theme: cleanString(body.theme || body.sceneTheme || body.vacationTheme),
-    snapTtlSeconds: clampInteger(body.snapTtlSeconds, 5, 600, 45),
     sourceImageUrl: cleanString(body.sourceImageUrl),
     referenceImageUrl: cleanString(body.referenceImageUrl),
     maxGenerations: clampInteger(body.maxGenerations, 1, 4, command === "couples-vacation" ? 3 : 1),
@@ -1170,7 +1189,6 @@ async function buildPlan(input) {
     visualIdentity: input.visualIdentity || null,
     negativePrompt: input.negativePrompt || null,
     theme: input.theme || null,
-    snapTtlSeconds: input.snapTtlSeconds || null,
     maxGenerations: input.maxGenerations,
     usesImageToImage,
     sourceImageUrl: sourceImageUrl || null,
@@ -1290,9 +1308,9 @@ function schemaResponse() {
       },
       {
         name: "private-snap",
-        description: "Generate an opted-in mature private snap with ephemeral display metadata.",
+        description: "Generate an opted-in mature private snap that stays visible in chat unless the user deletes it.",
         required: [],
-        optional: ["profileId", "characterName", "sourceImageUrl", "mood", "outfit", "location", "pose", "style", "visualIdentity", "negativePrompt", "memory", "chatText", "snapTtlSeconds"],
+        optional: ["profileId", "characterName", "sourceImageUrl", "mood", "outfit", "location", "pose", "style", "visualIdentity", "negativePrompt", "memory", "chatText"],
       },
     ],
   };
@@ -1482,6 +1500,128 @@ function promptTemplateRequestMetadata(plan) {
   };
 }
 
+function qaEventFromPlan(type, plan, extra = {}) {
+  const template = plan?.promptTemplate && typeof plan.promptTemplate === "object" ? plan.promptTemplate : null;
+  return {
+    id: crypto.randomUUID(),
+    createdAt: new Date().toISOString(),
+    type,
+    command: plan?.command || null,
+    characterName: plan?.characterName || null,
+    profileId: plan?.profileId || null,
+    modelId: plan?.modelId || null,
+    matureContent: plan?.matureContent === true,
+    promptTemplateDecision: plan?.promptTemplateDecision || null,
+    promptTemplateSearchQuery: plan?.promptTemplateSearchQuery || null,
+    promptTemplatePackTitle: template?.packTitle || null,
+    promptTemplatePackId: template?.packId || null,
+    promptTemplateQualityStatus: template?.qualityStatus || null,
+    promptTemplateScore: typeof template?.score === "number" ? template.score : null,
+    promptTemplatePreferredQuality: template?.preferredQuality === true,
+    resultImageUrls: [],
+    productionImageUrls: [],
+    feedbackSignal: null,
+    feedbackAt: null,
+    ...extra,
+  };
+}
+
+function recordQaEvent(event) {
+  recentQaEvents.unshift(event);
+  if (recentQaEvents.length > RECENT_QA_EVENT_LIMIT) {
+    recentQaEvents.length = RECENT_QA_EVENT_LIMIT;
+  }
+  return event;
+}
+
+function recordPlanQaEvent(type, plan, extra = {}) {
+  return recordQaEvent(qaEventFromPlan(type, plan, extra));
+}
+
+function updateQaFeedback(input) {
+  const generationId = cleanString(input.generationId);
+  const signal = cleanString(input.signal);
+  const now = new Date().toISOString();
+  for (const event of recentQaEvents) {
+    const resultIds = Array.isArray(event.resultGenerationIds) ? event.resultGenerationIds : [];
+    if (resultIds.includes(generationId)) {
+      event.feedbackSignal = signal;
+      event.feedbackAt = now;
+      return;
+    }
+  }
+  recordQaEvent({
+    id: crypto.randomUUID(),
+    createdAt: now,
+    type: "feedback",
+    command: cleanString(input.command) || null,
+    characterName: null,
+    profileId: null,
+    modelId: null,
+    matureContent: false,
+    promptTemplateDecision: null,
+    promptTemplateSearchQuery: null,
+    promptTemplatePackTitle: null,
+    promptTemplatePackId: null,
+    promptTemplateQualityStatus: null,
+    promptTemplateScore: null,
+    promptTemplatePreferredQuality: false,
+    resultGenerationIds: [generationId],
+    resultImageUrls: [],
+    productionImageUrls: [],
+    feedbackSignal: signal,
+    feedbackAt: now,
+  });
+}
+
+function qaHtml() {
+  const rows = recentQaEvents
+    .map((event) => {
+      const images = (Array.isArray(event.productionImageUrls) ? event.productionImageUrls : [])
+        .slice(0, 3)
+        .map((url, index) => `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">image ${index + 1}</a>`)
+        .join("<br>");
+      return [
+        "<tr>",
+        `<td>${escapeHtml(event.createdAt)}</td>`,
+        `<td>${escapeHtml(event.type)}</td>`,
+        `<td>${escapeHtml(event.command || "")}</td>`,
+        `<td>${escapeHtml(event.modelId || "")}</td>`,
+        `<td>${escapeHtml(event.promptTemplateDecision || "")}</td>`,
+        `<td>${escapeHtml(event.promptTemplatePackTitle || event.promptTemplatePackId || "")}</td>`,
+        `<td>${escapeHtml(event.promptTemplateQualityStatus || "")}</td>`,
+        `<td>${event.promptTemplateScore === null ? "" : escapeHtml(event.promptTemplateScore)}</td>`,
+        `<td>${images || ""}</td>`,
+        `<td>${escapeHtml(event.feedbackSignal || "")}</td>`,
+        "</tr>",
+      ].join("");
+    })
+    .join("");
+  return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Remix.Camera SillyTavern QA</title>
+  <style>
+    body { margin: 0; padding: 24px; background: #171717; color: #f7f7f8; font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    h1 { margin: 0 0 8px; font-size: 24px; }
+    p { margin: 0 0 20px; color: #b8b8b8; }
+    table { width: 100%; border-collapse: collapse; background: #222; border: 1px solid #333; }
+    th, td { padding: 10px; border-bottom: 1px solid #333; text-align: left; vertical-align: top; font-size: 13px; }
+    th { color: #d1fe17; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
+    a { color: #d1fe17; }
+    .empty { padding: 18px; border: 1px solid #333; background: #222; color: #b8b8b8; }
+  </style>
+</head>
+<body>
+  <h1>Remix.Camera SillyTavern QA</h1>
+  <p>Recent in-memory bridge activity. Refresh after Preview Prompt, generation, or inline feedback.</p>
+  ${rows ? `<table><thead><tr><th>Time</th><th>Type</th><th>Command</th><th>Model</th><th>Decision</th><th>Template</th><th>Quality</th><th>Score</th><th>Images</th><th>Feedback</th></tr></thead><tbody>${rows}</tbody></table>` : '<div class="empty">No QA events yet. Run Preview Prompt or generate an image from SillyTavern.</div>'}
+</body>
+</html>`;
+}
+
 async function submitGeneration(plan) {
   const profileId = await resolveProfileId(plan.profileId);
   const commonBody = {
@@ -1546,7 +1686,7 @@ async function submitFeedback(input) {
     throw httpError(400, "signal must be thumbs_up or thumbs_down.");
   }
 
-  return remixFetch(`/api/v1/design/generations/${encodeURIComponent(generationId)}/feedback`, {
+  const response = await remixFetch(`/api/v1/design/generations/${encodeURIComponent(generationId)}/feedback`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -1556,6 +1696,8 @@ async function submitFeedback(input) {
       command: cleanString(input.command) || null,
     }),
   });
+  updateQaFeedback(input);
+  return response;
 }
 
 async function fetchGenerationStatus(id) {
@@ -1663,12 +1805,19 @@ async function generate(input) {
       return `![${input.characterName} ${input.command}${suffix}](${result.imageUrl})`;
     })
     .join("\n\n");
-  return {
+  const response = {
     ok: displayResults.some((result) => result.ok),
     ...plan,
     results: displayResults,
     markdown,
   };
+  recordPlanQaEvent("generate", plan, {
+    ok: response.ok,
+    resultGenerationIds: displayResults.map((result) => cleanString(result.id)).filter(Boolean),
+    resultImageUrls: displayResults.map((result) => cleanString(result.imageUrl)).filter(Boolean),
+    productionImageUrls: displayResults.map((result) => cleanString(result.productionImageUrl)).filter(Boolean),
+  });
+  return response;
 }
 
 async function serveProxiedImage(req, res, id) {
@@ -1765,6 +1914,19 @@ async function route(req, res) {
     return;
   }
 
+  if (req.method === "GET" && (url.pathname === "/qa" || url.pathname === "/v1/qa")) {
+    sendHtml(req, res, 200, qaHtml());
+    return;
+  }
+
+  if (req.method === "GET" && url.pathname === "/v1/qa/recent") {
+    sendJson(req, res, 200, {
+      ok: true,
+      events: recentQaEvents,
+    });
+    return;
+  }
+
   if (
     req.method === "GET" &&
     ["/openapi.json", "/openwebui/openapi.json", "/librechat/openapi.json"].includes(url.pathname)
@@ -1788,10 +1950,12 @@ async function route(req, res) {
       command,
     });
     if (action === "dry-run") {
+      const plan = await buildPlan(body);
+      recordPlanQaEvent("dry-run", plan, { dryRun: true });
       sendJson(req, res, 200, {
         ok: true,
         dryRun: true,
-        ...(await buildPlan(body)),
+        ...plan,
       });
       return;
     }
@@ -1811,10 +1975,12 @@ async function route(req, res) {
 
   if (req.method === "POST" && url.pathname === "/v1/commands/dry-run") {
     const body = normalizeBody(await readJsonBody(req));
+    const plan = await buildPlan(body);
+    recordPlanQaEvent("dry-run", plan, { dryRun: true });
     sendJson(req, res, 200, {
       ok: true,
       dryRun: true,
-      ...(await buildPlan(body)),
+      ...plan,
     });
     return;
   }
@@ -1828,10 +1994,12 @@ async function route(req, res) {
       command,
     });
     if (action === "dry-run") {
+      const plan = await buildPlan(body);
+      recordPlanQaEvent("dry-run", plan, { dryRun: true });
       sendJson(req, res, 200, {
         ok: true,
         dryRun: true,
-        ...(await buildPlan(body)),
+        ...plan,
       });
       return;
     }
@@ -1851,6 +2019,9 @@ async function route(req, res) {
     routes: [
       "GET /health",
       "GET /schema",
+      "GET /qa",
+      "GET /v1/qa",
+      "GET /v1/qa/recent",
       "GET /openapi.json",
       "GET /chatgpt-actions/openapi.json",
       "GET /chatgpt-actions/health",
