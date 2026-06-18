@@ -297,7 +297,7 @@ Restart SillyTavern.
 
 3. Import or configure the character:
 
-For a new character, import the personalized Character Card PNG downloaded from Remix.Camera. For an existing character, keep the original SillyTavern card and add the prompt snippet below plus the Remix.Camera profile ID in the extension settings. The bundled character cards are examples only.
+For a new character, import the personalized Character Card PNG downloaded from Remix.Camera. For an existing character, keep the original SillyTavern card and add the prompt snippet below. The extension auto-fills Remix.Camera profile metadata from the card when available; raw profile IDs live under Advanced for recovery/debugging. The bundled character cards are examples only.
 
 For chat images to render without a warning toast, allow external media for the character or disable SillyTavern's `Forbid External Media` setting under User Settings -> Chat/Message Handling -> Message Formatting & Display. The browser E2E recorder temporarily disables that setting in its backed-up test state and restores the original settings afterward.
 
@@ -309,14 +309,16 @@ Set:
 
 - Bridge URL: `http://127.0.0.1:8787`
 - Character name: your character name
-- Profile ID: optional if already set in `REMIX_PROFILE_ID`
+- Character profile: manage name, gender, bio, and photos in Remix.Camera; the extension uses the paired profile for identity
 - Visual identity: auto-filled from Remix.Camera card metadata when imported
 - Tool calls: enable only if you want the character to call image tools automatically
-- Proactive private snaps: optional, off by default, capped per day, and spends one generation each time it fires
+- Proactive private snaps: optional, off by default, quiet-hour guarded, active-chat guarded, capped per day, and spends one generation each time it fires
 
 Use Health Check first. Then use Preview Prompt, which is a no-credit dry run. Try Send Selfie only after the prompt looks aligned.
 
 Preview Prompt calls Remix.Camera to retrieve a proven prompt/template pack and returns the selected `promptTemplate` metadata. It does not submit a generation or spend credits.
+
+The extension includes native fields for outfit source URL, date setting, vacation theme, user-inclusion consent, user appearance notes, and one private-snap consent. It does not use browser `prompt()` or `confirm()` dialogs for these launch flows.
 
 ## Character Card Prompt Snippet
 
@@ -513,6 +515,7 @@ Private snaps are private in the companion-chat sense, not disappearing media. T
 - The bridge rejects browser requests whose `Origin` is not in `REMIX_ALLOWED_ORIGINS`; update that variable if your SillyTavern runs on a different local host or port.
 - Do not put Remix.Camera credentials into SillyTavern custom JavaScript or character cards.
 - The bridge searches templates first, boosts best/excellent packs, and treats concrete scene terms such as bath, shower, tennis, cafe, couch, kitchen, beach, gym, office, and car as required fit signals. If no strong match remains, it uses an explicit ad-hoc fallback unless `REMIX_ALLOW_AD_HOC_PROMPT_FALLBACK=false`.
+- The local bridge QA page at `http://127.0.0.1:8787/qa` shows recent in-memory dry-run, generation, and feedback metadata: template vs fallback, model ID, selected pack, score, image URLs, and thumbs feedback.
 - SFW prompt-only generations use `nano-banana` by default. Mature mode or NSFW prompt language uses `seedream-v4.5-edit`; SFW source-image remixes follow Remix.Camera's standard extension route contract.
 - Character cards can include `data.extensions.remix_camera.referenceImageKey`; the bridge forwards it to SFW Nano requests so untrained reference-photo profiles can still produce character-consistent images.
 - `couple-photo` requires affirmative `userConsent`, such as `"yes"`, and should only be used when the user clearly wants to appear with the character. If a user photo is selected, it is uploaded to Remix.Camera and used as the user's identity reference, not as a fake output.

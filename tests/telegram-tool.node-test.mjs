@@ -78,6 +78,27 @@ test("Telegram parser accepts natural SillyTavern-style photo requests", () => {
     userConsent: undefined,
     contextualSourceImage: true,
   });
+
+  assert.deepEqual(parseTelegramCommand("send a photo of us at dinner"), {
+    type: "image",
+    action: "generate",
+    command: "couple-photo",
+    text: "send a photo of us at dinner",
+    natural: true,
+    userConsent: undefined,
+  });
+
+  assert.deepEqual(parseTelegramCommand("yes send a photo of us at dinner"), {
+    type: "image",
+    action: "generate",
+    command: "couple-photo",
+    text: "yes send a photo of us at dinner",
+    natural: true,
+    userConsent: "yes",
+  });
+
+  assert.equal(parseTelegramCommand("show me what you mean"), null);
+  assert.equal(parseTelegramCommand("send it"), null);
 });
 
 test("contextual undress requests pass the last generated image to the bridge", async () => {
@@ -141,23 +162,15 @@ test("Telegram bridge input routes couple and private generation like natural ch
   assert.equal(privateInput.snapTtlSeconds, undefined);
 });
 
-test("Telegram private generation does not require a literal yes token", async () => {
-  const calls = [];
+test("Telegram couple/vacation generation requires explicit user-inclusion consent", async () => {
   const result = await runTelegramRemixCommand(parseTelegramCommand("/vacation Amalfi coast"), {
-    fetchImpl: async (url, options) => {
-      calls.push({ url, body: JSON.parse(options.body) });
-      return new Response(JSON.stringify({ ok: true, dryRun: false, results: [] }), {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      });
+    fetchImpl: async () => {
+      throw new Error("bridge should not be called without user-inclusion consent");
     },
   });
 
-  assert.equal(result.type, "bridge");
-  assert.equal(calls[0].url, "http://127.0.0.1:8787/v1/tools/couples-vacation/generate");
-  assert.equal(calls[0].body.yes, true);
-  assert.equal(calls[0].body.userConsent, "yes");
-  assert.equal(calls[0].body.maxGenerations, 3);
+  assert.equal(result.type, "text");
+  assert.match(result.text, /Say yes/);
 });
 
 test("Telegram run calls bridge and extracts generated image URLs", async () => {

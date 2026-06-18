@@ -1,5 +1,11 @@
 import { extension_settings, getContext as getSillyTavernContext } from "../../../extensions.js";
 import { saveSettingsDebounced } from "../../../../script.js";
+import {
+  USER_INCLUDED_COMMANDS,
+  firstUrl,
+  parseNaturalCompanionImageRequest,
+  withoutFirstUrl,
+} from "./shared/companion-command-parser.mjs";
 
 (function remixCameraCompanionImages() {
   const EXTENSION_NAME = "remix-camera-companion-images";
@@ -37,6 +43,9 @@ import { saveSettingsDebounced } from "../../../../script.js";
     proactiveSnapDate: "",
     proactiveSnapCount: 0,
     proactiveSnapLastSentAt: 0,
+    proactiveSnapQuietStart: "22:00",
+    proactiveSnapQuietEnd: "08:00",
+    proactiveSnapRequireActiveChat: true,
   };
   const CHARACTER_SETTINGS_KEYS = [
     "profileId",
@@ -63,6 +72,7 @@ import { saveSettingsDebounced } from "../../../../script.js";
   let proactiveSnapTimer = null;
   let naturalLanguageGenerationInProgress = false;
   let lastNaturalLanguageImageRequest = "";
+  let lastGeneratedImageUrl = "";
 
   function getContext() {
     try {
@@ -287,6 +297,12 @@ import { saveSettingsDebounced } from "../../../../script.js";
       proactiveSnapDate: cleanString(saved.proactiveSnapDate),
       proactiveSnapCount: Math.max(0, Number(saved.proactiveSnapCount || 0)),
       proactiveSnapLastSentAt: Math.max(0, Number(saved.proactiveSnapLastSentAt || 0)),
+      proactiveSnapQuietStart: cleanString(saved.proactiveSnapQuietStart) || DEFAULT_SETTINGS.proactiveSnapQuietStart,
+      proactiveSnapQuietEnd: cleanString(saved.proactiveSnapQuietEnd) || DEFAULT_SETTINGS.proactiveSnapQuietEnd,
+      proactiveSnapRequireActiveChat:
+        typeof saved.proactiveSnapRequireActiveChat === "boolean"
+          ? saved.proactiveSnapRequireActiveChat
+          : DEFAULT_SETTINGS.proactiveSnapRequireActiveChat,
     };
   }
 
@@ -388,10 +404,22 @@ import { saveSettingsDebounced } from "../../../../script.js";
     }
     return [
       `<div class="remix-camera-feedback" data-remix-camera-generation-id="${escapeHtml(id)}" data-remix-camera-command="${escapeHtml(command || "image")}">`,
-      `<button class="remix-camera-feedback-button" type="button" data-remix-camera-feedback-signal="thumbs_up" title="Good image" aria-label="Good image">Good</button>`,
-      `<button class="remix-camera-feedback-button" type="button" data-remix-camera-feedback-signal="thumbs_down" title="Bad image" aria-label="Bad image">Bad</button>`,
+      `<button class="remix-camera-feedback-button" type="button" data-remix-camera-feedback-signal="thumbs_up" title="More like this" aria-label="More like this">More like this</button>`,
+      `<button class="remix-camera-feedback-button" type="button" data-remix-camera-feedback-signal="thumbs_down" title="Not quite" aria-label="Not quite">Not quite</button>`,
       "</div>",
     ].join("");
+  }
+
+  function setFirstRunStep(step, state) {
+    const item = document.querySelector(`[data-remix-camera-first-run="${step}"]`);
+    if (!item) {
+      return;
+    }
+    item.dataset.state = state;
+  }
+
+  function refreshFirstRunChecklist(current = settings()) {
+    setFirstRunStep("profile", current.profileId || current.referenceImageKey ? "done" : "todo");
   }
 
   function generatedImageMessageHtml(markdown, images, command) {
@@ -724,6 +752,7 @@ import { saveSettingsDebounced } from "../../../../script.js";
     if (!markdown && !imageUrls.length) {
       return "none";
     }
+    lastGeneratedImageUrl = productionImageUrl || imageUrl || lastGeneratedImageUrl;
 
     const messageHtml = generatedImageMessageHtml(markdown, generatedImages, payload?.command);
     const extra = imageResultExtra(payload, generatedImages, markdown, imageUrls, productionImageUrls, bridgeImageIds, generationIds, imageUrl, productionImageUrl);
@@ -856,8 +885,10 @@ import { saveSettingsDebounced } from "../../../../script.js";
     }
     const insertion = await insertGeneratedResult(payload, { pendingMessage });
     if (insertion === "inserted") {
+      setFirstRunStep("image", "done");
       setLog("Image generated and inserted into chat.", "success");
     } else if (insertion === "copied") {
+      setFirstRunStep("image", "done");
       setLog("Image generated. Markdown copied to clipboard.", "success");
     } else {
       setLog(payload.markdown || "Image generated, but no markdown was returned.", "success");
@@ -889,74 +920,25 @@ import { saveSettingsDebounced } from "../../../../script.js";
   }
 
   function classifyNaturalLanguageImageRequest(text) {
-    const lower = cleanString(text).toLowerCase();
-    if (!lower) {
+    const parsed = parseNaturalCompanionImageRequest(text, "generate");
+    if (!parsed) {
       return null;
     }
-
-    const hasImageNoun = /\b(selfie|photo|picture|pic|image|snap|shot|portrait|nude|nudes)\b/.test(lower);
-    const hasImageVerb = /\b(send|take|show|make|create|generate|give|share|post|see|want|need)\b/.test(lower);
-    const hasMatureImageIntent = /\b(private|sexy|spicy|risqu[eé]|nsfw|nude|nudes|naked|intimate|lewd|explicit|thirst\s*trap|snap)\b/.test(lower);
-    if (hasMatureImageIntent && (hasImageVerb || /\b(nude|nudes|snap)\b/.test(lower))) {
-      return {
-        command: "private-snap",
-        args: {
-          mood: text,
-          matureContent: true,
-        },
-      };
-    }
-
-    if (!hasImageNoun || (!hasImageVerb && !/\b(selfie|snap)\b/.test(lower))) {
-      return null;
-    }
-
-    if (/\b(couple|together|with me|you and me|us\b|our photo|our picture)\b/.test(lower)) {
-      if (/\b(vacation|trip|getaway|holiday|travel|weekend)\b/.test(lower)) {
-        return {
-          command: "couples-vacation",
-          args: {
-            userConsent: "yes",
-            userDescription: "the user, a consenting adult",
-            theme: text,
-            location: text,
-            maxGenerations: /\b(3|three|set|series|photos|pictures|pics)\b/.test(lower) ? 3 : 1,
-          },
-        };
-      }
-      return {
-        command: "couple-photo",
-        args: {
-          userConsent: "yes",
-          userDescription: "the user, a consenting adult",
-          location: text,
-        },
-      };
-    }
-
-    if (/\b(outfit|try[- ]?on|wear|wearing|dress|clothes|wardrobe|lingerie|bikini)\b/.test(lower)) {
-      return { command: "outfit-try-on", args: { outfit: text, mood: text } };
-    }
-
-    if (/\b(date|dinner|restaurant|bar|night out|date night)\b/.test(lower)) {
-      return { command: "date-night", args: { location: text, mood: text } };
-    }
-
-    if (hasMatureImageIntent) {
-      return {
-        command: "private-snap",
-        args: {
-          mood: text,
-          matureContent: true,
-        },
-      };
-    }
-
-    if (/\b(scene|around you|where you are|what we were talking|from chat|our chat|moment)\b/.test(lower)) {
-      return { command: "auto-selfie-from-chat", args: { mood: text } };
-    }
-
-    return { command: "send-selfie", args: { mood: text } };
+    const promptText = withoutFirstUrl(parsed.text);
+    const sourceImageUrl = firstUrl(parsed.text) || (parsed.contextualSourceImage ? lastGeneratedImageUrl : "");
+    const args = {
+      mood: promptText,
+      location: promptText,
+      sourceImageUrl,
+      userConsent: parsed.userConsent,
+      matureContent: parsed.command === "private-snap" ? true : undefined,
+      maxGenerations: parsed.command === "couples-vacation" ? 3 : undefined,
+      theme: parsed.command === "couples-vacation" ? promptText : undefined,
+      outfit: parsed.command === "outfit-try-on" ? promptText : undefined,
+      userReferenceImageUrl: USER_INCLUDED_COMMANDS.has(parsed.command) ? sourceImageUrl : undefined,
+      userDescription: parsed.userConsent === "yes" ? "the user, a consenting adult" : undefined,
+    };
+    return { command: parsed.command, args, parsed };
   }
 
   function isFollowupImageRequest(text) {
@@ -1023,6 +1005,14 @@ import { saveSettingsDebounced } from "../../../../script.js";
     }
 
     lastNaturalLanguageImageRequest = signature;
+    if (USER_INCLUDED_COMMANDS.has(request.command) && request.args?.userConsent !== "yes") {
+      if (typeof abort === "function") {
+        abort(true);
+      }
+      insertCompanionTextMessage("Say yes and clearly ask to be in the photo before I make a couple or vacation image with you.");
+      return;
+    }
+
     naturalLanguageGenerationInProgress = true;
     if (typeof abort === "function") {
       abort(true);
@@ -1060,6 +1050,7 @@ import { saveSettingsDebounced } from "../../../../script.js";
     const warnings = Array.isArray(payload.warnings) && payload.warnings.length
       ? `\n\nWarnings:\n- ${payload.warnings.join("\n- ")}`
       : "";
+    setFirstRunStep("preview", "done");
     setLog(`Dry run OK. Planned generations: ${payload.maxGenerations || 1}\n\n${payload.prompt}${warnings}`, "success");
     return JSON.stringify(payload, null, 2);
   }
@@ -1091,21 +1082,58 @@ import { saveSettingsDebounced } from "../../../../script.js";
   }
 
   async function userIncludedArgs(commandLabel) {
-    const userConsent = window.prompt(`Type "yes" if the user clearly asked to be included in this ${commandLabel}:`);
-    if (String(userConsent || "").trim().toLowerCase() !== "yes") {
-      setLog(`${commandLabel} canceled. Type "yes" only when the user explicitly asked to appear.`, "warn");
+    const userConsent = inputChecked("remix-camera-user-consent") ? "yes" : "";
+    if (userConsent !== "yes") {
+      setLog(`${commandLabel} needs user-inclusion consent. Check the consent box only after the user clearly asked to appear.`, "warn");
       return null;
     }
-    const userDescription = window.prompt(
-      coupleReferenceFile
-        ? "Optional detail about the uploaded user's appearance, pose, or relationship context:"
-        : "Optional user appearance or relationship context:",
-    ) || "";
+    const userDescription = inputValue("remix-camera-user-description") ||
+      (coupleReferenceFile ? "the adult man in the uploaded reference photo" : "the user, a consenting adult");
     return {
       userConsent,
       userDescription,
       ...(await coupleReferenceArgs()),
     };
+  }
+
+  function parseTimeMinutes(value) {
+    const match = String(value || "").trim().match(/^(\d{1,2}):(\d{2})$/);
+    if (!match) {
+      return null;
+    }
+    const hours = Math.max(0, Math.min(23, Number(match[1])));
+    const minutes = Math.max(0, Math.min(59, Number(match[2])));
+    return hours * 60 + minutes;
+  }
+
+  function withinQuietHours(current = settings(), now = new Date()) {
+    const start = parseTimeMinutes(current.proactiveSnapQuietStart);
+    const end = parseTimeMinutes(current.proactiveSnapQuietEnd);
+    if (start === null || end === null || start === end) {
+      return false;
+    }
+    const minute = now.getHours() * 60 + now.getMinutes();
+    return start < end
+      ? minute >= start && minute < end
+      : minute >= start || minute < end;
+  }
+
+  function hasActiveVisibleChat() {
+    if (document.visibilityState && document.visibilityState !== "visible") {
+      return false;
+    }
+    const context = getContext();
+    const chat = Array.isArray(context?.chat) ? context.chat : [];
+    if (!chat.length || !document.querySelector("#chat .mes")) {
+      return false;
+    }
+    const latest = latestUserMessage(chat);
+    if (!latest) {
+      return false;
+    }
+    const message = chat[latest.index];
+    const sentAt = messageTimeMs(message);
+    return !sentAt || Date.now() - sentAt <= 6 * 60 * 60 * 1000;
   }
 
   function todayKey() {
@@ -1131,6 +1159,12 @@ import { saveSettingsDebounced } from "../../../../script.js";
       return;
     }
     if (proactiveSnapCountForToday(current) >= Number(current.proactiveSnapDailyLimit || 0)) {
+      return;
+    }
+    if (withinQuietHours(current)) {
+      return;
+    }
+    if (current.proactiveSnapRequireActiveChat && !hasActiveVisibleChat()) {
       return;
     }
     if (!current.profileId && !current.referenceImageKey) {
@@ -1184,6 +1218,9 @@ import { saveSettingsDebounced } from "../../../../script.js";
       proactiveSnapsEnabled: inputChecked("remix-camera-proactive-snaps"),
       proactiveSnapIntervalMinutes: Math.max(30, Math.min(1440, Number(inputValue("remix-camera-proactive-interval") || DEFAULT_SETTINGS.proactiveSnapIntervalMinutes))),
       proactiveSnapDailyLimit: Math.max(0, Math.min(6, Number(inputValue("remix-camera-proactive-daily-limit") || DEFAULT_SETTINGS.proactiveSnapDailyLimit))),
+      proactiveSnapQuietStart: inputValue("remix-camera-proactive-quiet-start") || DEFAULT_SETTINGS.proactiveSnapQuietStart,
+      proactiveSnapQuietEnd: inputValue("remix-camera-proactive-quiet-end") || DEFAULT_SETTINGS.proactiveSnapQuietEnd,
+      proactiveSnapRequireActiveChat: inputChecked("remix-camera-proactive-active-chat"),
     });
     if (settings().allowToolCalls) {
       registerFunctionTools();
@@ -1214,6 +1251,10 @@ import { saveSettingsDebounced } from "../../../../script.js";
     setInputChecked("remix-camera-proactive-snaps", current.proactiveSnapsEnabled);
     setInputValue("remix-camera-proactive-interval", Number(current.proactiveSnapIntervalMinutes || DEFAULT_SETTINGS.proactiveSnapIntervalMinutes));
     setInputValue("remix-camera-proactive-daily-limit", Number(current.proactiveSnapDailyLimit || DEFAULT_SETTINGS.proactiveSnapDailyLimit));
+    setInputValue("remix-camera-proactive-quiet-start", current.proactiveSnapQuietStart || DEFAULT_SETTINGS.proactiveSnapQuietStart);
+    setInputValue("remix-camera-proactive-quiet-end", current.proactiveSnapQuietEnd || DEFAULT_SETTINGS.proactiveSnapQuietEnd);
+    setInputChecked("remix-camera-proactive-active-chat", current.proactiveSnapRequireActiveChat !== false);
+    refreshFirstRunChecklist(current);
   }
 
   function settingsHtml() {
@@ -1224,8 +1265,23 @@ import { saveSettingsDebounced } from "../../../../script.js";
           <label>Name<input id="remix-camera-character-name" type="text" value="${escapeHtml(current.characterName)}" placeholder="Character"></label>
           <label>Gender<input id="remix-camera-gender" type="text" value="${escapeHtml(current.gender)}" placeholder="female, male, nonbinary"></label>
           <label class="remix-camera-wide">Bio<textarea id="remix-camera-bio" rows="3">${escapeHtml(current.bio)}</textarea></label>
-          <label class="remix-camera-wide">Photos / Remix profile<input id="remix-camera-profile-id" type="text" value="${escapeHtml(current.profileId)}" placeholder="profile_..."></label>
           <label class="remix-camera-check remix-camera-mature"><input id="remix-camera-mature-content" type="checkbox" ${current.matureContent ? "checked" : ""}> Mature mode</label>
+          <div class="remix-camera-profile-card remix-camera-wide">
+            <div>
+              <strong>Character photos</strong>
+              <span>Manage bio, gender, and photos in Remix.Camera; this extension uses the paired profile for identity.</span>
+            </div>
+            <a href="https://remix.camera/camera" target="_blank" rel="noopener noreferrer">Open Remix.Camera</a>
+          </div>
+        </div>
+        <div class="remix-camera-first-run">
+          <strong>First run checklist</strong>
+          <ol>
+            <li data-remix-camera-first-run="bridge" data-state="todo">Bridge health passed</li>
+            <li data-remix-camera-first-run="profile" data-state="${current.profileId || current.referenceImageKey ? "done" : "todo"}">Character profile is connected</li>
+            <li data-remix-camera-first-run="preview" data-state="todo">Preview prompt checked</li>
+            <li data-remix-camera-first-run="image" data-state="todo">First image inserted</li>
+          </ol>
         </div>
         <div class="remix-camera-utility-actions">
           <button id="remix-camera-health" type="button">Health Check</button>
@@ -1241,6 +1297,14 @@ import { saveSettingsDebounced } from "../../../../script.js";
           <button id="remix-camera-daily-snap-button" class="remix-camera-quick remix-camera-quick--daily" type="button"><span>Day Snap</span></button>
           <button id="remix-camera-private-snap-button" class="remix-camera-quick remix-camera-quick--snap" type="button"><span>Private Snap</span></button>
         </div>
+        <div class="remix-camera-action-inputs">
+          <label class="remix-camera-wide">Outfit or style source URL<input id="remix-camera-source-image-url" type="url" placeholder="https://example.com/outfit.jpg"></label>
+          <label>Date setting<input id="remix-camera-date-location" type="text" value="${escapeHtml(current.location)}" placeholder="cozy restaurant booth with warm light"></label>
+          <label>Vacation theme<input id="remix-camera-vacation-theme" type="text" value="${escapeHtml(current.location)}" placeholder="cohesive beach weekend getaway"></label>
+          <label class="remix-camera-check remix-camera-wide"><input id="remix-camera-user-consent" type="checkbox"> User clearly asked to appear in the Couple/Vacation image</label>
+          <label class="remix-camera-wide">User appearance or relationship context<textarea id="remix-camera-user-description" rows="2" placeholder="adult man in the uploaded reference photo, casual date-night mood"></textarea></label>
+          <label class="remix-camera-check remix-camera-wide"><input id="remix-camera-private-consent" type="checkbox"> One mature private snap is explicitly requested</label>
+        </div>
         <div class="remix-camera-couple-reference">
           <label class="remix-camera-wide">Your photo for Couple/Vacation<input id="remix-camera-couple-photo" type="file" accept="image/png,image/jpeg,image/webp,image/gif"></label>
           <div class="remix-camera-couple-reference-row">
@@ -1252,20 +1316,25 @@ import { saveSettingsDebounced } from "../../../../script.js";
           <summary>Advanced</summary>
           <div class="remix-camera-grid">
             <label>Bridge URL<input id="remix-camera-bridge-url" type="text" value="${escapeHtml(current.bridgeUrl)}"></label>
-            <label>Max generations<input id="remix-camera-max-generations" type="number" min="1" max="4" value="${Number(current.maxGenerations || 1)}"></label>
+            <label>Remix profile ID<input id="remix-camera-profile-id" type="text" value="${escapeHtml(current.profileId)}" placeholder="profile_..."></label>
             <label>Reference key<input id="remix-camera-reference-image-key" type="text" value="${escapeHtml(current.referenceImageKey)}"></label>
+            <label>Max generations<input id="remix-camera-max-generations" type="number" min="1" max="4" value="${Number(current.maxGenerations || 1)}"></label>
             <label>Mood<input id="remix-camera-mood" type="text" value="${escapeHtml(current.mood)}"></label>
             <label>Outfit<input id="remix-camera-outfit" type="text" value="${escapeHtml(current.outfit)}"></label>
             <label>Location<input id="remix-camera-location" type="text" value="${escapeHtml(current.location)}"></label>
             <label>Style<input id="remix-camera-style" type="text" value="${escapeHtml(current.style)}"></label>
             <label>Proactive interval<input id="remix-camera-proactive-interval" type="number" min="30" max="1440" value="${Number(current.proactiveSnapIntervalMinutes || DEFAULT_SETTINGS.proactiveSnapIntervalMinutes)}"></label>
             <label>Proactive daily cap<input id="remix-camera-proactive-daily-limit" type="number" min="0" max="6" value="${Number(current.proactiveSnapDailyLimit || DEFAULT_SETTINGS.proactiveSnapDailyLimit)}"></label>
+            <label>Quiet start<input id="remix-camera-proactive-quiet-start" type="time" value="${escapeHtml(current.proactiveSnapQuietStart || DEFAULT_SETTINGS.proactiveSnapQuietStart)}"></label>
+            <label>Quiet end<input id="remix-camera-proactive-quiet-end" type="time" value="${escapeHtml(current.proactiveSnapQuietEnd || DEFAULT_SETTINGS.proactiveSnapQuietEnd)}"></label>
           </div>
           <label class="remix-camera-wide">Visual identity<textarea id="remix-camera-visual-identity" rows="3">${escapeHtml(current.visualIdentity)}</textarea></label>
           <label class="remix-camera-wide">Avoid<textarea id="remix-camera-negative-prompt" rows="2">${escapeHtml(current.negativePrompt)}</textarea></label>
           <label class="remix-camera-check"><input id="remix-camera-allow-tool-calls" type="checkbox" ${current.allowToolCalls ? "checked" : ""}> Allow character tool calls</label>
           <label class="remix-camera-check"><input id="remix-camera-auto-insert" type="checkbox" ${current.autoInsertResult ? "checked" : ""}> Insert generated image in chat</label>
           <label class="remix-camera-check"><input id="remix-camera-proactive-snaps" type="checkbox" ${current.proactiveSnapsEnabled ? "checked" : ""}> Proactive private snaps</label>
+          <label class="remix-camera-check"><input id="remix-camera-proactive-active-chat" type="checkbox" ${current.proactiveSnapRequireActiveChat !== false ? "checked" : ""}> Only when this chat is open and active</label>
+        </details>
         <pre id="remix-camera-log" data-type="info">Bridge not checked yet.</pre>
       </div>
     `;
@@ -1304,6 +1373,7 @@ import { saveSettingsDebounced } from "../../../../script.js";
           `Bridge OK. Auth: ${authMode}. Default profile: ${health.defaultProfileId || "none"}.`,
           health.hasSessionToken || health.hasApiKey ? "success" : "warn",
         );
+        setFirstRunStep("bridge", "done");
       } catch (error) {
         setLog(error.message, "error");
       }
@@ -1360,8 +1430,9 @@ import { saveSettingsDebounced } from "../../../../script.js";
 
     document.getElementById("remix-camera-outfit-button")?.addEventListener("click", async () => {
       saveFromUi();
-      const sourceImageUrl = window.prompt("Source image URL for outfit or styling reference:");
+      const sourceImageUrl = inputValue("remix-camera-source-image-url");
       if (!sourceImageUrl) {
+        setLog("Add an outfit or style source URL before using Outfit.", "warn");
         return;
       }
       try {
@@ -1381,6 +1452,8 @@ import { saveSettingsDebounced } from "../../../../script.js";
         await generate("couple-photo", args);
       } catch (error) {
         setLog(error.message, "error");
+      } finally {
+        setInputChecked("remix-camera-user-consent", false);
       }
     });
 
@@ -1390,7 +1463,7 @@ import { saveSettingsDebounced } from "../../../../script.js";
       if (!args) {
         return;
       }
-      const theme = window.prompt("Vacation theme or destination:", settings().location || "cohesive beach weekend getaway") || "";
+      const theme = inputValue("remix-camera-vacation-theme") || settings().location || "cohesive beach weekend getaway";
       try {
         await generate("couples-vacation", {
           ...args,
@@ -1400,12 +1473,14 @@ import { saveSettingsDebounced } from "../../../../script.js";
         });
       } catch (error) {
         setLog(error.message, "error");
+      } finally {
+        setInputChecked("remix-camera-user-consent", false);
       }
     });
 
     document.getElementById("remix-camera-date-button")?.addEventListener("click", async () => {
       saveFromUi();
-      const location = window.prompt("Date-night setting:", settings().location || "cozy restaurant booth with warm light") || "";
+      const location = inputValue("remix-camera-date-location") || settings().location || "cozy restaurant booth with warm light";
       try {
         await generate("date-night", { location });
       } catch (error) {
@@ -1424,8 +1499,8 @@ import { saveSettingsDebounced } from "../../../../script.js";
 
     document.getElementById("remix-camera-private-snap-button")?.addEventListener("click", async () => {
       saveFromUi();
-      if (!window.confirm("Generate a mature private snap?")) {
-        setLog("Private snap canceled.", "warn");
+      if (!inputChecked("remix-camera-private-consent")) {
+        setLog("Check the private snap consent box before generating one mature private snap.", "warn");
         return;
       }
       try {
@@ -1434,6 +1509,8 @@ import { saveSettingsDebounced } from "../../../../script.js";
         });
       } catch (error) {
         setLog(error.message, "error");
+      } finally {
+        setInputChecked("remix-camera-private-consent", false);
       }
     });
 

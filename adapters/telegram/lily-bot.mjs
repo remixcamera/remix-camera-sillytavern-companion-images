@@ -36,7 +36,6 @@ const tool = createRemixTelegramTool({
   profileId,
   characterName,
   visualIdentity,
-  snapTtlSeconds: Number(process.env.REMIX_PRIVATE_SNAP_TTL_SECONDS || 120),
 });
 
 const recentChatById = new Map();

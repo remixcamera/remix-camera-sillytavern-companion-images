@@ -825,6 +825,47 @@ test("bridge forwards SillyTavern inline feedback to Remix API", async () => {
   }
 });
 
+test("bridge QA endpoints show recent prompt-template decisions", async () => {
+  const mockApi = await startMockRemixApi();
+  const bridge = await startBridge({
+    REMIX_API_KEY: "rc_live_test.secret",
+    REMIX_API_BASE_URL: mockApi.baseUrl,
+  });
+
+  try {
+    const dryRunResponse = await fetch(`${bridge.url}/v1/commands/dry-run`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        command: "send-selfie",
+        characterName: "Seraphina",
+        visualIdentity: "long pastel-pink hair, amber eyes, black sundress",
+        mood: "cozy cafe selfie",
+      }),
+    });
+    assert.equal(dryRunResponse.status, 200);
+
+    const recentResponse = await fetch(`${bridge.url}/v1/qa/recent`);
+    const recent = await recentResponse.json();
+    assert.equal(recentResponse.status, 200);
+    assert.equal(recent.ok, true);
+    assert.equal(recent.events[0].type, "dry-run");
+    assert.equal(recent.events[0].command, "send-selfie");
+    assert.equal(recent.events[0].modelId, "nano-banana");
+    assert.equal(recent.events[0].promptTemplateDecision, "template");
+    assert.match(recent.events[0].promptTemplatePackTitle, /Pack$/);
+
+    const htmlResponse = await fetch(`${bridge.url}/qa`);
+    const html = await htmlResponse.text();
+    assert.equal(htmlResponse.status, 200);
+    assert.match(html, /Remix\.Camera SillyTavern QA/);
+    assert.match(html, new RegExp(recent.events[0].promptTemplatePackTitle));
+  } finally {
+    await bridge.close();
+    await mockApi.close();
+  }
+});
+
 test("bridge uses Seedream for mature prompt-only generations", async () => {
   const mockApi = await startMockRemixApi();
   const bridge = await startBridge({
@@ -1385,7 +1426,7 @@ test("couples-vacation rejects non-affirmative consent before spending credits",
   }
 });
 
-test("private-snap routes to Seedream and returns snap expiry metadata", async () => {
+test("private-snap routes to Seedream without expiring snap metadata", async () => {
   const mockApi = await startMockRemixApi();
   const bridge = await startBridge({
     REMIX_API_KEY: "rc_live_test.secret",
@@ -1401,7 +1442,6 @@ test("private-snap routes to Seedream and returns snap expiry metadata", async (
         yes: true,
         command: "private-snap",
         characterName: "Seraphina",
-        snapTtlSeconds: 30,
         visualIdentity: "long pastel-pink hair, amber eyes, black sundress, emerald vine magic",
         maxGenerations: 1,
       }),
@@ -1412,7 +1452,7 @@ test("private-snap routes to Seedream and returns snap expiry metadata", async (
     assert.equal(payload.ok, true);
     assert.equal(payload.command, "private-snap");
     assert.equal(payload.modelId, "seedream-v4.5-edit");
-    assert.equal(payload.snapTtlSeconds, 30);
+    assert.equal(payload.snapTtlSeconds, undefined);
     assert.match(payload.prompt, /clearly adults/);
     const generationCall = mockApi.calls.find((call) => call.pathname === "/api/v1/design/generations");
     assert.equal(generationCall.body.modelId, "seedream-v4.5-edit");

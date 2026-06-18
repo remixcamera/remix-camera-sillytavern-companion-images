@@ -20,6 +20,35 @@
   gap: 8px;
 }
 
+.remix-camera-profile-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid var(--SmartThemeBorderColor, #555);
+  border-radius: 6px;
+}
+
+.remix-camera-profile-card div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.remix-camera-profile-card span {
+  color: color-mix(in srgb, var(--SmartThemeBodyColor, #ddd) 78%, transparent);
+  font-size: 0.82rem;
+  line-height: 1.3;
+}
+
+.remix-camera-profile-card a {
+  flex-shrink: 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
 .remix-camera-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -28,6 +57,7 @@
 
 .remix-camera-grid label,
 .remix-camera-profile label,
+.remix-camera-action-inputs label,
 .remix-camera-wide,
 .remix-camera-check {
   display: flex;
@@ -45,15 +75,45 @@
   grid-column: 1 / -1;
 }
 
+.remix-camera-action-inputs .remix-camera-wide {
+  grid-column: 1 / -1;
+}
+
 .remix-camera-grid input,
 .remix-camera-profile input,
-.remix-camera-profile select {
+.remix-camera-profile select,
+.remix-camera-action-inputs input {
   width: 100%;
 }
 
-.remix-camera-wide textarea {
+.remix-camera-wide textarea,
+.remix-camera-action-inputs textarea {
   width: 100%;
   resize: vertical;
+}
+
+.remix-camera-first-run {
+  padding: 8px;
+  border: 1px solid var(--SmartThemeBorderColor, #555);
+  border-radius: 6px;
+}
+
+.remix-camera-first-run strong {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.remix-camera-first-run ol {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding-left: 18px;
+  font-size: 0.84rem;
+}
+
+.remix-camera-first-run li[data-state="done"] {
+  color: #80d69a;
+  text-decoration: line-through;
 }
 
 .remix-camera-utility-actions {
@@ -66,6 +126,15 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
+}
+
+.remix-camera-action-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid var(--SmartThemeBorderColor, #555);
+  border-radius: 6px;
 }
 
 .remix-camera-utility-actions button {
@@ -119,19 +188,19 @@
 }
 
 .remix-camera-quick--vacation {
-  background-image: url("./assets/quick-try-couple.jpg");
+  background-image: url("./assets/quick-try-vacation.jpg");
 }
 
 .remix-camera-quick--date {
-  background-image: url("./assets/quick-try-scene.jpg");
+  background-image: url("./assets/quick-try-date.jpg");
 }
 
 .remix-camera-quick--daily {
-  background-image: url("./assets/quick-try-selfie.jpg");
+  background-image: url("./assets/quick-try-daily.jpg");
 }
 
 .remix-camera-quick--snap {
-  background-image: url("./assets/quick-try-selfie.jpg");
+  background-image: url("./assets/quick-try-snap.png");
 }
 
 .remix-camera-couple-reference {
@@ -212,14 +281,14 @@
 
 .remix-camera-feedback-button {
   appearance: none;
-  min-width: 44px;
+  min-width: 34px;
   min-height: 26px;
-  padding: 3px 9px;
+  padding: 3px 8px;
   border: 1px solid color-mix(in srgb, var(--SmartThemeBorderColor, #555) 80%, transparent);
   border-radius: 999px;
   color: var(--SmartThemeBodyColor, #ddd);
   background: color-mix(in srgb, var(--SmartThemeBlurTintColor, #111) 76%, transparent);
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   font-weight: 700;
   line-height: 1;
   cursor: pointer;
