@@ -28,10 +28,24 @@ demos/sillytavern/live-production-2026-06-12/result.json
 It was recorded with:
 
 ```bash
-SILLYTAVERN_ROOT=/Users/adamhalper/SillyTavern-Launcher/SillyTavern \
+SILLYTAVERN_ROOT=/path/to/SillyTavern \
 REMIX_SILLYTAVERN_E2E_CHARACTER_CARD=lily-remix-visual \
 npm run test:browser:live -- --yes --commands=send-selfie --max-generations=1
 ```
+
+## Sophie Setup-to-Output Marketing Walkthrough
+
+The current landing-page walkthrough is:
+
+```text
+demos/sillytavern/sophie-setup-2026-07-21/sophie-setup-to-output.mp4
+demos/sillytavern/sophie-setup-2026-07-21/sophie-setup-hero.png
+demos/sillytavern/sophie-setup-2026-07-21/sophie-character-setup.png
+demos/sillytavern/sophie-setup-2026-07-21/sophie-mirror-selfie-output.png
+demos/sillytavern/sophie-setup-2026-07-21/narrated-tutorial-storyboard.md
+```
+
+This is a real SillyTavern UI recording with live bridge Health Check and no-credit Preview Prompt steps. It replays a previously approved production Sophie output in chat and submitted zero new generations during the recording. The demo sender is Billy.
 
 ## Proof Points
 
