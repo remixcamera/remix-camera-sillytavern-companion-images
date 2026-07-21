@@ -1,0 +1,27 @@
+{
+  "capturedAt": "2026-07-21",
+  "evidenceType": "real SillyTavern marketing walkthrough with approved production output replay",
+  "character": "Sophie",
+  "demoUser": "Billy",
+  "resolution": "1280x720",
+  "durationSeconds": 22.24,
+  "videoCodec": "h264",
+  "plannedGenerations": 0,
+  "attemptedGenerations": 0,
+  "generatedImages": 0,
+  "failures": [],
+  "approvedOutput": {
+    "generationId": "ApwxCVVjnPumzAf7iXmx",
+    "modelId": "nano-banana",
+    "status": "completed",
+    "manualReview": "pass"
+  },
+  "verification": {
+    "liveSillyTavernUi": true,
+    "liveBridgeHealthCheck": true,
+    "liveNoCreditPromptPreview": true,
+    "newGenerationSubmittedDuringRecording": false,
+    "credentialsVisible": false,
+    "browserConsoleIssues": 0
+  }
+}

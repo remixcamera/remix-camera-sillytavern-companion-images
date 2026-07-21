@@ -11,6 +11,7 @@ Targets:
 
 - `sillytavern/`: existing polished SillyTavern extension demo.
 - `sillytavern/live-production-2026-06-12/`: real production SillyTavern screen recording, one live Lily selfie generation, no mocked output.
+- `sillytavern/sophie-setup-2026-07-21/`: 22-second Sophie setup-to-output marketing walkthrough, approved production output replay, screenshots, and a 60–90 second narrated tutorial storyboard.
 - `mcp/`: local stdio MCP server demo for Claude Desktop, Cursor, Cline, and MCP-compatible hosts.
 - `risu/`: RisuAI MCP plugin demo.
 - `openwebui/`: Open WebUI native Tool demo.
