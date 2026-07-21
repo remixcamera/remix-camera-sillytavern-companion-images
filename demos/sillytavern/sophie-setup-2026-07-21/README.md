@@ -1,8 +1,19 @@
-# Sophie Setup-to-Output Marketing Demo
+# Plug Realistic Image Generation Into Your AI Girlfriend Chatbot
 
 [![Sophie setup-to-output demo](./sophie-setup-hero.png)](./sophie-setup-to-output.mp4)
 
+Remix.Camera is an easy plug-in image layer for an AI girlfriend chatbot you already have. Keep the chatbot's existing conversation, memory, and personality, then add realistic, character-consistent selfies, outfits, scenes, dates, and remixes.
+
 This folder contains a 22-second, 1280x720 marketing walkthrough recorded from the real local SillyTavern UI with the Remix.Camera Companion Images extension.
+
+## Key selling point
+
+> **Add realistic image-generation abilities to your existing AI girlfriend chatbot—without rebuilding the chatbot.**
+
+- Keep the existing chat, memory, model, and personality.
+- Pair one visual profile to preserve the character's identity.
+- Add realistic selfies and visual replies through a simple local integration.
+- Preview prompts and generation limits before spending credits.
 
 ## What the recording shows
 
@@ -27,6 +38,7 @@ The Health Check and Preview Prompt steps were live no-credit actions. The mirro
 - `sophie-mirror-selfie-output.png`: final chat-output screenshot.
 - `result.json`: structured capture and generation-accounting metadata.
 - `narrated-tutorial-storyboard.md`: proposed 60–90 second narrated tutorial.
+- `landing-page-positioning.md`: reusable headline, supporting copy, proof points, and CTA.
 
 ## Generation accounting
 

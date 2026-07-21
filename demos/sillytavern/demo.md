@@ -45,7 +45,7 @@ demos/sillytavern/sophie-setup-2026-07-21/sophie-mirror-selfie-output.png
 demos/sillytavern/sophie-setup-2026-07-21/narrated-tutorial-storyboard.md
 ```
 
-This is a real SillyTavern UI recording with live bridge Health Check and no-credit Preview Prompt steps. It replays a previously approved production Sophie output in chat and submitted zero new generations during the recording. The demo sender is Billy.
+The selling point is an easy plug-in image layer that adds realistic, character-consistent generation to an existing AI girlfriend chatbot without replacing its chat, memory, model, or personality. This is a real SillyTavern UI recording with live bridge Health Check and no-credit Preview Prompt steps. It replays a previously approved production Sophie output in chat and submitted zero new generations during the recording. The demo sender is Billy.
 
 ## Proof Points
 
