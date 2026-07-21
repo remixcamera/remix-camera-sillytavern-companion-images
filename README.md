@@ -2,6 +2,17 @@
 
 This package connects a SillyTavern character to the Remix.Camera AI Companion Image Toolset without putting a Remix.Camera credential in the browser.
 
+> **Public preview:** `v0.4.0-alpha.1` is an invite-based alpha. The source and installer are public, while Remix.Camera account pairing is enabled for invited email addresses as we validate first-run setup and first-image success. Request access at [ducky@remix.camera](mailto:ducky@remix.camera?subject=SillyTavern%20alpha%20invite).
+
+## The 60-second version
+
+1. Keep the SillyTavern character, model, lore, memory, and chat you already use.
+2. Run one setup command and approve the device code with an invited Remix.Camera account.
+3. Pair the Remix.Camera visual profile that belongs to that character.
+4. Run **Health Check** and **Preview Prompt**, then generate one reviewable image.
+
+See the [live setup-to-output demo](https://remix.camera/ai-girlfriend-image-generation) before installing. The first alpha activation milestone is one image generated and inserted into the active SillyTavern chat.
+
 Image prompts are template-first. For every image action, the bridge searches Remix.Camera's proven prompt/template packs, selects a strong relevant match, and adapts that template to the active character, chat context, user reference photo, and SFW/NSFW model route. If no strong template match exists, the bridge can generate from an ad-hoc fallback prompt and marks that response as `promptTemplateDecision: "ad_hoc_fallback"` so the output can be reviewed before it becomes part of the future prompt library.
 
 The integration has two parts:
@@ -28,13 +39,14 @@ The integration has two parts:
 - A Remix.Camera account.
 - A trained or ready character profile in Remix.Camera, or photos ready to create one.
 - SillyTavern installed locally.
+- An invited Remix.Camera alpha email. Pairing fails closed for accounts that are not on the server-side invite list.
 
 ## One-Step Setup
 
 Run the public GitHub setup command for SillyTavern:
 
 ```bash
-npx --yes github:remixcamera/remix-camera-sillytavern-companion-images
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images#v0.4.0-alpha.1
 ```
 
 After the npm package is published, the shorter command will also work:
@@ -53,6 +65,8 @@ This is the intended path for bringing Remix.Camera image tools to your own Sill
 - starts the local bridge and opens `http://127.0.0.1:8787/health`
 
 The bridge uses a scoped opaque `dapi_...` session token created by the browser approval flow. You do not need to paste a raw API key into SillyTavern or a character card.
+
+Removing an email from the alpha invite list revokes non-admin SillyTavern session access on the next authenticated request. Other session sources and API keys remain admin-only during this alpha.
 
 ## Other Chatbot Targets
 
