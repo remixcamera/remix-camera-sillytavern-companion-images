@@ -26,7 +26,7 @@ The integration has two parts:
 
 - `send-selfie`: generate an in-character selfie.
 - `auto-selfie-from-chat`: turn recent chat context into a natural selfie.
-- `outfit-try-on`: generate a new outfit look from a source image URL.
+- `outfit-try-on`: generate a new outfit look from a dropped/uploaded source image or a source image URL.
 - `couple-photo`: create a shared image with the user after explicit consent, optionally using the user's uploaded photo as the male reference.
 - `couples-vacation`: create a cohesive 3-photo trip set with the user after explicit consent.
 - `date-night`: send a date-scene image that matches the current conversation.
@@ -332,7 +332,11 @@ Use Health Check first. Then use Preview Prompt, which is a no-credit dry run. T
 
 Preview Prompt calls Remix.Camera to retrieve a proven prompt/template pack and returns the selected `promptTemplate` metadata. It does not submit a generation or spend credits.
 
-The extension includes native fields for outfit source URL, date setting, vacation theme, user-inclusion consent, user appearance notes, and one private-snap consent. It does not use browser `prompt()` or `confirm()` dialogs for these launch flows.
+The extension includes a drag-and-drop/file-picker source image field for Outfit, with the source URL retained as a fallback. When both are present, the local file takes precedence. It also includes native fields for date setting, vacation theme, user-inclusion consent, user appearance notes, and one private-snap consent. It does not use browser `prompt()` or `confirm()` dialogs for these launch flows.
+
+Dropped source images are resized in the browser when needed, capped below 4 MB, and sent as multipart data only to the local bridge. The bridge uploads them through Remix.Camera's reference-image API, waits for the safety review, and passes the reviewed reference id into Remix from image. The browser never receives the Remix.Camera credential. JPG, PNG, WebP, AVIF, and HEIC/HEIF are accepted; GIF is not supported.
+
+The selected file's reviewed id is reused for later clicks while it remains selected. The bridge also keeps a content-hash cache for up to six days, below Remix.Camera's default seven-day reference retention, so repeated use does not create another upload or moderation request.
 
 ## Character Card Prompt Snippet
 
@@ -442,9 +446,16 @@ The response includes `markdown`, which SillyTavern can paste into the chat:
 
 ### Couple Photo With User Reference
 
-In SillyTavern, choose `Your photo for Couple`, then click `Couple` and type `yes` only after the user has clearly asked to appear in the image. The extension compresses the local file when needed, sends it to the bridge, and the bridge uploads it to Remix.Camera's real reference-image API before generation.
+In SillyTavern, choose `Your photo for Couple/Vacation`, check the user-consent box only after the user has clearly asked to appear, then click `Couple`. The extension compresses the local file when needed, sends it to the bridge as multipart data, and the bridge waits for Remix.Camera's safety review before generation.
 
-For direct bridge calls, pass an already uploaded key or a data URL:
+For direct bridge calls, upload the photo first:
+
+```bash
+curl -X POST http://127.0.0.1:8787/v1/media/reference-image \
+  -F "file=@user-reference.jpg"
+```
+
+Use the returned reviewed `referenceImage.id` as `userReferenceImageId`:
 
 ```bash
 curl -X POST http://127.0.0.1:8787/v1/commands/generate \
@@ -456,14 +467,14 @@ curl -X POST http://127.0.0.1:8787/v1/commands/generate \
     "profileId": "your_remix_profile_id",
     "referenceImageKey": "optional_remix_camera_character_reference_key",
     "userConsent": "yes",
-    "userReferenceImageKey": "uploads/user/reference-images/123.jpg",
+    "userReferenceImageId": "reference_123",
     "userDescription": "adult man in the uploaded reference photo",
     "location": "cozy cafe booth",
     "maxGenerations": 1
   }'
 ```
 
-When both `referenceImageKey` and `userReferenceImageKey` are present, the bridge follows the Remix.Camera web app multi-reference split: the character key is sent as the selected character reference for the character profile, and the user's uploaded key is sent as the extra `referenceImage` for the user.
+The companion `profileId` supplies the character identity. The reviewed `userReferenceImageId` supplies the consenting user's source identity to Remix from image without exposing a storage key or public source URL.
 
 ### Couples Vacation Set
 
@@ -479,7 +490,7 @@ curl -X POST http://127.0.0.1:8787/v1/commands/generate \
     "profileId": "your_remix_profile_id",
     "referenceImageKey": "optional_remix_camera_character_reference_key",
     "userConsent": "yes",
-    "userReferenceImageKey": "uploads/user/reference-images/123.jpg",
+    "userReferenceImageId": "reference_123",
     "theme": "cohesive beach weekend getaway",
     "maxGenerations": 3
   }'
@@ -531,9 +542,9 @@ Private snaps are private in the companion-chat sense, not disappearing media. T
 - The bridge searches templates first, boosts best/excellent packs, and treats concrete scene terms such as bath, shower, tennis, cafe, couch, kitchen, beach, gym, office, and car as required fit signals. If no strong match remains, it uses an explicit ad-hoc fallback unless `REMIX_ALLOW_AD_HOC_PROMPT_FALLBACK=false`.
 - The local bridge QA page at `http://127.0.0.1:8787/qa` shows recent in-memory dry-run, generation, and feedback metadata: template vs fallback, model ID, selected pack, score, image URLs, and thumbs feedback.
 - SFW prompt-only generations use `nano-banana` by default. Mature mode or NSFW prompt language uses `seedream-v4.5-edit`; SFW source-image remixes follow Remix.Camera's standard extension route contract.
-- Character cards can include `data.extensions.remix_camera.referenceImageKey`; the bridge forwards it to SFW Nano requests so untrained reference-photo profiles can still produce character-consistent images.
+- Character cards can keep `data.extensions.remix_camera.referenceImageKey` as identity metadata, but the current Remix.Camera generation contract uses `profileId` for character identity and no longer accepts raw storage keys on generation requests.
 - `couple-photo` requires affirmative `userConsent`, such as `"yes"`, and should only be used when the user clearly wants to appear with the character. If a user photo is selected, it is uploaded to Remix.Camera and used as the user's identity reference, not as a fake output.
-- `couples-vacation` uses the same explicit-consent and multi-reference behavior as `couple-photo`, then generates a cohesive 3-photo set by default.
+- `couples-vacation` uses the same explicit-consent and reviewed-reference behavior as `couple-photo`, then generates a cohesive 3-photo set by default.
 - `private-snap` is adult-only in intent, routes to `seedream-v4.5-edit` by default, and stays visible in the SillyTavern chat unless the user deletes it.
 - The bundled `examples/mila-real-outputs/` images are archived real Remix.Camera outputs for visual review and demo recording. They are not a substitute for `npm run test:live -- --yes` when validating a live paid generation path.
 

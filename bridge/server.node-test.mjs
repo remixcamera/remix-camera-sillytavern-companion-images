@@ -166,10 +166,17 @@ function chooseMockPromptPacks(query) {
 
 async function startMockRemixApi() {
   const calls = [];
+  let referenceStatusPolls = 0;
   const server = http.createServer(async (req, res) => {
     const url = new URL(req.url || "/", "http://127.0.0.1");
     const body = req.method === "POST" ? await readJsonBody(req) : null;
-    calls.push({ method: req.method, pathname: url.pathname, body, authorization: req.headers.authorization });
+    calls.push({
+      method: req.method,
+      pathname: url.pathname,
+      body,
+      authorization: req.headers.authorization,
+      idempotencyKey: req.headers["idempotency-key"],
+    });
 
     if (req.method === "GET" && url.pathname === "/api/v1/design/profiles") {
       sendJson(res, 200, {
@@ -237,6 +244,9 @@ async function startMockRemixApi() {
       assert.match(body.prompt, /long pastel-pink hair/);
       assert.match(body.prompt, /proven Remix\.Camera prompt\/template/i);
       assert.ok(["nano-banana", "seedream-v4.5-edit"].includes(body.modelId));
+      assert.equal(body.referenceImage, undefined);
+      assert.equal(body.selectedReferenceImages, undefined);
+      assert.match(String(req.headers["idempotency-key"] || ""), /^sillytavern-/);
       sendJson(res, 200, {
         ok: true,
         generation: {
@@ -264,13 +274,35 @@ async function startMockRemixApi() {
       assert.equal(body.__multipart, true);
       assert.match(body.contentType, /multipart\/form-data/);
       assert.match(body.text, /name="file"/);
+      sendJson(res, 202, {
+        ok: true,
+        referenceImage: {
+          id: "reference_test_1",
+          status: "pending",
+          statusUrl: "/api/v1/design/media/reference-image/reference_test_1",
+          url: null,
+          fileSize: body.byteLength,
+          fileType: "image/jpeg",
+        },
+      });
+      return;
+    }
+
+    if (
+      req.method === "GET" &&
+      url.pathname === "/api/v1/design/media/reference-image/reference_test_1"
+    ) {
+      referenceStatusPolls += 1;
       sendJson(res, 200, {
         ok: true,
         referenceImage: {
+          id: "reference_test_1",
+          status: "clear",
+          statusUrl: "/api/v1/design/media/reference-image/reference_test_1",
           url: "https://remix-camera.test/uploads/user-man.jpg",
-          s3Key: "uploads/test-user/reference-images/user-man.jpg",
-          fileSize: body.byteLength,
+          fileSize: 631,
           fileType: "image/jpeg",
+          expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000,
         },
       });
       return;
@@ -280,6 +312,8 @@ async function startMockRemixApi() {
       assert.equal(body.profileId, "profile_seraphina");
       assert.match(body.prompt, /long pastel-pink hair/);
       assert.match(body.prompt, /proven Remix\.Camera prompt\/template/i);
+      assert.equal(body.referenceImageId, "reference_test_1");
+      assert.match(String(req.headers["idempotency-key"] || ""), /^sillytavern-/);
       sendJson(res, 200, {
         ok: true,
         generation: {
@@ -313,6 +347,11 @@ async function startMockRemixApi() {
       return;
     }
 
+    if (req.method === "GET" && url.pathname === "/source/outfit.jpg") {
+      sendJpeg(res);
+      return;
+    }
+
     sendJson(res, 404, { ok: false, error: "not found" });
   });
 
@@ -321,6 +360,7 @@ async function startMockRemixApi() {
   return {
     baseUrl: `http://127.0.0.1:${server.address().port}`,
     calls,
+    referenceStatusPolls: () => referenceStatusPolls,
     close: () => new Promise((resolve, reject) => server.close((error) => (error ? reject(error) : resolve()))),
   };
 }
@@ -360,6 +400,8 @@ async function startBridge(env) {
       REMIX_BRIDGE_PORT: String(port),
       REMIX_POLL_INTERVAL_MS: "10",
       REMIX_POLL_TIMEOUT_MS: "2000",
+      REMIX_REFERENCE_REVIEW_POLL_INTERVAL_MS: "10",
+      REMIX_REFERENCE_REVIEW_TIMEOUT_MS: "2000",
     },
     stdio: ["ignore", "pipe", "pipe"],
   });
@@ -899,7 +941,7 @@ test("bridge uses Seedream for mature prompt-only generations", async () => {
   }
 });
 
-test("bridge forwards explicit reference image key on Nano prompt generations", async () => {
+test("bridge retains explicit reference key metadata without sending deprecated generation inputs", async () => {
   const mockApi = await startMockRemixApi();
   const bridge = await startBridge({
     REMIX_API_KEY: "rc_live_test.secret",
@@ -928,14 +970,15 @@ test("bridge forwards explicit reference image key on Nano prompt generations", 
     assert.equal(payload.referenceImageKey, "camera/training/seraphina/reference.jpg");
     const generationCall = mockApi.calls.find((call) => call.pathname === "/api/v1/design/generations");
     assert.equal(generationCall.body.modelId, "nano-banana");
-    assert.deepEqual(generationCall.body.referenceImage, { s3Key: "camera/training/seraphina/reference.jpg" });
+    assert.equal(generationCall.body.referenceImage, undefined);
+    assert.equal(generationCall.body.selectedReferenceImages, undefined);
   } finally {
     await bridge.close();
     await mockApi.close();
   }
 });
 
-test("bridge source-image SFW path follows standard Nano remix route contract", async () => {
+test("bridge rehosts a source-image URL into the reviewed Nano remix contract", async () => {
   const mockApi = await startMockRemixApi();
   const bridge = await startBridge({
     REMIX_API_KEY: "rc_live_test.secret",
@@ -951,7 +994,7 @@ test("bridge source-image SFW path follows standard Nano remix route contract", 
         yes: true,
         command: "outfit-try-on",
         characterName: "Seraphina",
-        sourceImageUrl: "https://example.com/outfit.jpg",
+        sourceImageUrl: `${mockApi.baseUrl}/source/outfit.jpg`,
         visualIdentity: "long pastel-pink hair, amber eyes, black sundress, emerald vine magic",
         maxGenerations: 1,
       }),
@@ -961,15 +1004,20 @@ test("bridge source-image SFW path follows standard Nano remix route contract", 
     assert.equal(response.status, 200);
     assert.equal(payload.ok, true);
     assert.equal(payload.modelId, "nano-banana");
+    assert.ok(
+      mockApi.calls.some((call) => call.pathname === "/api/v1/design/media/reference-image"),
+    );
     const remixCall = mockApi.calls.find((call) => call.pathname === "/api/v1/design/remix-from-image");
-    assert.equal(remixCall.body.modelId, undefined);
+    assert.equal(remixCall.body.modelId, "nano-banana");
+    assert.equal(remixCall.body.referenceImageId, "reference_test_1");
+    assert.match(remixCall.idempotencyKey, /^sillytavern-/);
   } finally {
     await bridge.close();
     await mockApi.close();
   }
 });
 
-test("bridge source-image SFW path uses generation endpoint when a character reference key is supplied", async () => {
+test("bridge uploads a source image data URL before Remix from image generation", async () => {
   const mockApi = await startMockRemixApi();
   const bridge = await startBridge({
     REMIX_API_KEY: "rc_live_test.secret",
@@ -985,7 +1033,150 @@ test("bridge source-image SFW path uses generation endpoint when a character ref
         yes: true,
         command: "outfit-try-on",
         characterName: "Seraphina",
-        sourceImageUrl: "https://example.com/outfit.jpg",
+        sourceImageDataUrl: "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAAP/Z",
+        sourceImageName: "dropped-outfit.jpg",
+        sourceImageMimeType: "image/jpeg",
+        visualIdentity: "long pastel-pink hair, amber eyes, black sundress, emerald vine magic",
+        maxGenerations: 1,
+      }),
+    });
+    const payload = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.equal(payload.ok, true);
+    const uploadCall = mockApi.calls.find((call) => call.pathname === "/api/v1/design/media/reference-image");
+    assert.ok(uploadCall, "dropped source image should be uploaded before generation");
+    assert.match(uploadCall.body.text, /filename="dropped-outfit\.jpg"/);
+    assert.equal(mockApi.referenceStatusPolls(), 1);
+    const remixCall = mockApi.calls.find((call) => call.pathname === "/api/v1/design/remix-from-image");
+    assert.equal(remixCall.body.referenceImageId, "reference_test_1");
+  } finally {
+    await bridge.close();
+    await mockApi.close();
+  }
+});
+
+test("bridge accepts raw multipart references and reuses the reviewed upload by content hash", async () => {
+  const mockApi = await startMockRemixApi();
+  const bridge = await startBridge({
+    REMIX_API_KEY: "rc_live_test.secret",
+    REMIX_PROFILE_ID: "profile_seraphina",
+    REMIX_API_BASE_URL: mockApi.baseUrl,
+  });
+
+  try {
+    const upload = async () => {
+      const formData = new FormData();
+      formData.set(
+        "file",
+        new Blob([Buffer.from("/9j/4AAQSkZJRgABAQEAAP/Z")], { type: "image/jpeg" }),
+        "outfit.jpg",
+      );
+      const response = await fetch(`${bridge.url}/v1/media/reference-image`, {
+        method: "POST",
+        body: formData,
+      });
+      return { response, payload: await response.json() };
+    };
+
+    const first = await upload();
+    const second = await upload();
+
+    assert.equal(first.response.status, 200);
+    assert.equal(first.payload.referenceImage.id, "reference_test_1");
+    assert.equal(first.payload.referenceImage.status, "clear");
+    assert.equal(first.payload.referenceImage.reused, false);
+    assert.equal(second.response.status, 200);
+    assert.equal(second.payload.referenceImage.id, "reference_test_1");
+    assert.equal(second.payload.referenceImage.reused, true);
+    assert.equal(
+      mockApi.calls.filter((call) => call.pathname === "/api/v1/design/media/reference-image").length,
+      1,
+    );
+    assert.equal(mockApi.referenceStatusPolls(), 1);
+  } finally {
+    await bridge.close();
+    await mockApi.close();
+  }
+});
+
+test("bridge rejects GIF references before any upstream upload", async () => {
+  const mockApi = await startMockRemixApi();
+  const bridge = await startBridge({
+    REMIX_API_KEY: "rc_live_test.secret",
+    REMIX_API_BASE_URL: mockApi.baseUrl,
+  });
+
+  try {
+    const formData = new FormData();
+    formData.set("file", new Blob(["GIF89a"], { type: "image/gif" }), "animated.gif");
+    const response = await fetch(`${bridge.url}/v1/media/reference-image`, {
+      method: "POST",
+      body: formData,
+    });
+    const payload = await response.json();
+
+    assert.equal(response.status, 400);
+    assert.match(payload.error, /JPG, PNG, WebP, AVIF, or HEIC\/HEIF/);
+    assert.equal(
+      mockApi.calls.some((call) => call.pathname === "/api/v1/design/media/reference-image"),
+      false,
+    );
+  } finally {
+    await bridge.close();
+    await mockApi.close();
+  }
+});
+
+test("bridge rejects outfit generation without a source image", async () => {
+  const mockApi = await startMockRemixApi();
+  const bridge = await startBridge({
+    REMIX_API_KEY: "rc_live_test.secret",
+    REMIX_PROFILE_ID: "profile_seraphina",
+    REMIX_API_BASE_URL: mockApi.baseUrl,
+  });
+
+  try {
+    const response = await fetch(`${bridge.url}/v1/commands/generate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        yes: true,
+        command: "outfit-try-on",
+        characterName: "Seraphina",
+        visualIdentity: "long pastel-pink hair, amber eyes, black sundress, emerald vine magic",
+        maxGenerations: 1,
+      }),
+    });
+    const payload = await response.json();
+
+    assert.equal(response.status, 400);
+    assert.match(payload.error, /requires a source image upload or sourceImageUrl/);
+    assert.equal(mockApi.calls.some((call) => call.pathname === "/api/v1/design/generations"), false);
+    assert.equal(mockApi.calls.some((call) => call.pathname === "/api/v1/design/remix-from-image"), false);
+  } finally {
+    await bridge.close();
+    await mockApi.close();
+  }
+});
+
+test("bridge source-image SFW path uses the reviewed id when a character reference key is supplied", async () => {
+  const mockApi = await startMockRemixApi();
+  const bridge = await startBridge({
+    REMIX_API_KEY: "rc_live_test.secret",
+    REMIX_PROFILE_ID: "profile_seraphina",
+    REMIX_API_BASE_URL: mockApi.baseUrl,
+  });
+
+  try {
+    const response = await fetch(`${bridge.url}/v1/commands/generate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        yes: true,
+        command: "outfit-try-on",
+        characterName: "Seraphina",
+        sourceReferenceImageId: "reference_test_1",
         referenceImageKey: "camera/training/seraphina/reference.jpg",
         visualIdentity: "long pastel-pink hair, amber eyes, black sundress, emerald vine magic",
         maxGenerations: 1,
@@ -998,10 +1189,10 @@ test("bridge source-image SFW path uses generation endpoint when a character ref
     assert.equal(payload.modelId, "nano-banana");
     const generationCall = mockApi.calls.find((call) => call.pathname === "/api/v1/design/generations");
     const remixCall = mockApi.calls.find((call) => call.pathname === "/api/v1/design/remix-from-image");
-    assert.equal(remixCall, undefined);
-    assert.equal(generationCall.body.modelId, "nano-banana");
-    assert.equal(generationCall.body.sourceImageUrl, "https://example.com/outfit.jpg");
-    assert.deepEqual(generationCall.body.referenceImage, { s3Key: "camera/training/seraphina/reference.jpg" });
+    assert.equal(generationCall, undefined);
+    assert.equal(remixCall.body.modelId, "nano-banana");
+    assert.equal(remixCall.body.referenceImageId, "reference_test_1");
+    assert.equal(remixCall.body.referenceImage, undefined);
   } finally {
     await bridge.close();
     await mockApi.close();
@@ -1025,7 +1216,7 @@ test("bridge source-image mature path forces Seedream remix", async () => {
         matureContent: true,
         command: "outfit-try-on",
         characterName: "Seraphina",
-        sourceImageUrl: "https://example.com/outfit.jpg",
+        sourceReferenceImageId: "reference_test_1",
         visualIdentity: "long pastel-pink hair, amber eyes, black sundress, emerald vine magic",
         maxGenerations: 1,
       }),
@@ -1059,7 +1250,7 @@ test("private-snap with source image uses Seedream remix edit", async () => {
         yes: true,
         command: "private-snap",
         characterName: "Seraphina",
-        sourceImageUrl: "https://example.com/private-snap.jpg",
+        sourceReferenceImageId: "reference_test_1",
         visualIdentity: "long pastel-pink hair, amber eyes, black sundress, emerald vine magic",
         maxGenerations: 1,
       }),
@@ -1076,7 +1267,7 @@ test("private-snap with source image uses Seedream remix edit", async () => {
     const generationCall = mockApi.calls.find((call) => call.pathname === "/api/v1/design/generations");
     assert.equal(generationCall, undefined);
     assert.equal(remixCall.body.modelId, "seedream-v4.5-edit");
-    assert.equal(remixCall.body.imageUrl, "https://example.com/private-snap.jpg");
+    assert.equal(remixCall.body.referenceImageId, "reference_test_1");
   } finally {
     await bridge.close();
     await mockApi.close();
@@ -1115,10 +1306,7 @@ test("couple-photo uploads the user's photo as the male reference", async () => 
     assert.equal(payload.ok, true);
     assert.equal(payload.modelId, "nano-banana");
     assert.equal(payload.referenceImageKey, "camera/training/seraphina/reference.jpg");
-    assert.equal(payload.userReferenceImageKey, "uploads/test-user/reference-images/user-man.jpg");
-    assert.deepEqual(payload.selectedReferenceImages, {
-      profile_seraphina: "camera/training/seraphina/reference.jpg",
-    });
+    assert.equal(payload.userReferenceImageId, "reference_test_1");
     assert.match(payload.prompt, /man from the uploaded user reference photo/);
     assert.match(payload.prompt, /two distinct people/);
 
@@ -1127,12 +1315,10 @@ test("couple-photo uploads the user's photo as the male reference", async () => 
     assert.match(uploadCall.body.text, /filename="user-man\.jpg"/);
 
     const generationCall = mockApi.calls.find((call) => call.pathname === "/api/v1/design/generations");
-    assert.deepEqual(generationCall.body.referenceImage, {
-      s3Key: "uploads/test-user/reference-images/user-man.jpg",
-    });
-    assert.deepEqual(generationCall.body.selectedReferenceImages, {
-      profile_seraphina: "camera/training/seraphina/reference.jpg",
-    });
+    const remixCall = mockApi.calls.find((call) => call.pathname === "/api/v1/design/remix-from-image");
+    assert.equal(generationCall, undefined);
+    assert.equal(remixCall.body.referenceImageId, "reference_test_1");
+    assert.equal(remixCall.body.referenceImage, undefined);
   } finally {
     await bridge.close();
     await mockApi.close();
@@ -1289,7 +1475,7 @@ test("bridge maps each companion command to a Remix prompt-template family", asy
   }
 });
 
-test("couples-vacation dry-run plans a three-photo multi-reference set", async () => {
+test("couples-vacation dry-run plans a three-photo reviewed-reference set", async () => {
   const mockApi = await startMockRemixApi();
   const bridge = await startBridge({
     REMIX_API_KEY: "rc_live_test.secret",
@@ -1307,7 +1493,7 @@ test("couples-vacation dry-run plans a three-photo multi-reference set", async (
         profileId: "profile_seraphina",
         referenceImageKey: "camera/training/seraphina/reference.jpg",
         userConsent: "yes",
-        userReferenceImageKey: "uploads/test-user/reference-images/user-man.jpg",
+        userReferenceImageId: "reference_test_1",
         theme: "cohesive Amalfi coast weekend",
         visualIdentity: "long pastel-pink hair, amber eyes, black sundress, emerald vine magic",
       }),
@@ -1319,9 +1505,8 @@ test("couples-vacation dry-run plans a three-photo multi-reference set", async (
     assert.equal(payload.command, "couples-vacation");
     assert.equal(payload.maxGenerations, 3);
     assert.equal(payload.modelId, "nano-banana");
-    assert.deepEqual(payload.selectedReferenceImages, {
-      profile_seraphina: "camera/training/seraphina/reference.jpg",
-    });
+    assert.equal(payload.referenceImageId, "reference_test_1");
+    assert.equal(payload.selectedReferenceImages, null);
     assert.match(payload.prompt, /couples vacation photo set/);
     assert.match(payload.prompt, /Amalfi coast/);
     assert.equal(payload.promptTemplate.packId, "pack_vacation");
@@ -1357,7 +1542,7 @@ test("couples-vacation generate returns a three-image chat set", async () => {
         profileId: "profile_seraphina",
         referenceImageKey: "camera/training/seraphina/reference.jpg",
         userConsent: "yes",
-        userReferenceImageKey: "uploads/test-user/reference-images/user-man.jpg",
+        userReferenceImageId: "reference_test_1",
         theme: "cohesive Amalfi coast weekend",
         visualIdentity: "long pastel-pink hair, amber eyes, black sundress, emerald vine magic",
       }),
@@ -1374,19 +1559,16 @@ test("couples-vacation generate returns a three-image chat set", async () => {
     assert.match(payload.markdown, /2 of 3/);
     assert.match(payload.markdown, /3 of 3/);
 
-    const generationCalls = mockApi.calls.filter((call) => call.pathname === "/api/v1/design/generations");
-    assert.equal(generationCalls.length, 3);
-    assert.match(generationCalls[0].body.prompt, /Photo 1 of 3/);
-    assert.match(generationCalls[1].body.prompt, /Photo 2 of 3/);
-    assert.match(generationCalls[2].body.prompt, /Photo 3 of 3/);
-    for (const call of generationCalls) {
+    const remixCalls = mockApi.calls.filter((call) => call.pathname === "/api/v1/design/remix-from-image");
+    assert.equal(remixCalls.length, 3);
+    assert.match(remixCalls[0].body.prompt, /Photo 1 of 3/);
+    assert.match(remixCalls[1].body.prompt, /Photo 2 of 3/);
+    assert.match(remixCalls[2].body.prompt, /Photo 3 of 3/);
+    for (const call of remixCalls) {
       assert.equal(call.body.modelId, "nano-banana");
-      assert.deepEqual(call.body.referenceImage, {
-        s3Key: "uploads/test-user/reference-images/user-man.jpg",
-      });
-      assert.deepEqual(call.body.selectedReferenceImages, {
-        profile_seraphina: "camera/training/seraphina/reference.jpg",
-      });
+      assert.equal(call.body.referenceImageId, "reference_test_1");
+      assert.equal(call.body.referenceImage, undefined);
+      assert.match(call.idempotencyKey, /^sillytavern-/);
     }
   } finally {
     await bridge.close();

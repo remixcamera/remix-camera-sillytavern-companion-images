@@ -211,11 +211,26 @@ const config = {
   ),
   pollTimeoutMs: Number(process.env.REMIX_POLL_TIMEOUT_MS || 180000),
   pollIntervalMs: Number(process.env.REMIX_POLL_INTERVAL_MS || 2000),
+  referenceReviewTimeoutMs: Number(process.env.REMIX_REFERENCE_REVIEW_TIMEOUT_MS || 45000),
+  referenceReviewPollIntervalMs: Number(process.env.REMIX_REFERENCE_REVIEW_POLL_INTERVAL_MS || 750),
+  referenceFetchTimeoutMs: Number(process.env.REMIX_REFERENCE_FETCH_TIMEOUT_MS || 15000),
 };
 const proxiedImages = new Map();
+const referenceUploads = new Map();
 const PROXIED_IMAGE_TTL_MS = 60 * 60 * 1000;
+const REFERENCE_UPLOAD_CACHE_TTL_MS = 6 * 24 * 60 * 60 * 1000;
 const JSON_BODY_MAX_BYTES = 7 * 1024 * 1024;
 const REFERENCE_UPLOAD_MAX_BYTES = 4 * 1024 * 1024;
+const MULTIPART_REFERENCE_BODY_MAX_BYTES = REFERENCE_UPLOAD_MAX_BYTES + 128 * 1024;
+const ALLOWED_REFERENCE_IMAGE_MIME_TYPES = new Set([
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+  "image/avif",
+  "image/heic",
+  "image/heif",
+]);
 const RECENT_QA_EVENT_LIMIT = 50;
 const recentQaEvents = [];
 
@@ -394,6 +409,53 @@ async function readJsonBody(req) {
   }
 }
 
+async function readBufferBody(req, maxBytes, tooLargeMessage) {
+  const chunks = [];
+  let size = 0;
+  for await (const chunk of req) {
+    size += chunk.byteLength;
+    if (size > maxBytes) {
+      throw httpError(413, tooLargeMessage);
+    }
+    chunks.push(chunk);
+  }
+  return Buffer.concat(chunks);
+}
+
+async function readReferenceImageMultipart(req) {
+  const contentType = cleanString(req.headers["content-type"]);
+  if (!contentType.toLowerCase().startsWith("multipart/form-data;")) {
+    throw httpError(415, "Reference uploads must use multipart/form-data.");
+  }
+  const body = await readBufferBody(
+    req,
+    MULTIPART_REFERENCE_BODY_MAX_BYTES,
+    "Reference upload request is too large.",
+  );
+  let formData;
+  try {
+    formData = await new Request("http://127.0.0.1/v1/media/reference-image", {
+      method: "POST",
+      headers: { "Content-Type": contentType },
+      body,
+    }).formData();
+  } catch {
+    throw httpError(400, "Reference upload form could not be parsed.");
+  }
+  const file = formData.get("file");
+  if (!file || typeof file.arrayBuffer !== "function") {
+    throw httpError(400, "Reference upload must include a file.");
+  }
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const mimeType = cleanString(file.type || "application/octet-stream").toLowerCase();
+  assertReferenceImageBuffer(buffer, mimeType);
+  return {
+    buffer,
+    mimeType,
+    fileName: cleanString(file.name) || "reference-image.jpg",
+  };
+}
+
 function cleanString(value) {
   return typeof value === "string" ? value.trim() : "";
 }
@@ -516,8 +578,20 @@ function normalizeBody(body) {
         body.userPhotoMimeType ||
         body.userImageMimeType,
     ),
+    userReferenceImageId: cleanString(
+      body.userReferenceImageId ||
+        body.userPhotoReferenceImageId ||
+        body.userImageReferenceId,
+    ),
     theme: cleanString(body.theme || body.sceneTheme || body.vacationTheme),
     sourceImageUrl: cleanString(body.sourceImageUrl),
+    sourceImageDataUrl: cleanString(body.sourceImageDataUrl),
+    sourceImageName: cleanString(body.sourceImageName),
+    sourceImageMimeType: cleanString(body.sourceImageMimeType),
+    sourceReferenceImageId: cleanString(
+      body.sourceReferenceImageId ||
+        body.sourceImageId,
+    ),
     referenceImageUrl: cleanString(body.referenceImageUrl),
     maxGenerations: clampInteger(body.maxGenerations, 1, 4, command === "couples-vacation" ? 3 : 1),
     matureContent: PRIVATE_SNAP_COMMANDS.has(command) || isTruthyValue(body.matureContent || body.nsfw || body.contentRating),
@@ -967,7 +1041,7 @@ function buildPrompt(input, promptTemplate = null) {
       identity,
       profileDetails,
       referenceDetails,
-      input.sourceImageUrl
+      (input.sourceReferenceImageId || input.sourceImageUrl)
         ? "Use the provided source image only as the clothing, outfit, pose, composition, or styling reference. Use the companion reference image for the character identity."
         : "",
       input.chatText ? `Recent chat and outfit request: ${input.chatText}` : "",
@@ -1140,7 +1214,8 @@ function isMatureContentRequested(input) {
 
 function hasUserReference(input) {
   return Boolean(
-    input.userReferenceImageKey ||
+    input.userReferenceImageId ||
+      input.userReferenceImageKey ||
       input.userReferenceImageUrl ||
       input.userReferenceImageDataUrl,
   );
@@ -1159,7 +1234,15 @@ async function buildPlan(input) {
   const prompt = buildPrompt(input, promptTemplate);
   const modelId = resolveModelId(input);
   const sourceImageUrl = input.sourceImageUrl || input.referenceImageUrl;
-  const usesImageToImage = Boolean(sourceImageUrl && SOURCE_IMAGE_COMMANDS.has(input.command));
+  const referenceImageId =
+    input.sourceReferenceImageId ||
+    (USER_INCLUDED_COMMANDS.has(input.command) ? input.userReferenceImageId : "");
+  const sourceImageProvided = Boolean(
+    referenceImageId ||
+      sourceImageUrl ||
+      input.sourceImageDataUrl,
+  );
+  const usesImageToImage = Boolean(sourceImageProvided && SOURCE_IMAGE_COMMANDS.has(input.command));
 
   const warnings = [];
   if (!input.profileId) {
@@ -1168,8 +1251,8 @@ async function buildPlan(input) {
   if (!input.visualIdentity) {
     warnings.push("No visualIdentity supplied. Add character-card remix_camera.visualIdentity for more consistent character images.");
   }
-  if (input.command === "outfit-try-on" && !sourceImageUrl) {
-    warnings.push("outfit-try-on works best with sourceImageUrl.");
+  if (input.command === "outfit-try-on" && !sourceImageProvided) {
+    warnings.push("outfit-try-on requires a source image upload or sourceImageUrl.");
   }
   if (USER_INCLUDED_COMMANDS.has(input.command) && !isAffirmativeConsent(input.userConsent)) {
     warnings.push(`${input.command} requires explicit affirmative user consent, for example userConsent: "yes".`);
@@ -1192,8 +1275,10 @@ async function buildPlan(input) {
     maxGenerations: input.maxGenerations,
     usesImageToImage,
     sourceImageUrl: sourceImageUrl || null,
+    referenceImageId: referenceImageId || null,
     referenceImageKey: input.referenceImageKey || null,
     userReferenceImageKey: input.userReferenceImageKey || null,
+    userReferenceImageId: input.userReferenceImageId || null,
     hasUserReferenceImage: hasUserReference(input),
     promptTemplateDecision: config.promptTemplatesEnabled
       ? promptTemplate
@@ -1278,21 +1363,21 @@ function schemaResponse() {
       },
       {
         name: "outfit-try-on",
-        description: "Create an outfit image from a clothing or styling source image URL.",
-        required: ["sourceImageUrl"],
-        optional: ["profileId", "characterName", "mood", "outfit", "location", "pose", "style", "visualIdentity", "negativePrompt"],
+        description: "Create an outfit image from an uploaded clothing or styling source image, or a source image URL.",
+        required: [],
+        optional: ["sourceReferenceImageId", "sourceImageUrl", "sourceImageDataUrl", "sourceImageName", "sourceImageMimeType", "profileId", "characterName", "mood", "outfit", "location", "pose", "style", "visualIdentity", "negativePrompt"],
       },
       {
         name: "couple-photo",
         description: "Generate a shared image with the user after explicit consent.",
         required: ["userConsent"],
-        optional: ["profileId", "characterName", "userDescription", "userReferenceImageKey", "userReferenceImageUrl", "userReferenceImageDataUrl", "sourceImageUrl", "mood", "outfit", "location", "pose", "style", "visualIdentity", "negativePrompt"],
+        optional: ["profileId", "characterName", "userDescription", "userReferenceImageId", "userReferenceImageKey", "userReferenceImageUrl", "userReferenceImageDataUrl", "sourceImageUrl", "mood", "outfit", "location", "pose", "style", "visualIdentity", "negativePrompt"],
       },
       {
         name: "couples-vacation",
         description: "Generate a cohesive three-photo couples vacation set after explicit user consent.",
         required: ["userConsent"],
-        optional: ["profileId", "characterName", "theme", "userDescription", "userReferenceImageKey", "userReferenceImageUrl", "userReferenceImageDataUrl", "mood", "outfit", "location", "pose", "style", "visualIdentity", "negativePrompt", "maxGenerations"],
+        optional: ["profileId", "characterName", "theme", "userDescription", "userReferenceImageId", "userReferenceImageKey", "userReferenceImageUrl", "userReferenceImageDataUrl", "mood", "outfit", "location", "pose", "style", "visualIdentity", "negativePrompt", "maxGenerations"],
       },
       {
         name: "date-night",
@@ -1350,11 +1435,14 @@ async function remixFetch(pathname, options = {}) {
 }
 
 function assertReferenceImageBuffer(buffer, mimeType) {
-  if (!mimeType.toLowerCase().startsWith("image/")) {
-    throw httpError(400, "User reference photo must be an image.");
+  if (!ALLOWED_REFERENCE_IMAGE_MIME_TYPES.has(mimeType.toLowerCase())) {
+    throw httpError(400, "Reference photo must be JPG, PNG, WebP, AVIF, or HEIC/HEIF.");
   }
   if (buffer.byteLength > REFERENCE_UPLOAD_MAX_BYTES) {
-    throw httpError(413, "User reference photo must be 4MB or smaller after compression.");
+    throw httpError(413, "Reference photo must be 4MB or smaller after compression.");
+  }
+  if (buffer.byteLength === 0) {
+    throw httpError(400, "Reference photo is empty.");
   }
 }
 
@@ -1375,31 +1463,60 @@ function decodeDataUrl(dataUrl, fallbackName, fallbackMimeType) {
   };
 }
 
-async function fetchUserReferenceImage(url) {
+async function readReferenceResponseBuffer(response) {
+  if (!response.body) {
+    throw httpError(400, "Reference image response was empty.");
+  }
+  const reader = response.body.getReader();
+  const chunks = [];
+  let size = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    size += value.byteLength;
+    if (size > REFERENCE_UPLOAD_MAX_BYTES) {
+      await reader.cancel();
+      throw httpError(413, "Reference photo must be 4MB or smaller.");
+    }
+    chunks.push(Buffer.from(value));
+  }
+  return Buffer.concat(chunks);
+}
+
+async function fetchReferenceImage(url) {
   let parsed;
   try {
     parsed = new URL(url);
   } catch {
-    throw httpError(400, "userReferenceImageUrl must be a valid URL.");
+    throw httpError(400, "Reference image URL must be valid.");
   }
   if (!["http:", "https:"].includes(parsed.protocol)) {
-    throw httpError(400, "userReferenceImageUrl must use http or https.");
+    throw httpError(400, "Reference image URL must use http or https.");
   }
 
-  const response = await fetch(parsed.toString(), {
-    headers: {
-      Accept: "image/avif,image/webp,image/png,image/jpeg,image/*;q=0.8",
-    },
-  });
+  let response;
+  try {
+    response = await fetch(parsed.toString(), {
+      headers: {
+        Accept: "image/avif,image/webp,image/png,image/jpeg,image/*;q=0.8",
+      },
+      signal: AbortSignal.timeout(Math.max(1_000, config.referenceFetchTimeoutMs)),
+    });
+  } catch (error) {
+    if (error?.name === "AbortError" || error?.name === "TimeoutError") {
+      throw httpError(504, "Reference image URL took too long to respond.");
+    }
+    throw httpError(502, "Reference image URL could not be fetched.");
+  }
   if (!response.ok) {
-    throw httpError(response.status, `Failed to fetch user reference photo: ${response.status}`);
+    throw httpError(response.status, `Failed to fetch reference photo: ${response.status}`);
   }
   const mimeType = cleanString(response.headers.get("content-type") || "image/jpeg").split(";")[0].toLowerCase();
   const contentLength = Number(response.headers.get("content-length") || 0);
   if (contentLength > REFERENCE_UPLOAD_MAX_BYTES) {
-    throw httpError(413, "User reference photo must be 4MB or smaller.");
+    throw httpError(413, "Reference photo must be 4MB or smaller.");
   }
-  const buffer = Buffer.from(await response.arrayBuffer());
+  const buffer = await readReferenceResponseBuffer(response);
   assertReferenceImageBuffer(buffer, mimeType);
   const fileName = decodeURIComponent(parsed.pathname.split("/").filter(Boolean).pop() || "user-reference.jpg");
   return {
@@ -1409,21 +1526,153 @@ async function fetchUserReferenceImage(url) {
   };
 }
 
+function referenceImageFromPayload(payload) {
+  const referenceImage =
+    payload?.referenceImage && typeof payload.referenceImage === "object"
+      ? payload.referenceImage
+      : null;
+  if (!referenceImage) {
+    throw httpError(502, "Reference upload response did not include referenceImage.", payload);
+  }
+  const id = cleanString(referenceImage.id);
+  if (!id) {
+    throw httpError(502, "Reference upload response did not include a reference image id.", payload);
+  }
+  const status = cleanString(referenceImage.status).toLowerCase() || "pending";
+  const statusUrl =
+    cleanString(referenceImage.statusUrl) ||
+    `/api/v1/design/media/reference-image/${encodeURIComponent(id)}`;
+  return {
+    id,
+    status,
+    statusUrl,
+    reason: cleanString(referenceImage.reason),
+    fileSize: Number(referenceImage.fileSize || 0) || null,
+    fileType: cleanString(referenceImage.fileType) || null,
+    expiresAt: Number(referenceImage.expiresAt || 0) || null,
+  };
+}
+
+function referenceStatusPath(statusUrl, referenceImageId) {
+  const candidate = cleanString(statusUrl);
+  if (candidate.startsWith("/")) {
+    return candidate;
+  }
+  if (candidate) {
+    try {
+      const parsed = new URL(candidate);
+      if (parsed.origin === new URL(config.apiBaseUrl).origin) {
+        return `${parsed.pathname}${parsed.search}`;
+      }
+    } catch {
+      // Fall back to the owned reference id below.
+    }
+  }
+  return `/api/v1/design/media/reference-image/${encodeURIComponent(referenceImageId)}`;
+}
+
+function cleanupReferenceUploads() {
+  const now = Date.now();
+  for (const [digest, entry] of referenceUploads) {
+    if (!entry || entry.cacheUntil <= now) {
+      referenceUploads.delete(digest);
+    }
+  }
+}
+
+function cacheUntilForReference(referenceImage) {
+  const localLimit = Date.now() + REFERENCE_UPLOAD_CACHE_TTL_MS;
+  return referenceImage.expiresAt
+    ? Math.max(Date.now(), Math.min(localLimit, referenceImage.expiresAt - 60_000))
+    : localLimit;
+}
+
+function assertUsableReferenceStatus(referenceImage) {
+  if (referenceImage.status === "clear") {
+    return;
+  }
+  if (referenceImage.status === "blocked") {
+    throw httpError(
+      403,
+      "This reference image was blocked by the safety review.",
+      { referenceImage },
+    );
+  }
+  if (referenceImage.status === "review_required") {
+    throw httpError(
+      403,
+      "This reference image requires admin review before it can be used.",
+      { referenceImage },
+    );
+  }
+}
+
+async function waitForReferenceImageClear(entry) {
+  let referenceImage = entry.referenceImage;
+  assertUsableReferenceStatus(referenceImage);
+  if (referenceImage.status === "clear") {
+    return referenceImage;
+  }
+
+  const deadline = Date.now() + Math.max(1_000, config.referenceReviewTimeoutMs);
+  while (Date.now() < deadline) {
+    await new Promise((resolve) =>
+      setTimeout(resolve, Math.max(100, config.referenceReviewPollIntervalMs)),
+    );
+    const payload = await remixFetch(
+      referenceStatusPath(referenceImage.statusUrl, referenceImage.id),
+    );
+    referenceImage = referenceImageFromPayload(payload);
+    entry.referenceImage = referenceImage;
+    entry.cacheUntil = cacheUntilForReference(referenceImage);
+    assertUsableReferenceStatus(referenceImage);
+    if (referenceImage.status === "clear") {
+      return referenceImage;
+    }
+  }
+
+  throw httpError(
+    409,
+    "The reference image safety check is still in progress. Try again shortly; the bridge will reuse this upload.",
+    {
+      referenceImage: {
+        id: referenceImage.id,
+        status: referenceImage.status,
+        statusUrl: referenceImage.statusUrl,
+      },
+    },
+  );
+}
+
 async function uploadReferenceImageBuffer({ buffer, mimeType, fileName }) {
+  assertReferenceImageBuffer(buffer, mimeType);
+  cleanupReferenceUploads();
+  const digest = crypto.createHash("sha256").update(buffer).digest("hex");
+  const cached = referenceUploads.get(digest);
+  if (cached) {
+    return {
+      referenceImage: await waitForReferenceImageClear(cached),
+      digest,
+      reused: true,
+    };
+  }
+
   const formData = new FormData();
-  formData.set("file", new Blob([buffer], { type: mimeType }), fileName || "user-reference.jpg");
+  formData.set("file", new Blob([buffer], { type: mimeType }), fileName || "reference-image.jpg");
   const payload = await remixFetch("/api/v1/design/media/reference-image", {
     method: "POST",
     body: formData,
   });
-  const referenceImage = payload?.referenceImage;
-  const s3Key = cleanString(referenceImage?.s3Key || payload?.s3Key);
-  if (!s3Key) {
-    throw httpError(502, "Reference upload response did not include an s3Key.", payload);
-  }
+  const referenceImage = referenceImageFromPayload(payload);
+  const entry = {
+    referenceImage,
+    cacheUntil: cacheUntilForReference(referenceImage),
+  };
+  referenceUploads.set(digest, entry);
   return {
-    s3Key,
-    url: cleanString(referenceImage?.url || payload?.url),
+    referenceImage: await waitForReferenceImageClear(entry),
+    digest,
+    reused: false,
   };
 }
 
@@ -1431,17 +1680,47 @@ async function resolveUserReferenceImage(input) {
   if (!USER_INCLUDED_COMMANDS.has(input.command)) {
     return input;
   }
-  if (input.userReferenceImageKey || (!input.userReferenceImageDataUrl && !input.userReferenceImageUrl)) {
+  if (
+    input.userReferenceImageId ||
+    input.userReferenceImageKey ||
+    (!input.userReferenceImageDataUrl && !input.userReferenceImageUrl)
+  ) {
     return input;
   }
 
   const image = input.userReferenceImageDataUrl
     ? decodeDataUrl(input.userReferenceImageDataUrl, input.userReferenceImageName, input.userReferenceImageMimeType)
-    : await fetchUserReferenceImage(input.userReferenceImageUrl);
+    : await fetchReferenceImage(input.userReferenceImageUrl);
   const uploaded = await uploadReferenceImageBuffer(image);
   return {
     ...input,
-    userReferenceImageKey: uploaded.s3Key,
+    userReferenceImageId: uploaded.referenceImage.id,
+    userReferenceImageDataUrl: "",
+    userReferenceImageUrl: "",
+  };
+}
+
+async function resolveSourceReferenceImage(input) {
+  if (
+    !SOURCE_IMAGE_COMMANDS.has(input.command) ||
+    input.sourceReferenceImageId ||
+    (!input.sourceImageDataUrl && !input.sourceImageUrl)
+  ) {
+    return input;
+  }
+  const image = input.sourceImageDataUrl
+    ? decodeDataUrl(
+        input.sourceImageDataUrl,
+        input.sourceImageName || "source-image.jpg",
+        input.sourceImageMimeType,
+      )
+    : await fetchReferenceImage(input.sourceImageUrl);
+  const uploaded = await uploadReferenceImageBuffer(image);
+  return {
+    ...input,
+    sourceReferenceImageId: uploaded.referenceImage.id,
+    sourceImageDataUrl: "",
+    sourceImageUrl: "",
   };
 }
 
@@ -1622,7 +1901,7 @@ function qaHtml() {
 </html>`;
 }
 
-async function submitGeneration(plan) {
+async function submitGeneration(plan, idempotencyKey) {
   const profileId = await resolveProfileId(plan.profileId);
   const commonBody = {
     profileId,
@@ -1630,44 +1909,40 @@ async function submitGeneration(plan) {
     ...promptTemplateRequestMetadata(plan),
   };
 
-  if (plan.modelId && (!plan.usesImageToImage || plan.referenceImageKey)) {
-    commonBody.modelId = plan.modelId;
-  }
-  const generationReferenceImageKey = plan.userReferenceImageKey || plan.referenceImageKey;
-  if (generationReferenceImageKey) {
-    commonBody.referenceImage = { s3Key: generationReferenceImageKey };
-  }
-  if (plan.selectedReferenceImages) {
-    commonBody.selectedReferenceImages = plan.selectedReferenceImages;
-  }
-
-  if (plan.usesImageToImage && plan.sourceImageUrl) {
-    if (plan.referenceImageKey) {
-      return remixFetch("/api/v1/design/generations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...commonBody,
-          sourceImageUrl: plan.sourceImageUrl,
-        }),
-      });
+  if (plan.usesImageToImage) {
+    if (!plan.referenceImageId) {
+      throw httpError(
+        400,
+        "A reviewed reference image id is required for image-to-image generation.",
+      );
     }
-    if (plan.modelId === "seedream-v4.5-edit" || plan.modelId === "seedream-v5-lite-edit") {
+    if (plan.modelId) {
       commonBody.modelId = plan.modelId;
     }
     return remixFetch("/api/v1/design/remix-from-image", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Idempotency-Key": idempotencyKey,
+      },
       body: JSON.stringify({
         ...commonBody,
-        imageUrl: plan.sourceImageUrl,
+        referenceImageId: plan.referenceImageId,
+        clientRequestId: idempotencyKey,
       }),
     });
   }
 
+  if (plan.modelId && (!plan.usesImageToImage || plan.referenceImageKey)) {
+    commonBody.modelId = plan.modelId;
+  }
+
   return remixFetch("/api/v1/design/generations", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "Idempotency-Key": idempotencyKey,
+    },
     body: JSON.stringify(commonBody),
   });
 }
@@ -1757,7 +2032,15 @@ async function generate(input) {
   if (USER_INCLUDED_COMMANDS.has(input.command) && !isAffirmativeConsent(input.userConsent)) {
     throw httpError(400, `${input.command} requires affirmative userConsent such as "yes".`);
   }
-  const preparedInput = await resolveUserReferenceImage(input);
+  if (
+    input.command === "outfit-try-on" &&
+    !input.sourceReferenceImageId &&
+    !input.sourceImageUrl &&
+    !input.sourceImageDataUrl
+  ) {
+    throw httpError(400, "outfit-try-on requires a source image upload or sourceImageUrl.");
+  }
+  const preparedInput = await resolveSourceReferenceImage(await resolveUserReferenceImage(input));
   const plan = await buildPlan(preparedInput);
   const shotPrompts = PHOTO_SET_SHOTS[preparedInput.command] || [];
 
@@ -1766,7 +2049,10 @@ async function generate(input) {
     const generationPlan = shotPrompts[index]
       ? { ...plan, prompt: joinSentences([plan.prompt, shotPrompts[index]]) }
       : plan;
-    const submitted = await submitGeneration(generationPlan);
+    const submitted = await submitGeneration(
+      generationPlan,
+      `sillytavern-${crypto.randomUUID()}`,
+    );
     const id = generationIdFromPayload(submitted);
     if (!id) {
       results.push({
@@ -1973,6 +2259,24 @@ async function route(req, res) {
     return;
   }
 
+  if (req.method === "POST" && url.pathname === "/v1/media/reference-image") {
+    const uploaded = await uploadReferenceImageBuffer(
+      await readReferenceImageMultipart(req),
+    );
+    sendJson(req, res, 200, {
+      ok: true,
+      referenceImage: {
+        id: uploaded.referenceImage.id,
+        status: uploaded.referenceImage.status,
+        fileSize: uploaded.referenceImage.fileSize,
+        fileType: uploaded.referenceImage.fileType,
+        expiresAt: uploaded.referenceImage.expiresAt,
+        reused: uploaded.reused,
+      },
+    });
+    return;
+  }
+
   if (req.method === "POST" && url.pathname === "/v1/commands/dry-run") {
     const body = normalizeBody(await readJsonBody(req));
     const plan = await buildPlan(body);
@@ -2028,6 +2332,7 @@ async function route(req, res) {
       "GET /lobe/manifest.json",
       "GET /v1/images/:id",
       "POST /v1/feedback",
+      "POST /v1/media/reference-image",
       "POST /v1/commands/dry-run",
       "POST /v1/commands/generate",
       "POST /v1/tools/:command/dry-run",

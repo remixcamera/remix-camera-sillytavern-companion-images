@@ -651,7 +651,10 @@ async function recordDemo() {
       "That one works. I can make it feel like a polished coffee-date outfit.",
     );
     await setBadge(page, "Use case 3: outfit try-on from a reference URL");
-    page.once("dialog", (dialog) => dialog.accept(realApiMode ? liveOutfitSourceImageUrl : "https://example.com/white-blazer-look.jpg"));
+    await page.fill(
+      "#remix-camera-source-image-url",
+      realApiMode ? liveOutfitSourceImageUrl : `${mockApiOrigin}/source/outfit.jpg`,
+    );
     expectedCount += 1;
     await clickAndWaitForImage(page, "outfit", "#remix-camera-outfit-button", expectedCount);
     await sleep(1600);
@@ -667,14 +670,15 @@ async function recordDemo() {
     await page.setInputFiles("#remix-camera-couple-photo", coupleUserReferenceImage);
     await page.waitForFunction(() => {
       const status = document.querySelector("#remix-camera-couple-photo-status")?.textContent || "";
-      return status.includes("Selected:");
+      return status.includes("Selected:") || status.includes("Ready:");
     });
-    const dialogReplies = ["yes", "consenting adult man with light brown hair, short beard, fair skin, tan jacket"];
-    const dialogHandler = (dialog) => dialog.accept(dialogReplies.shift() || "");
-    page.on("dialog", dialogHandler);
+    await page.check("#remix-camera-user-consent");
+    await page.fill(
+      "#remix-camera-user-description",
+      "consenting adult man with light brown hair, short beard, fair skin, tan jacket",
+    );
     expectedCount += 1;
     await clickAndWaitForImage(page, "couple", "#remix-camera-couple-button", expectedCount);
-    page.off("dialog", dialogHandler);
     await sleep(2200);
   }
 
@@ -688,19 +692,17 @@ async function recordDemo() {
     await page.setInputFiles("#remix-camera-couple-photo", coupleUserReferenceImage);
     await page.waitForFunction(() => {
       const status = document.querySelector("#remix-camera-couple-photo-status")?.textContent || "";
-      return status.includes("Selected:");
+      return status.includes("Selected:") || status.includes("Ready:");
     });
-    const dialogReplies = [
-      "yes",
+    await page.check("#remix-camera-user-consent");
+    await page.fill(
+      "#remix-camera-user-description",
       "consenting adult man with light brown hair, short beard, fair skin, tan jacket",
-      "cohesive beach weekend getaway",
-    ];
-    const dialogHandler = (dialog) => dialog.accept(dialogReplies.shift() || "");
-    page.on("dialog", dialogHandler);
+    );
+    await page.fill("#remix-camera-vacation-theme", "cohesive beach weekend getaway");
     const vacationGenerationCount = generationCountForKind("vacation");
     expectedCount += vacationGenerationCount;
     await clickAndWaitForImage(page, "vacation", "#remix-camera-vacation-button", expectedCount, vacationGenerationCount);
-    page.off("dialog", dialogHandler);
     await sleep(2200);
   }
 
@@ -711,7 +713,7 @@ async function recordDemo() {
       "I will make it feel like an actual dinner photo, not just a portrait with a vague background.",
     );
     await setBadge(page, "Use case 6: contextual date-night image");
-    page.once("dialog", (dialog) => dialog.accept("cozy restaurant booth with warm light"));
+    await page.fill("#remix-camera-date-location", "cozy restaurant booth with warm light");
     expectedCount += 1;
     await clickAndWaitForImage(page, "date", "#remix-camera-date-button", expectedCount);
     await sleep(1600);
@@ -736,7 +738,7 @@ async function recordDemo() {
       "Only because this is clearly an adult private chat. I will make it temporary in the chat view.",
     );
     await setBadge(page, "Use case 8: opted-in private snap with timed hide");
-    page.once("dialog", (dialog) => dialog.accept());
+    await page.check("#remix-camera-private-consent");
     expectedCount += 1;
     await clickAndWaitForImage(page, "snap", "#remix-camera-private-snap-button", expectedCount);
     await sleep(1600);
@@ -1374,30 +1376,50 @@ function startMockRemixApi() {
           byteLength: buffer.byteLength,
           contentType: req.headers["content-type"] || null,
         });
-        return sendJson(res, 200, {
+        return sendJson(res, 202, {
           ok: true,
           referenceImage: {
-            url: `${mockApiOrigin}/uploads/couple-photo-user-reference.jpg`,
-            s3Key: "uploads/e2e/reference-images/couple-photo-user-reference.jpg",
+            id: "reference_e2e_user",
+            status: "pending",
+            statusUrl: "/api/v1/design/media/reference-image/reference_e2e_user",
+            url: null,
             fileSize: buffer.byteLength,
             fileType: "image/jpeg",
           },
         });
       }
+      if (
+        req.method === "GET" &&
+        url.pathname === "/api/v1/design/media/reference-image/reference_e2e_user"
+      ) {
+        return sendJson(res, 200, {
+          ok: true,
+          referenceImage: {
+            id: "reference_e2e_user",
+            status: "clear",
+            statusUrl: "/api/v1/design/media/reference-image/reference_e2e_user",
+            url: `${mockApiOrigin}/uploads/couple-photo-user-reference.jpg`,
+            fileSize: 631,
+            fileType: "image/jpeg",
+            expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000,
+          },
+        });
+      }
       if (req.method === "POST" && url.pathname === "/api/v1/design/remix-from-image") {
         const body = await readJson(req);
-        validateGenerationBody(body, "outfit");
-        if (!body.imageUrl) {
-          return sendJson(res, 400, { error: "imageUrl is required" });
+        const kind = classifyPrompt(body.prompt);
+        validateGenerationBody(body, kind);
+        if (body.referenceImageId !== "reference_e2e_user") {
+          return sendJson(res, 400, { error: "referenceImageId is required" });
         }
-        const id = `demo_outfit_${++counter}`;
-        generations.set(id, { id, kind: "outfit", prompt: body.prompt, imageUrl: body.imageUrl });
+        const id = `demo_${kind}_${++counter}`;
+        generations.set(id, { id, kind, prompt: body.prompt, referenceImageId: body.referenceImageId });
         apiRequests.push({
-          kind: "outfit",
+          kind,
           prompt: body.prompt,
           route: url.pathname,
           profileId: body.profileId,
-          imageUrl: body.imageUrl,
+          referenceImageId: body.referenceImageId,
         });
         return sendJson(res, 200, {
           id,
@@ -1418,6 +1440,17 @@ function startMockRemixApi() {
             };
           }),
         });
+      }
+      if (req.method === "GET" && url.pathname === "/source/outfit.jpg") {
+        const buffer = await fs.readFile(
+          path.join(packageRoot, "assets", "quick-try-outfit.jpg"),
+        );
+        res.writeHead(200, {
+          "Content-Type": "image/jpeg",
+          "Content-Length": buffer.byteLength,
+        });
+        res.end(buffer);
+        return;
       }
       return sendJson(res, 404, { error: "not found" });
     } catch (error) {
@@ -1451,13 +1484,8 @@ function validateGenerationBody(body, kind) {
     }
   }
   if (kind === "couple" || kind === "vacation") {
-    if (body.referenceImage?.s3Key !== "uploads/e2e/reference-images/couple-photo-user-reference.jpg") {
-      const error = new Error(`${kind} generation did not include the uploaded user reference image key.`);
-      error.status = 400;
-      throw error;
-    }
-    if (body.selectedReferenceImages?.[characterProfileId] !== characterCard?.data?.extensions?.remix_camera?.referenceImageKey) {
-      const error = new Error(`${kind} generation did not keep the character reference attached to the profile.`);
+    if (body.referenceImageId !== "reference_e2e_user") {
+      const error = new Error(`${kind} generation did not include the reviewed user reference image id.`);
       error.status = 400;
       throw error;
     }

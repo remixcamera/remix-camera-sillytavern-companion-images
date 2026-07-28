@@ -203,6 +203,65 @@
   background-image: url("./assets/quick-try-snap.png");
 }
 
+.remix-camera-source-reference {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.remix-camera-source-dropzone {
+  position: relative;
+  align-items: center;
+  justify-content: center;
+  min-height: 92px;
+  padding: 12px;
+  border: 2px dashed var(--SmartThemeBorderColor, #666);
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 120ms ease, background-color 120ms ease;
+}
+
+.remix-camera-source-dropzone:hover,
+.remix-camera-source-dropzone:focus-within,
+.remix-camera-source-dropzone[data-dragging="true"] {
+  border-color: #80d69a;
+  background: color-mix(in srgb, #80d69a 12%, transparent);
+}
+
+.remix-camera-source-dropzone input[type="file"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.remix-camera-source-dropzone span {
+  font-weight: 700;
+}
+
+.remix-camera-source-dropzone small {
+  opacity: 0.76;
+  font-size: 0.78rem;
+}
+
+.remix-camera-source-reference-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.82rem;
+}
+
+.remix-camera-source-reference-row span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .remix-camera-couple-reference {
   display: flex;
   flex-direction: column;

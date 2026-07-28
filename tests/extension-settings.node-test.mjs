@@ -114,6 +114,31 @@ test("extension exposes moment tools and snap controls", async () => {
   assert.match(source, /hasActiveVisibleChat/, "proactive private snaps should require an active visible chat by default.");
 });
 
+test("extension accepts a dropped or selected source image for Remix from image", async () => {
+  const source = await readFile(extensionPath, "utf8");
+
+  [
+    "remix-camera-source-image-dropzone",
+    "remix-camera-source-image-file",
+    "remix-camera-source-image-status",
+    "remix-camera-source-image-clear",
+    "sourceReferenceImageId",
+    "/v1/media/reference-image",
+    "waiting for its safety check",
+    "This reviewed upload will be reused",
+  ].forEach((needle) => {
+    assert.match(source, new RegExp(needle.replaceAll("-", "\\-")), `${needle} should be present in the extension source.`);
+  });
+
+  assert.match(source, /addEventListener\("drop"/, "the source image target should handle file drops.");
+  assert.match(source, /await sourceReferenceArgs\(\)/, "Outfit should prepare the selected local source image before generation.");
+  assert.match(source, /This file will be used instead of the URL/, "the UI should explain local-file precedence.");
+  assert.match(source, /formData\.set\("file"/, "the extension should send the file as multipart data instead of base64 JSON.");
+  assert.match(source, /userReferenceImageId/, "couple and vacation uploads should use the reviewed reference id.");
+  assert.doesNotMatch(source, /readAsDataURL|toDataURL/, "reference upload preparation should not create base64 data URLs.");
+  assert.doesNotMatch(source, /image\/gif/, "the file picker should not advertise unsupported GIF references.");
+});
+
 test("extension packages visual examples for every quick try button", async () => {
   const [styleSource, rootStyleSource] = await Promise.all([
     readFile(stylePath, "utf8"),

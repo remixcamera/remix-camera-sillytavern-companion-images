@@ -63,12 +63,18 @@ import {
   ];
   const REFERENCE_UPLOAD_TARGET_BYTES = Math.floor(3.6 * 1024 * 1024);
   const REFERENCE_UPLOAD_MAX_DIMENSION = 2048;
+  const REFERENCE_UPLOAD_INPUT_MAX_BYTES = 20 * 1024 * 1024;
+  const REFERENCE_UPLOAD_TIMEOUT_MS = 60_000;
+  const REFERENCE_IMAGE_MIME_PATTERN = /^image\/(jpeg|jpg|png|webp|avif|heic|heif)$/i;
   const GENERATION_TIMEOUT_MS = 4 * 60 * 1000;
   const STALE_PENDING_MS = 5 * 60 * 1000;
   let functionToolsRegistered = false;
   let lifecycleEventsBound = false;
   let feedbackEventsBound = false;
+  let sourceReferenceFile = null;
+  let sourceReferenceUpload = null;
   let coupleReferenceFile = null;
+  let coupleReferenceUpload = null;
   let proactiveSnapTimer = null;
   let naturalLanguageGenerationInProgress = false;
   let lastNaturalLanguageImageRequest = "";
@@ -194,36 +200,70 @@ import {
     return profileId === "profile_replace_me" ? "" : profileId;
   }
 
-  function dataUrlByteLength(dataUrl) {
-    const base64 = String(dataUrl || "").split(",")[1] || "";
-    return Math.floor((base64.length * 3) / 4);
-  }
-
-  function readFileAsDataUrl(file) {
+  function loadImage(file) {
     return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(String(reader.result || ""));
-      reader.onerror = () => reject(reader.error || new Error("Could not read the selected photo."));
-      reader.readAsDataURL(file);
-    });
-  }
-
-  function loadImage(dataUrl) {
-    return new Promise((resolve, reject) => {
+      const objectUrl = URL.createObjectURL(file);
       const image = new Image();
-      image.onload = () => resolve(image);
-      image.onerror = () => reject(new Error("Could not decode the selected photo."));
-      image.src = dataUrl;
+      image.onload = () => {
+        URL.revokeObjectURL(objectUrl);
+        resolve(image);
+      };
+      image.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        reject(new Error("Could not decode the selected photo."));
+      };
+      image.src = objectUrl;
     });
   }
 
-  async function compressReferencePhoto(file) {
-    const originalDataUrl = await readFileAsDataUrl(file);
-    if (file.size <= REFERENCE_UPLOAD_TARGET_BYTES && /^image\/(jpeg|jpg|png|webp|gif)$/i.test(file.type || "")) {
-      return originalDataUrl;
+  function canvasJpegBlob(canvas, quality) {
+    return new Promise((resolve, reject) => {
+      canvas.toBlob(
+        (blob) => blob ? resolve(blob) : reject(new Error("Could not compress the selected photo.")),
+        "image/jpeg",
+        quality,
+      );
+    });
+  }
+
+  function referenceFileName(file, mimeType) {
+    const original = cleanString(file?.name) || "reference-image";
+    return mimeType === "image/jpeg"
+      ? original.replace(/\.[^.]+$/, "") + ".jpg"
+      : original;
+  }
+
+  function referenceMimeType(file) {
+    const declared = cleanString(file?.type).toLowerCase();
+    if (REFERENCE_IMAGE_MIME_PATTERN.test(declared)) {
+      return declared;
+    }
+    const extension = cleanString(file?.name).toLowerCase().split(".").pop();
+    return {
+      jpg: "image/jpeg",
+      jpeg: "image/jpeg",
+      png: "image/png",
+      webp: "image/webp",
+      avif: "image/avif",
+      heic: "image/heic",
+      heif: "image/heif",
+    }[extension] || "";
+  }
+
+  async function prepareReferencePhoto(file) {
+    if (file.size > REFERENCE_UPLOAD_INPUT_MAX_BYTES) {
+      throw new Error("The selected photo must be 20MB or smaller before compression.");
+    }
+    const mimeType = referenceMimeType(file);
+    if (file.size <= REFERENCE_UPLOAD_TARGET_BYTES && isSupportedReferencePhoto(file)) {
+      return {
+        blob: file.type === mimeType ? file : file.slice(0, file.size, mimeType),
+        fileName: referenceFileName(file, mimeType),
+        mimeType,
+      };
     }
 
-    const image = await loadImage(originalDataUrl);
+    const image = await loadImage(file);
     const scale = Math.min(1, REFERENCE_UPLOAD_MAX_DIMENSION / Math.max(image.naturalWidth || image.width, image.naturalHeight || image.height));
     const width = Math.max(1, Math.round((image.naturalWidth || image.width) * scale));
     const height = Math.max(1, Math.round((image.naturalHeight || image.height) * scale));
@@ -237,13 +277,21 @@ import {
     context.drawImage(image, 0, 0, width, height);
 
     for (const quality of [0.88, 0.82, 0.76, 0.7, 0.64]) {
-      const compressed = canvas.toDataURL("image/jpeg", quality);
-      if (dataUrlByteLength(compressed) <= REFERENCE_UPLOAD_TARGET_BYTES) {
-        return compressed;
+      const blob = await canvasJpegBlob(canvas, quality);
+      if (blob.size <= REFERENCE_UPLOAD_TARGET_BYTES) {
+        return {
+          blob,
+          fileName: referenceFileName(file, "image/jpeg"),
+          mimeType: "image/jpeg",
+        };
       }
     }
 
     throw new Error("The selected photo is too large. Crop or compress it under 4MB and try again.");
+  }
+
+  function isSupportedReferencePhoto(file) {
+    return Boolean(file && referenceMimeType(file));
   }
 
   function stringSetting(saved, card, key, scoped = {}, cardHasSettings = false) {
@@ -526,10 +574,12 @@ import {
       visualIdentity: args.visualIdentity || current.visualIdentity,
       negativePrompt: args.negativePrompt || current.negativePrompt,
       sourceImageUrl: args.sourceImageUrl || "",
+      sourceReferenceImageId: args.sourceReferenceImageId || "",
       referenceImageUrl: args.referenceImageUrl || "",
       userDescription: args.userDescription || "",
       userConsent: args.userConsent || "",
       userReferenceImageKey: args.userReferenceImageKey || "",
+      userReferenceImageId: args.userReferenceImageId || "",
       userReferenceImageUrl: args.userReferenceImageUrl || "",
       userReferenceImageDataUrl: args.userReferenceImageDataUrl || "",
       userReferenceImageName: args.userReferenceImageName || "",
@@ -570,6 +620,45 @@ import {
       if (timeout) {
         window.clearTimeout(timeout);
       }
+    }
+  }
+
+  async function uploadReferenceFile(file, purpose) {
+    const prepared = await prepareReferencePhoto(file);
+    const formData = new FormData();
+    formData.set("file", prepared.blob, prepared.fileName);
+    const current = settings();
+    const controller = new AbortController();
+    const timeout = window.setTimeout(
+      () => controller.abort(),
+      REFERENCE_UPLOAD_TIMEOUT_MS,
+    );
+    try {
+      setLog(`Uploading ${purpose} and waiting for its safety check...`);
+      const response = await fetch(
+        `${current.bridgeUrl.replace(/\/+$/, "")}/v1/media/reference-image`,
+        {
+          method: "POST",
+          body: formData,
+          signal: controller.signal,
+        },
+      );
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(payload?.error || `Reference upload failed with ${response.status}`);
+      }
+      const referenceImage = payload?.referenceImage;
+      if (!referenceImage?.id || referenceImage.status !== "clear") {
+        throw new Error("Reference upload did not finish its safety check.");
+      }
+      return referenceImage;
+    } catch (error) {
+      if (error?.name === "AbortError") {
+        throw new Error("The reference image safety check is still running. Try again shortly; the bridge will reuse the upload.");
+      }
+      throw error;
+    } finally {
+      window.clearTimeout(timeout);
     }
   }
 
@@ -1060,7 +1149,9 @@ import {
     const clearButton = document.getElementById("remix-camera-couple-photo-clear");
     if (status) {
       status.textContent = coupleReferenceFile
-        ? `Selected: ${coupleReferenceFile.name || "user reference photo"}`
+        ? coupleReferenceUpload
+          ? `Ready: ${coupleReferenceFile.name || "user reference photo"}`
+          : `Selected: ${coupleReferenceFile.name || "user reference photo"}`
         : "No user photo selected.";
     }
     if (clearButton) {
@@ -1068,16 +1159,68 @@ import {
     }
   }
 
+  function updateSourceReferenceUi() {
+    const status = document.getElementById("remix-camera-source-image-status");
+    const clearButton = document.getElementById("remix-camera-source-image-clear");
+    if (status) {
+      status.textContent = sourceReferenceFile
+        ? sourceReferenceUpload
+          ? `Ready: ${sourceReferenceFile.name || "source image"}. This reviewed upload will be reused.`
+          : `Selected: ${sourceReferenceFile.name || "source image"}. This file will be used instead of the URL.`
+        : "No source image selected. You can still use a URL below.";
+    }
+    if (clearButton) {
+      clearButton.disabled = !sourceReferenceFile;
+    }
+  }
+
+  function setSourceReferenceFile(file, input = null) {
+    if (file && !isSupportedReferencePhoto(file)) {
+      sourceReferenceFile = null;
+      sourceReferenceUpload = null;
+      if (input) {
+        input.value = "";
+      }
+      updateSourceReferenceUi();
+      setLog("Choose a JPG, PNG, WebP, AVIF, or HEIC/HEIF source image.", "error");
+      return false;
+    }
+    sourceReferenceFile = file;
+    sourceReferenceUpload = null;
+    updateSourceReferenceUi();
+    return true;
+  }
+
+  async function sourceReferenceArgs() {
+    if (!sourceReferenceFile) {
+      const sourceImageUrl = inputValue("remix-camera-source-image-url");
+      return sourceImageUrl ? { sourceImageUrl } : {};
+    }
+    if (!sourceReferenceUpload) {
+      sourceReferenceUpload = await uploadReferenceFile(
+        sourceReferenceFile,
+        "source image",
+      );
+      updateSourceReferenceUi();
+    }
+    return {
+      sourceReferenceImageId: sourceReferenceUpload.id,
+    };
+  }
+
   async function coupleReferenceArgs() {
     if (!coupleReferenceFile) {
       return {};
     }
-    setLog("Preparing uploaded user photo...");
-    const dataUrl = await compressReferencePhoto(coupleReferenceFile);
+    if (!coupleReferenceUpload) {
+      coupleReferenceUpload = await uploadReferenceFile(
+        coupleReferenceFile,
+        "user photo",
+      );
+      updateCoupleReferenceUi();
+    }
     return {
-      userReferenceImageDataUrl: dataUrl,
-      userReferenceImageName: coupleReferenceFile.name || "user-reference.jpg",
-      userReferenceImageMimeType: dataUrl.startsWith("data:image/jpeg") ? "image/jpeg" : coupleReferenceFile.type || "image/jpeg",
+      userReferenceImageId: coupleReferenceUpload.id,
     };
   }
 
@@ -1298,7 +1441,19 @@ import {
           <button id="remix-camera-private-snap-button" class="remix-camera-quick remix-camera-quick--snap" type="button"><span>Private Snap</span></button>
         </div>
         <div class="remix-camera-action-inputs">
-          <label class="remix-camera-wide">Outfit or style source URL<input id="remix-camera-source-image-url" type="url" placeholder="https://example.com/outfit.jpg"></label>
+          <div class="remix-camera-source-reference remix-camera-wide">
+            <strong>Remix from image</strong>
+            <label id="remix-camera-source-image-dropzone" class="remix-camera-source-dropzone" for="remix-camera-source-image-file">
+              <input id="remix-camera-source-image-file" type="file" accept="image/jpeg,image/png,image/webp,image/avif,image/heic,image/heif">
+              <span>Drop an image here, or choose a file</span>
+              <small>JPG, PNG, WebP, AVIF, or HEIC/HEIF. Large images are resized before upload.</small>
+            </label>
+            <div class="remix-camera-source-reference-row">
+              <span id="remix-camera-source-image-status">No source image selected. You can still use a URL below.</span>
+              <button id="remix-camera-source-image-clear" type="button" disabled>Clear</button>
+            </div>
+            <label>Or use an image URL<input id="remix-camera-source-image-url" type="url" placeholder="https://example.com/outfit.jpg"></label>
+          </div>
           <label>Date setting<input id="remix-camera-date-location" type="text" value="${escapeHtml(current.location)}" placeholder="cozy restaurant booth with warm light"></label>
           <label>Vacation theme<input id="remix-camera-vacation-theme" type="text" value="${escapeHtml(current.location)}" placeholder="cohesive beach weekend getaway"></label>
           <label class="remix-camera-check remix-camera-wide"><input id="remix-camera-user-consent" type="checkbox"> User clearly asked to appear in the Couple/Vacation image</label>
@@ -1306,7 +1461,7 @@ import {
           <label class="remix-camera-check remix-camera-wide"><input id="remix-camera-private-consent" type="checkbox"> One mature private snap is explicitly requested</label>
         </div>
         <div class="remix-camera-couple-reference">
-          <label class="remix-camera-wide">Your photo for Couple/Vacation<input id="remix-camera-couple-photo" type="file" accept="image/png,image/jpeg,image/webp,image/gif"></label>
+          <label class="remix-camera-wide">Your photo for Couple/Vacation<input id="remix-camera-couple-photo" type="file" accept="image/jpeg,image/png,image/webp,image/avif,image/heic,image/heif"></label>
           <div class="remix-camera-couple-reference-row">
             <span id="remix-camera-couple-photo-status">No user photo selected.</span>
             <button id="remix-camera-couple-photo-clear" type="button" disabled>Clear</button>
@@ -1390,19 +1545,56 @@ import {
 
     document.getElementById("remix-camera-couple-photo")?.addEventListener("change", (event) => {
       const file = event.currentTarget?.files?.[0] || null;
-      if (file && !String(file.type || "").toLowerCase().startsWith("image/")) {
+      if (file && !isSupportedReferencePhoto(file)) {
         coupleReferenceFile = null;
+        coupleReferenceUpload = null;
         event.currentTarget.value = "";
         updateCoupleReferenceUi();
-        setLog("Choose an image file for the couple reference photo.", "error");
+        setLog("Choose a JPG, PNG, WebP, AVIF, or HEIC/HEIF couple reference photo.", "error");
         return;
       }
       coupleReferenceFile = file;
+      coupleReferenceUpload = null;
       updateCoupleReferenceUi();
+    });
+
+    const sourceImageInput = document.getElementById("remix-camera-source-image-file");
+    const sourceImageDropzone = document.getElementById("remix-camera-source-image-dropzone");
+    sourceImageInput?.addEventListener("change", (event) => {
+      setSourceReferenceFile(event.currentTarget?.files?.[0] || null, event.currentTarget);
+    });
+    ["dragenter", "dragover"].forEach((eventName) => {
+      sourceImageDropzone?.addEventListener(eventName, (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        sourceImageDropzone.dataset.dragging = "true";
+        if (event.dataTransfer) {
+          event.dataTransfer.dropEffect = "copy";
+        }
+      });
+    });
+    ["dragleave", "drop"].forEach((eventName) => {
+      sourceImageDropzone?.addEventListener(eventName, (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        delete sourceImageDropzone.dataset.dragging;
+      });
+    });
+    sourceImageDropzone?.addEventListener("drop", (event) => {
+      setSourceReferenceFile(event.dataTransfer?.files?.[0] || null, sourceImageInput);
+    });
+    document.getElementById("remix-camera-source-image-clear")?.addEventListener("click", () => {
+      sourceReferenceFile = null;
+      sourceReferenceUpload = null;
+      if (sourceImageInput) {
+        sourceImageInput.value = "";
+      }
+      updateSourceReferenceUi();
     });
 
     document.getElementById("remix-camera-couple-photo-clear")?.addEventListener("click", () => {
       coupleReferenceFile = null;
+      coupleReferenceUpload = null;
       const input = document.getElementById("remix-camera-couple-photo");
       if (input) {
         input.value = "";
@@ -1430,13 +1622,12 @@ import {
 
     document.getElementById("remix-camera-outfit-button")?.addEventListener("click", async () => {
       saveFromUi();
-      const sourceImageUrl = inputValue("remix-camera-source-image-url");
-      if (!sourceImageUrl) {
-        setLog("Add an outfit or style source URL before using Outfit.", "warn");
+      if (!sourceReferenceFile && !inputValue("remix-camera-source-image-url")) {
+        setLog("Drop in a source image or add an image URL before using Outfit.", "warn");
         return;
       }
       try {
-        await generate("outfit-try-on", { sourceImageUrl });
+        await generate("outfit-try-on", await sourceReferenceArgs());
       } catch (error) {
         setLog(error.message, "error");
       }
@@ -1514,6 +1705,7 @@ import {
       }
     });
 
+    updateSourceReferenceUi();
     updateCoupleReferenceUi();
     scheduleProactiveSnaps();
     scheduleStalePendingCleanup();
