@@ -47,6 +47,14 @@ demos/sillytavern/sophie-setup-2026-07-21/narrated-tutorial-storyboard.md
 
 The selling point is an easy plug-in image layer that adds realistic, character-consistent generation to an existing AI girlfriend chatbot without replacing its chat, memory, model, or personality. This is a real SillyTavern UI recording with live bridge Health Check and no-credit Preview Prompt steps. It replays a previously approved production Sophie output in chat and submitted zero new generations during the recording. The demo sender is Billy.
 
+## Character Case Studies
+
+Three evidence-bounded walkthroughs show different parts of the integration without presenting archived assets as fresh live runs:
+
+- [Sophie: existing character to approved mirror selfie](./case-studies/sophie-existing-character.md)
+- [Mila: recent chat context to a casual couch selfie](./case-studies/mila-chat-context-selfie.md)
+- [Lily: one true-live selfie through SillyTavern](./case-studies/lily-live-selfie.md)
+
 ## Proof Points
 
 - The extension panel auto-fills character metadata from the card or settings.
