@@ -11,7 +11,9 @@ This package connects a SillyTavern character to the Remix.Camera AI Companion I
 3. Pair the Remix.Camera visual profile that belongs to that character.
 4. Run **Health Check** and **Preview Prompt**, then generate one reviewable image.
 
-See the [live setup-to-output demo](https://remix.camera/ai-girlfriend-image-generation) before installing. The first alpha activation milestone is one image generated and inserted into the active SillyTavern chat.
+See the [live setup-to-output demo](https://remix.camera/ai-girlfriend-image-generation?utm_source=github&utm_medium=repository&utm_campaign=sillytavern_alpha&utm_content=readme_demo) before installing. The first alpha activation milestone is one image generated and inserted into the active SillyTavern chat.
+
+For proof with explicit generation boundaries, see the [Sophie, Mila, and Lily case studies](demos/sillytavern/case-studies/README.md). They distinguish a live UI/bridge check, a replayed approved output, an archived real output, and a true-live paid generation.
 
 Image prompts are template-first. For every image action, the bridge searches Remix.Camera's proven prompt/template packs, selects a strong relevant match, and adapts that template to the active character, chat context, user reference photo, and SFW/NSFW model route. If no strong template match exists, the bridge can generate from an ad-hoc fallback prompt and marks that response as `promptTemplateDecision: "ad_hoc_fallback"` so the output can be reviewed before it becomes part of the future prompt library.
 
