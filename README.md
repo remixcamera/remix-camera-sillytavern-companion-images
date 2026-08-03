@@ -1,6 +1,10 @@
-# Remix.Camera SillyTavern Companion Images
+# Give your character a camera.
 
-This package connects a SillyTavern character to the Remix.Camera AI Companion Image Toolset without putting a Remix.Camera credential in the browser.
+**Remix.Camera Companion Images** adds identity-consistent selfies, outfits, scenes, dates, and chat-aware image replies to the SillyTavern character you already use—without replacing its model, memory, lore, personality, or chat.
+
+[![Watch the 22-second Remix.Camera Companion Images demo](demos/sillytavern/sophie-setup-2026-07-21/sophie-setup-hero.png)](demos/sillytavern/sophie-setup-2026-07-21/sophie-setup-to-output.mp4)
+
+**[Watch the 22-second setup-to-output demo.](demos/sillytavern/sophie-setup-2026-07-21/sophie-setup-to-output.mp4)**
 
 > **Public preview:** `v0.4.0-alpha.1` is an invite-based alpha. The source and installer are public, while Remix.Camera account pairing is enabled for invited email addresses as we validate first-run setup and first-image success. Request access at [ducky@remix.camera](mailto:ducky@remix.camera?subject=SillyTavern%20alpha%20invite).
 
@@ -11,7 +15,7 @@ This package connects a SillyTavern character to the Remix.Camera AI Companion I
 3. Pair the Remix.Camera visual profile that belongs to that character.
 4. Run **Health Check** and **Preview Prompt**, then generate one reviewable image.
 
-See the [live setup-to-output demo](https://remix.camera/ai-girlfriend-image-generation?utm_source=github&utm_medium=repository&utm_campaign=sillytavern_alpha&utm_content=readme_demo) before installing. The first alpha activation milestone is one image generated and inserted into the active SillyTavern chat.
+See the [full demo page](https://remix.camera/ai-girlfriend-image-generation?utm_source=github&utm_medium=repository&utm_campaign=sillytavern_alpha&utm_content=readme_demo) before installing. The first alpha activation milestone is one image generated and inserted into the active SillyTavern chat.
 
 For proof with explicit generation boundaries, see the [Sophie, Mila, and Lily case studies](demos/sillytavern/case-studies/README.md). They distinguish a live UI/bridge check, a replayed approved output, an archived real output, and a true-live paid generation.
 
