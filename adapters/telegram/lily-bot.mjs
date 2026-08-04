@@ -7,6 +7,8 @@ import {
   createRemixTelegramTool,
   extractTelegramChatId,
   extractTelegramText,
+  normalizeTelegramImageContextUrl,
+  sendTelegramRemixResult,
   sendTelegramText,
   telegramImageContextFromResult,
   telegramResultMetadataForLog,
@@ -17,6 +19,7 @@ const botToken = process.env.TELEGRAM_BOT_TOKEN || "";
 const bridgeUrl = process.env.REMIX_BRIDGE_URL || "http://127.0.0.1:8787";
 const characterName = process.env.REMIX_CHARACTER_NAME || "Lily";
 const profileId = process.env.REMIX_PROFILE_ID || LILY_PROFILE_ID;
+const remixApiBaseUrl = process.env.REMIX_API_BASE_URL || "https://remix.camera";
 const imageContextPath =
   process.env.TELEGRAM_IMAGE_CONTEXT_FILE ||
   process.env.REMIX_TELEGRAM_IMAGE_CONTEXT_FILE ||
@@ -57,8 +60,8 @@ function readStoredImageContexts() {
         .map(([chatId, context]) => [
           chatId,
           {
-            sourceImageUrl: cleanString(context.sourceImageUrl),
-            fallbackImageUrl: cleanString(context.fallbackImageUrl),
+            sourceImageUrl: normalizeTelegramImageContextUrl(context.sourceImageUrl, remixApiBaseUrl),
+            fallbackImageUrl: normalizeTelegramImageContextUrl(context.fallbackImageUrl, remixApiBaseUrl),
             generationId: cleanString(context.generationId),
             updatedAt: cleanString(context.updatedAt),
           },
@@ -169,7 +172,16 @@ async function pollUpdates() {
         }
         try {
           const text = extractTelegramText(update);
+          const parsed = tool.parseCommand(text);
+          if (parsed?.type === "image" && parsed.action === "generate") {
+            await sendTelegramText({
+              botToken,
+              chatId,
+              text: tool.progressText(parsed),
+            });
+          }
           const details = await tool.handleUpdateDetailed(update, {
+            autoSend: false,
             recentChatText: recentChatText(chatId),
             lastGeneratedImageUrl: lastImageById.get(String(chatId))?.sourceImageUrl,
           });
@@ -188,6 +200,11 @@ async function pollUpdates() {
             if (imageContext) {
               rememberLastGeneratedImage(chatId, imageContext);
             }
+            details.sentMessages = await sendTelegramRemixResult({
+              botToken,
+              chatId,
+              result: details.result,
+            });
             console.log(
               `Handled ${details.parsed?.command || details.parsed?.type || "message"} in chat ${extractTelegramChatId(update)}`,
               JSON.stringify(telegramResultMetadataForLog(details)),

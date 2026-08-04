@@ -9,11 +9,23 @@ import {
   createRemixTelegramTool,
   getTelegramMessage,
   isRemixTelegramCommand,
+  normalizeTelegramImageContextUrl,
   parseTelegramCommand,
   runTelegramRemixCommand,
   sendTelegramRemixResult,
   shouldHandleTelegramUpdate,
 } from "../adapters/telegram/remix-telegram-tool.mjs";
+
+test("Telegram normalizes legacy relative image context URLs", () => {
+  assert.equal(
+    normalizeTelegramImageContextUrl("/api/s3-file?key=camera%2Fphotos%2Fexample.jpg"),
+    "https://remix.camera/api/s3-file?key=camera%2Fphotos%2Fexample.jpg",
+  );
+  assert.equal(
+    normalizeTelegramImageContextUrl("https://cdn.example.test/example.jpg"),
+    "https://cdn.example.test/example.jpg",
+  );
+});
 
 test("Telegram parser maps slash commands to bridge commands", () => {
   assert.deepEqual(parseTelegramCommand("/selfie cafe mirror"), {
@@ -237,21 +249,68 @@ test("Telegram sender refuses local-only bridge image URLs", async (t) => {
   assert.equal(calls.length, 1);
 });
 
+test("Telegram sender falls back to a document when a generated image exceeds the photo limit", async () => {
+  const imageBytes = new Uint8Array(10 * 1024 * 1024 + 1);
+  const calls = [];
+  const sent = await sendTelegramRemixResult({
+    botToken: "bot_token",
+    chatId: 123,
+    result: {
+      type: "bridge",
+      imageUrls: ["https://cdn.example.test/large.png"],
+      payload: {
+        results: [{
+          ok: true,
+          productionImageUrl: "https://cdn.example.test/large.png",
+        }],
+      },
+    },
+    fetchImpl: async (url, options = {}) => {
+      calls.push({ url: String(url), options });
+      if (String(url).endsWith("/sendPhoto")) {
+        return new Response(JSON.stringify({ ok: false, description: "Bad Request: failed to get HTTP URL content" }), {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+      if (String(url) === "https://cdn.example.test/large.png") {
+        return new Response(imageBytes, {
+          status: 200,
+          headers: { "Content-Type": "image/png" },
+        });
+      }
+      assert.equal(String(url), "https://api.telegram.org/botbot_token/sendDocument");
+      assert.equal(options.body.get("chat_id"), "123");
+      assert.equal(options.body.get("document").size, imageBytes.byteLength);
+      return new Response(JSON.stringify({ ok: true, result: { message_id: 10, document: {} } }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    },
+  });
+
+  assert.equal(sent[0].message_id, 10);
+  assert.equal(calls.length, 3);
+});
+
 test("Telegram detailed update handler can run without auto-sending for existing bots", async () => {
+  const bridgeBodies = [];
   const tool = createRemixTelegramTool({
     botToken: "bot_token",
     bridgeUrl: "http://127.0.0.1:8787",
     profileId: "profile_lily",
     characterName: "Lily",
-    fetchImpl: async () =>
-      new Response(
+    fetchImpl: async (_url, options = {}) => {
+      bridgeBodies.push(JSON.parse(options.body));
+      return new Response(
         JSON.stringify({
           ok: true,
           markdown: "![Lily send-selfie](https://cdn.example.test/photo_1.jpg)",
           results: [{ ok: true, imageUrl: "https://cdn.example.test/photo_1.jpg" }],
         }),
         { status: 200, headers: { "Content-Type": "application/json" } },
-      ),
+      );
+    },
   });
 
   const details = await tool.handleUpdateDetailed(
@@ -271,6 +330,7 @@ test("Telegram detailed update handler can run without auto-sending for existing
   assert.equal(details.parsed.command, "send-selfie");
   assert.deepEqual(details.result.imageUrls, ["https://cdn.example.test/photo_1.jpg"]);
   assert.deepEqual(details.sentMessages, []);
+  assert.equal(bridgeBodies[0].idempotencyKey, "telegram:123:7");
 });
 
 test("Telegram detailed update handler returns sent message records when auto-send is enabled", async () => {

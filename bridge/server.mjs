@@ -474,6 +474,7 @@ function normalizeBody(body) {
   return {
     command,
     profileId: cleanProfileId(body.profileId) || cleanProfileId(config.defaultProfileId),
+    referenceImageId: cleanString(body.referenceImageId),
     referenceImageKey: cleanString(body.referenceImageKey || body.primaryReferenceImageKey || body.uploadedReferenceImageKey),
     modelId: cleanString(body.modelId || config.defaultModelId),
     characterName: cleanString(body.characterName) || "Companion",
@@ -521,6 +522,7 @@ function normalizeBody(body) {
     referenceImageUrl: cleanString(body.referenceImageUrl),
     maxGenerations: clampInteger(body.maxGenerations, 1, 4, command === "couples-vacation" ? 3 : 1),
     matureContent: PRIVATE_SNAP_COMMANDS.has(command) || isTruthyValue(body.matureContent || body.nsfw || body.contentRating),
+    idempotencySeed: cleanString(body.idempotencyKey || body.clientRequestId) || crypto.randomUUID(),
     yes: body.yes === true || body.confirm === true || cleanString(body.yes).toLowerCase() === "true",
   };
 }
@@ -1159,7 +1161,9 @@ async function buildPlan(input) {
   const prompt = buildPrompt(input, promptTemplate);
   const modelId = resolveModelId(input);
   const sourceImageUrl = input.sourceImageUrl || input.referenceImageUrl;
-  const usesImageToImage = Boolean(sourceImageUrl && SOURCE_IMAGE_COMMANDS.has(input.command));
+  const usesImageToImage = Boolean(
+    SOURCE_IMAGE_COMMANDS.has(input.command) && (sourceImageUrl || input.referenceImageId),
+  );
 
   const warnings = [];
   if (!input.profileId) {
@@ -1192,6 +1196,7 @@ async function buildPlan(input) {
     maxGenerations: input.maxGenerations,
     usesImageToImage,
     sourceImageUrl: sourceImageUrl || null,
+    referenceImageId: input.referenceImageId || null,
     referenceImageKey: input.referenceImageKey || null,
     userReferenceImageKey: input.userReferenceImageKey || null,
     hasUserReferenceImage: hasUserReference(input),
@@ -1417,11 +1422,13 @@ async function uploadReferenceImageBuffer({ buffer, mimeType, fileName }) {
     body: formData,
   });
   const referenceImage = payload?.referenceImage;
+  const id = cleanString(referenceImage?.id || payload?.id);
   const s3Key = cleanString(referenceImage?.s3Key || payload?.s3Key);
-  if (!s3Key) {
-    throw httpError(502, "Reference upload response did not include an s3Key.", payload);
+  if (!id && !s3Key) {
+    throw httpError(502, "Reference upload response did not include a reference image id.", payload);
   }
   return {
+    id,
     s3Key,
     url: cleanString(referenceImage?.url || payload?.url),
   };
@@ -1441,7 +1448,23 @@ async function resolveUserReferenceImage(input) {
   const uploaded = await uploadReferenceImageBuffer(image);
   return {
     ...input,
-    userReferenceImageKey: uploaded.s3Key,
+    referenceImageId: uploaded.id || input.referenceImageId,
+    userReferenceImageKey: uploaded.s3Key || input.userReferenceImageKey,
+  };
+}
+
+async function resolveSourceImageReference(input) {
+  if (!SOURCE_IMAGE_COMMANDS.has(input.command) || !input.sourceImageUrl || input.referenceImageId) {
+    return input;
+  }
+  const image = await fetchUserReferenceImage(input.sourceImageUrl);
+  const uploaded = await uploadReferenceImageBuffer(image);
+  if (!uploaded.id) {
+    throw httpError(502, "Reference upload response did not include a reference image id.");
+  }
+  return {
+    ...input,
+    referenceImageId: uploaded.id,
   };
 }
 
@@ -1641,39 +1664,52 @@ async function submitGeneration(plan) {
     commonBody.selectedReferenceImages = plan.selectedReferenceImages;
   }
 
-  if (plan.usesImageToImage && plan.sourceImageUrl) {
-    if (plan.referenceImageKey) {
-      return remixFetch("/api/v1/design/generations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...commonBody,
-          sourceImageUrl: plan.sourceImageUrl,
-        }),
-      });
-    }
+  if (plan.usesImageToImage && (plan.sourceImageUrl || plan.referenceImageId)) {
     if (plan.modelId === "seedream-v4.5-edit" || plan.modelId === "seedream-v5-lite-edit") {
       commonBody.modelId = plan.modelId;
     }
     return remixFetch("/api/v1/design/remix-from-image", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Idempotency-Key": plan.idempotencyKey,
+      },
       body: JSON.stringify({
         ...commonBody,
-        imageUrl: plan.sourceImageUrl,
+        referenceImageId: plan.referenceImageId,
       }),
     });
   }
 
   return remixFetch("/api/v1/design/generations", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "Idempotency-Key": plan.idempotencyKey,
+    },
     body: JSON.stringify(commonBody),
   });
 }
 
 function generationIdFromPayload(payload) {
   return payload?.id || payload?.generationId || payload?.generation?.id || null;
+}
+
+function generationStatusUrlFromPayload(payload) {
+  const value = cleanString(payload?.statusUrl || payload?.generation?.statusUrl);
+  if (!value) {
+    return null;
+  }
+  try {
+    const url = new URL(value, `${config.apiBaseUrl}/`);
+    const baseUrl = new URL(config.apiBaseUrl);
+    if (url.origin !== baseUrl.origin) {
+      return null;
+    }
+    return `${url.pathname}${url.search}`;
+  } catch {
+    return null;
+  }
 }
 
 async function submitFeedback(input) {
@@ -1712,10 +1748,20 @@ async function fetchGenerationStatus(id) {
   return { payload, generation };
 }
 
-async function pollGeneration(id) {
+async function fetchImageJobStatus(statusUrl) {
+  const payload = await remixFetch(statusUrl);
+  return {
+    payload,
+    generation: payload?.image || payload?.generation || null,
+  };
+}
+
+async function pollGeneration(id, statusUrl = null) {
   const started = Date.now();
   while (Date.now() - started < config.pollTimeoutMs) {
-    const { payload, generation } = await fetchGenerationStatus(id);
+    const { payload, generation } = statusUrl
+      ? await fetchImageJobStatus(statusUrl)
+      : await fetchGenerationStatus(id);
     const status = String(generation?.status || "").toLowerCase();
     const imageUrl = absoluteRemixUrl(generation?.imageUrl || generation?.result?.imageUrl);
 
@@ -1757,17 +1803,28 @@ async function generate(input) {
   if (USER_INCLUDED_COMMANDS.has(input.command) && !isAffirmativeConsent(input.userConsent)) {
     throw httpError(400, `${input.command} requires affirmative userConsent such as "yes".`);
   }
-  const preparedInput = await resolveUserReferenceImage(input);
+  const withUserReference = await resolveUserReferenceImage(input);
+  const preparedInput = await resolveSourceImageReference(withUserReference);
   const plan = await buildPlan(preparedInput);
   const shotPrompts = PHOTO_SET_SHOTS[preparedInput.command] || [];
 
   const results = [];
   for (let index = 0; index < preparedInput.maxGenerations; index += 1) {
-    const generationPlan = shotPrompts[index]
-      ? { ...plan, prompt: joinSentences([plan.prompt, shotPrompts[index]]) }
-      : plan;
+    const idempotencyKey = `companion:${crypto
+      .createHash("sha256")
+      .update(`${preparedInput.idempotencySeed}:${index}`)
+      .digest("hex")
+      .slice(0, 48)}`;
+    const generationPlan = {
+      ...plan,
+      ...(shotPrompts[index]
+        ? { prompt: joinSentences([plan.prompt, shotPrompts[index]]) }
+        : {}),
+      idempotencyKey,
+    };
     const submitted = await submitGeneration(generationPlan);
     const id = generationIdFromPayload(submitted);
+    const statusUrl = generationStatusUrlFromPayload(submitted);
     if (!id) {
       results.push({
         ok: false,
@@ -1778,7 +1835,7 @@ async function generate(input) {
       continue;
     }
     results.push({
-      ...(await pollGeneration(id)),
+      ...(await pollGeneration(id, statusUrl)),
       prompt: generationPlan.prompt,
     });
   }

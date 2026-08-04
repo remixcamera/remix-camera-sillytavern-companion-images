@@ -67,6 +67,7 @@ export function buildCompanionBridgeInput(parsed, options = {}) {
     theme: parsed?.command === "couples-vacation" ? promptText : undefined,
     matureContent: parsed?.command === "private-snap" ? true : options.matureContent,
     maxGenerations: parsed?.command === "couples-vacation" ? 3 : Number(options.maxGenerations || 1),
+    idempotencyKey: options.idempotencyKey,
   };
   if (parsed?.action === "generate") {
     input.yes = true;
