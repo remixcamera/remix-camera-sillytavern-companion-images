@@ -11,6 +11,7 @@ import {
 } from "../shared/companion-surface-controller.mjs";
 
 const TELEGRAM_PHOTO_UPLOAD_MAX_BYTES = 10 * 1024 * 1024;
+const TELEGRAM_DOCUMENT_UPLOAD_MAX_BYTES = 50 * 1024 * 1024;
 
 function timingSafeStringEqual(expected, received) {
   const expectedBuffer = Buffer.from(String(expected || ""), "utf8");
@@ -176,6 +177,21 @@ export function telegramImageContextFromResult(result = {}) {
   };
 }
 
+export function normalizeTelegramImageContextUrl(value, baseUrl = "https://remix.camera") {
+  const imageUrl = cleanString(value);
+  if (!imageUrl || /^https?:\/\//i.test(imageUrl)) {
+    return imageUrl;
+  }
+  if (!imageUrl.startsWith("/")) {
+    return imageUrl;
+  }
+  try {
+    return new URL(imageUrl, `${cleanString(baseUrl).replace(/\/+$/, "")}/`).toString();
+  } catch {
+    return imageUrl;
+  }
+}
+
 export function telegramResultMetadataForLog(details = {}) {
   const payload = details?.result?.payload || {};
   const parsed = details?.parsed || {};
@@ -241,7 +257,7 @@ async function telegramMultipartRequest({
   return payload?.result ?? payload;
 }
 
-async function fetchPhotoForTelegramUpload(photoUrl, fetchImpl) {
+async function fetchImageForTelegramUpload(photoUrl, fetchImpl) {
   const response = await fetchImpl(photoUrl, {
     headers: {
       Accept: "image/avif,image/webp,image/png,image/jpeg,image/*;q=0.8",
@@ -251,18 +267,57 @@ async function fetchPhotoForTelegramUpload(photoUrl, fetchImpl) {
     throw new Error(`Could not fetch generated image for Telegram upload: ${response.status}`);
   }
   const contentLength = Number(response.headers.get("content-length") || 0);
-  if (contentLength > TELEGRAM_PHOTO_UPLOAD_MAX_BYTES) {
-    throw new Error("Generated image is too large for Telegram photo upload.");
+  if (contentLength > TELEGRAM_DOCUMENT_UPLOAD_MAX_BYTES) {
+    throw new Error("Generated image exceeds Telegram's 50 MB bot upload limit.");
   }
   const bytes = Buffer.from(await response.arrayBuffer());
-  if (bytes.byteLength > TELEGRAM_PHOTO_UPLOAD_MAX_BYTES) {
-    throw new Error("Generated image is too large for Telegram photo upload.");
+  if (bytes.byteLength > TELEGRAM_DOCUMENT_UPLOAD_MAX_BYTES) {
+    throw new Error("Generated image exceeds Telegram's 50 MB bot upload limit.");
   }
   const mimeType = cleanString(response.headers.get("content-type")).split(";")[0] || "image/jpeg";
   return {
     bytes,
     mimeType,
   };
+}
+
+function telegramImageFilename(mimeType) {
+  if (mimeType === "image/png") {
+    return "remix-camera.png";
+  }
+  if (mimeType === "image/webp") {
+    return "remix-camera.webp";
+  }
+  return "remix-camera.jpg";
+}
+
+async function uploadTelegramImage({
+  botToken,
+  body,
+  image,
+  forceDocument = false,
+  fetchImpl = globalThis.fetch,
+}) {
+  const useDocument = forceDocument || image.bytes.byteLength > TELEGRAM_PHOTO_UPLOAD_MAX_BYTES;
+  const method = useDocument ? "sendDocument" : "sendPhoto";
+  const fieldName = useDocument ? "document" : "photo";
+  const formData = new FormData();
+  for (const [key, value] of Object.entries(body || {})) {
+    if (key !== "photo" && value !== undefined && value !== null) {
+      formData.set(key, String(value));
+    }
+  }
+  formData.set(
+    fieldName,
+    new Blob([image.bytes], { type: image.mimeType }),
+    telegramImageFilename(image.mimeType),
+  );
+  return telegramMultipartRequest({
+    botToken,
+    method,
+    formData,
+    fetchImpl,
+  });
 }
 
 async function sendTelegramPhoto({
@@ -280,26 +335,21 @@ async function sendTelegramPhoto({
     });
   } catch (error) {
     const photoUrl = cleanString(body?.photo);
+    const errorMessage = String(error?.message || "");
     const shouldUploadBytes =
       /^https?:\/\//i.test(photoUrl) &&
-      /failed to get HTTP URL content|wrong file identifier|bad request/i.test(String(error?.message || ""));
+      /failed to get HTTP URL content|wrong file identifier|bad request|too large|file is too big|invalid dimensions|request entity too large/i.test(errorMessage);
     if (!shouldUploadBytes) {
       throw error;
     }
 
     const uploadUrl = cleanString(fallbackPhotoUrl) || photoUrl;
-    const photo = await fetchPhotoForTelegramUpload(uploadUrl, fetchImpl);
-    const formData = new FormData();
-    for (const [key, value] of Object.entries(body || {})) {
-      if (key !== "photo" && value !== undefined && value !== null) {
-        formData.set(key, String(value));
-      }
-    }
-    formData.set("photo", new Blob([photo.bytes], { type: photo.mimeType }), "remix-camera.jpg");
-    return telegramMultipartRequest({
+    const image = await fetchImageForTelegramUpload(uploadUrl, fetchImpl);
+    return uploadTelegramImage({
       botToken,
-      method: "sendPhoto",
-      formData,
+      body,
+      image,
+      forceDocument: /too large|file is too big|invalid dimensions|request entity too large/i.test(errorMessage),
       fetchImpl,
     });
   }
@@ -393,7 +443,16 @@ export function createRemixTelegramTool(options = {}) {
     }
 
     const chatId = extractTelegramChatId(update) ?? merged.chatId;
-    const result = await runTelegramRemixCommand(parsed, merged);
+    const messageId = extractTelegramMessage(update)?.message_id;
+    const idempotencyKey =
+      cleanString(merged.idempotencyKey) ||
+      (chatId !== null && chatId !== undefined && (messageId || update?.update_id)
+        ? `telegram:${chatId}:${messageId || update.update_id}`
+        : "");
+    const result = await runTelegramRemixCommand(parsed, {
+      ...merged,
+      idempotencyKey,
+    });
     const responseMessages = telegramMessagesForResult(result, { ...merged, chatId });
     const sentMessages =
       merged.autoSend === false || !merged.botToken || !chatId
@@ -403,7 +462,7 @@ export function createRemixTelegramTool(options = {}) {
     return {
       handled: true,
       chatId,
-      messageId: extractTelegramMessage(update)?.message_id,
+      messageId,
       userId: extractTelegramMessage(update)?.from?.id || update?.callback_query?.from?.id || null,
       text,
       parsed,

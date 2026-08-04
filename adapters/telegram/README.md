@@ -1,5 +1,7 @@
 # Telegram Adapter
 
+The Telegram adapter is free to install and available to every Remix.Camera account. New accounts include free generation credits; image generation uses the account's available credits. No invite is required.
+
 Telegram has two deliverables:
 
 - `remix-telegram-tool.mjs`: reusable integration module for existing Telegram bots.
@@ -7,6 +9,8 @@ Telegram has two deliverables:
 - `lily-bot.mjs`: Lily proof-of-concept bot using long polling.
 
 ## Setup
+
+Create or sign in to a Remix.Camera account, then run:
 
 ```bash
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=telegram
@@ -60,7 +64,7 @@ if (!details.result.imageUrls?.length) {
 }
 ```
 
-The adapter uploads local bridge images to Telegram as files. It does not pass `127.0.0.1` URLs to Telegram's servers.
+The adapter uploads local bridge images to Telegram as files. It does not pass `127.0.0.1` URLs to Telegram's servers. If an image exceeds Telegram's 10 MB photo limit, it is delivered as a document instead (up to Telegram's 50 MB bot-upload limit). The Lily proof bot saves the last generated image before delivery, so contextual follow-ups such as `now take it off` still work after a media-delivery failure or process restart.
 
 Detailed handler return shape:
 
