@@ -7,9 +7,10 @@ import os from "node:os";
 import path from "node:path";
 import { URL } from "node:url";
 import { createBridgeOpenApiDocument, createChatGptActionsOpenApiDocument, createLobeManifest } from "../lib/companion-tools.mjs";
+import { createInstallTelemetryClient } from "../lib/install-telemetry.mjs";
 
 const SERVICE = "remix-camera-sillytavern-bridge";
-const VERSION = "0.3.0";
+const VERSION = "0.4.0-alpha.2";
 const COMMANDS = new Set([
   "send-selfie",
   "generate-selfie",
@@ -212,6 +213,15 @@ const config = {
   pollTimeoutMs: Number(process.env.REMIX_POLL_TIMEOUT_MS || 180000),
   pollIntervalMs: Number(process.env.REMIX_POLL_INTERVAL_MS || 2000),
 };
+const telemetry = createInstallTelemetryClient({
+  apiBaseUrl: config.apiBaseUrl,
+  installationId: persistedConfig?.telemetry?.installationId,
+  installSource: persistedConfig?.telemetry?.installSource,
+  target: persistedConfig?.telemetry?.target || persistedConfig.target || "sillytavern",
+  packageVersion: persistedConfig?.telemetry?.packageVersion || VERSION,
+  enabled: persistedConfig?.telemetry?.enabled === true,
+});
+let firstImageTelemetryAttempted = false;
 const proxiedImages = new Map();
 const PROXIED_IMAGE_TTL_MS = 60 * 60 * 1000;
 const JSON_BODY_MAX_BYTES = 7 * 1024 * 1024;
@@ -1874,6 +1884,10 @@ async function generate(input) {
     resultImageUrls: displayResults.map((result) => cleanString(result.imageUrl)).filter(Boolean),
     productionImageUrls: displayResults.map((result) => cleanString(result.productionImageUrl)).filter(Boolean),
   });
+  if (response.ok && !firstImageTelemetryAttempted) {
+    firstImageTelemetryAttempted = true;
+    void telemetry.track("sillytavern_first_image_completed");
+  }
   return response;
 }
 
@@ -2108,4 +2122,5 @@ const server = http.createServer((req, res) => {
 
 server.listen(config.port, config.host, () => {
   console.log(`${SERVICE} listening on http://${config.host}:${config.port}`);
+  void telemetry.track("sillytavern_bridge_started");
 });
