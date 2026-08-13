@@ -6,6 +6,12 @@ import { access, chmod, cp, mkdir, readFile, writeFile } from "node:fs/promises"
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  createInstallationId,
+  createInstallTelemetryClient,
+  normalizeInstallSource,
+  telemetryEnabled,
+} from "../lib/install-telemetry.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const packageRoot = path.resolve(__dirname, "..");
@@ -90,6 +96,8 @@ Options:
   --api-base-url=https://remix.camera      Remix.Camera API base URL
   --config=/path/to/config.json           Bridge config output path
   --client-name="Device name"             Name shown on the Remix.Camera pairing page
+  --source=github_readme                   Privacy-safe install source label
+  --no-telemetry                           Disable anonymous setup funnel telemetry
   --no-open                               Do not open browser windows
   --no-start                              Install/configure only; do not start the bridge
   --help                                  Show this help
@@ -122,6 +130,10 @@ function argValue(name) {
 
 function hasFlag(name) {
   return process.argv.slice(2).includes(name);
+}
+
+function bridgeConfigPath() {
+  return argValue("--config") || process.env.REMIX_CONFIG_FILE || DEFAULT_CONFIG_PATH;
 }
 
 function trimTrailingSlash(value) {
@@ -246,6 +258,24 @@ async function postJson(apiBaseUrl, pathname, body, token = null) {
   return { response, payload };
 }
 
+async function readExistingBridgeConfig() {
+  try {
+    const parsed = JSON.parse(await readFile(bridgeConfigPath(), "utf8"));
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+async function packageVersion() {
+  try {
+    const parsed = JSON.parse(await readFile(path.join(packageRoot, "package.json"), "utf8"));
+    return typeof parsed.version === "string" ? parsed.version : "unknown";
+  } catch {
+    return "unknown";
+  }
+}
+
 async function getJson(apiBaseUrl, pathname, token) {
   const response = await fetch(`${apiBaseUrl}${pathname}`, {
     headers: {
@@ -269,8 +299,8 @@ function openUrl(url) {
   child.unref();
 }
 
-async function pairDevice(apiBaseUrl, target) {
-  const clientName = argValue("--client-name") || `${os.hostname()} ${target}`;
+async function pairDevice(apiBaseUrl, target, telemetry) {
+  const clientName = argValue("--client-name") || `Remix.Camera ${target} local bridge`;
   const { payload } = await postJson(apiBaseUrl, "/api/v1/design/auth/device/start", {
     clientName,
     source: target,
@@ -278,6 +308,7 @@ async function pairDevice(apiBaseUrl, target) {
   if (!payload?.deviceCode || !payload?.userCode || !payload?.verificationUriComplete) {
     throw new Error("Device pairing response was incomplete.");
   }
+  await telemetry.track("sillytavern_pairing_started");
 
   console.log("");
   console.log(`Open Remix.Camera and approve this ${target} device:`);
@@ -298,6 +329,7 @@ async function pairDevice(apiBaseUrl, target) {
       deviceCode: payload.deviceCode,
     });
     if (pollPayload?.ok && pollPayload.sessionToken) {
+      await telemetry.track("sillytavern_pairing_completed");
       return pollPayload;
     }
     if (pollPayload?.status === "authorization_pending") {
@@ -311,7 +343,7 @@ async function pairDevice(apiBaseUrl, target) {
 }
 
 async function writeBridgeConfig(config) {
-  const configPath = argValue("--config") || process.env.REMIX_CONFIG_FILE || DEFAULT_CONFIG_PATH;
+  const configPath = bridgeConfigPath();
   await mkdir(path.dirname(configPath), { recursive: true });
   try {
     await chmod(path.dirname(configPath), 0o700);
@@ -813,11 +845,26 @@ async function main() {
   const apiBaseUrl = trimTrailingSlash(argValue("--api-base-url") || process.env.REMIX_API_BASE_URL || DEFAULT_API_BASE_URL);
   const port = argValue("--port") || process.env.REMIX_BRIDGE_PORT || "8787";
   const allowedOrigins = allowedOriginsForTarget(target);
+  const existingConfig = await readExistingBridgeConfig();
+  const isTelemetryEnabled = telemetryEnabled({ disabled: hasFlag("--no-telemetry") });
+  const telemetry = createInstallTelemetryClient({
+    apiBaseUrl,
+    installationId: isTelemetryEnabled
+      ? createInstallationId(existingConfig?.telemetry?.installationId)
+      : "",
+    installSource: normalizeInstallSource(
+      argValue("--source") || process.env.REMIX_INSTALL_SOURCE || existingConfig?.telemetry?.installSource,
+    ),
+    target,
+    packageVersion: await packageVersion(),
+    enabled: isTelemetryEnabled,
+  });
+  await telemetry.track("sillytavern_install_started");
 
   if (target !== "sillytavern") {
     console.log(`Target: ${target}`);
     console.log(`Remix.Camera: ${apiBaseUrl}`);
-    const pairing = await pairDevice(apiBaseUrl, target);
+    const pairing = await pairDevice(apiBaseUrl, target, telemetry);
     const sessionToken = pairing.sessionToken;
     const profile = await selectProfile(apiBaseUrl, sessionToken, pairing.profileId);
     const characterName = argValue("--character-name") || pairing.characterName || profile.name || "Remix Companion";
@@ -830,7 +877,9 @@ async function main() {
       allowedOrigins,
       pairedAt: new Date().toISOString(),
       session: pairing.session || null,
+      telemetry: telemetry.config,
     });
+    await telemetry.track("sillytavern_setup_completed");
     const healthUrl = await startBridge(configPath, {
       REMIX_ALLOWED_ORIGINS: allowedOrigins.join(","),
     });
@@ -844,8 +893,9 @@ async function main() {
 
   console.log(`SillyTavern: ${sillyTavernDir}`);
   console.log(`Remix.Camera: ${apiBaseUrl}`);
+  console.log(`Anonymous setup telemetry: ${telemetry.enabled ? "enabled" : "disabled"}`);
 
-  const pairing = await pairDevice(apiBaseUrl, target);
+  const pairing = await pairDevice(apiBaseUrl, target, telemetry);
   const sessionToken = pairing.sessionToken;
   const profile = await selectProfile(apiBaseUrl, sessionToken, pairing.profileId);
   const characterName = argValue("--character-name") || pairing.characterName || profile.name || "Remix Companion";
@@ -858,9 +908,11 @@ async function main() {
     allowedOrigins,
     pairedAt: new Date().toISOString(),
     session: pairing.session || null,
+    telemetry: telemetry.config,
   });
   const extensionTarget = await installExtension(sillyTavernDir, userName);
   const cardPath = await downloadCharacterCard(apiBaseUrl, sessionToken, profile, characterName, characterDir);
+  await telemetry.track("sillytavern_setup_completed");
   const healthUrl = await startBridge(configPath, {
     REMIX_ALLOWED_ORIGINS: allowedOrigins.join(","),
   });

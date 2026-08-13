@@ -47,7 +47,7 @@ The integration has two parts:
 Run the public GitHub setup command for SillyTavern:
 
 ```bash
-npx --yes github:remixcamera/remix-camera-sillytavern-companion-images#v0.4.0-alpha.1
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images#v0.4.0-alpha.2 --source=github_readme
 ```
 
 After the npm package is published, the shorter command will also work:
@@ -68,6 +68,12 @@ This is the intended path for bringing Remix.Camera image tools to your own Sill
 The bridge uses a scoped opaque `dapi_...` session token created by the browser approval flow. You do not need to paste a raw API key into SillyTavern or a character card.
 
 Paired SillyTavern sessions are scoped to the signed-in Remix.Camera account and can be revoked from the account session controls. Other session sources and API keys keep their existing access rules.
+
+### Anonymous setup telemetry
+
+The setup command records six install-funnel milestones: installer started, pairing started, pairing completed, setup completed, bridge started, and first image completed. One random installation ID joins those milestones to the same setup. Remix.Camera does not collect your email, account ID, IP address, hostname, SillyTavern character, prompts, chat text, or generated image URLs in this telemetry record. Records expire automatically after 400 days.
+
+Use a campaign label such as `--source=github_show_and_tell` to attribute an install without identifying the installer. Disable telemetry with `--no-telemetry`, `DO_NOT_TRACK=1`, or `REMIX_TELEMETRY_DISABLED=1`. Telemetry is best-effort and never blocks setup or image generation.
 
 ## Other Chatbot Targets
 
