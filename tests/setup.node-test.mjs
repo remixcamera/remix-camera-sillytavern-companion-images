@@ -20,7 +20,7 @@ test("installation telemetry uses a random anonymous id and stable source labels
     installationId,
     installSource: "GitHub Show & Tell",
     target: "sillytavern",
-    packageVersion: "0.4.0-alpha.2",
+    packageVersion: "0.4.0-alpha.3",
     fetchImpl: async (url, init) => {
       calls.push({ url, init });
       return { ok: true };
@@ -35,7 +35,7 @@ test("installation telemetry uses a random anonymous id and stable source labels
     installationId,
     installSource: "github_show_tell",
     target: "sillytavern",
-    packageVersion: "0.4.0-alpha.2",
+    packageVersion: "0.4.0-alpha.3",
   });
   assert.deepEqual(telemetry.config, {
     enabled: true,
@@ -43,7 +43,7 @@ test("installation telemetry uses a random anonymous id and stable source labels
     installationId,
     installSource: "github_show_tell",
     target: "sillytavern",
-    packageVersion: "0.4.0-alpha.2",
+    packageVersion: "0.4.0-alpha.3",
   });
 });
 

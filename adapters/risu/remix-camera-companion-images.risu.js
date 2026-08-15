@@ -1,6 +1,8 @@
 //@name remix_camera_companion_images
 //@display-name Remix.Camera Companion Images
 //@api 3.0
+//@version 0.4.0-alpha.3
+//@update-url https://raw.githubusercontent.com/remixcamera/remix-camera-sillytavern-companion-images/main/adapters/risu/remix-camera-companion-images.risu.js
 //@arg bridge_url string Local bridge URL, default http://127.0.0.1:8787
 //@arg profile_id string Optional Remix.Camera profile ID override
 //@arg character_name string Optional character name override
@@ -140,6 +142,24 @@
     }
   }
 
+  function publicImageMarkdown(payload, characterName) {
+    const images = (Array.isArray(payload?.results) ? payload.results : [])
+      .map(
+        (result) =>
+          [result?.productionImageUrl, result?.imageUrl].find((url) => /^https:\/\//i.test(url)) || "",
+      )
+      .filter(Boolean);
+    const label = String(characterName || "").trim()
+      .replace(/[\[\]\r\n]+/g, " ")
+      .replace(/\s+/g, " ") || "Companion";
+    return images
+      .map((url, index) => {
+        const suffix = images.length > 1 ? ` ${index + 1} of ${images.length}` : "";
+        return `![${label} image${suffix}](${url})`;
+      })
+      .join("\n\n");
+  }
+
   async function callBridge(command, content) {
     const bridgeUrl = cleanUrl(await Risuai.getArgument("bridge_url"));
     const profileId = await Risuai.getArgument("profile_id");
@@ -171,8 +191,9 @@
         },
       ];
     }
-    if (payload?.markdown) {
-      return [{ type: "text", text: payload.markdown }];
+    const imageMarkdown = publicImageMarkdown(payload, body.characterName);
+    if (imageMarkdown || payload?.markdown) {
+      return [{ type: "text", text: imageMarkdown || payload.markdown }];
     }
     return [{ type: "text", text: "Remix.Camera completed, but no image markdown was returned." }];
   }
@@ -181,7 +202,7 @@
     {
       identifier: "plugin:remix-camera-companion-images",
       name: "Remix.Camera Companion Images",
-      version: "0.4.0",
+      version: "0.4.0-alpha.3",
       description: "AI companion image tools backed by Remix.Camera prompt templates and a local bridge.",
     },
     async () =>
@@ -207,4 +228,3 @@
     await Risuai.unregisterMCP("plugin:remix-camera-companion-images");
   });
 })();
-

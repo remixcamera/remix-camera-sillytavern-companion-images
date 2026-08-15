@@ -28,6 +28,7 @@ const SUPPORTED_TARGETS = new Set([
   "openwebui",
   "librechat",
   "lobechat",
+  "jan",
   "chatgpt-actions",
   "agnai",
   "telegram",
@@ -87,7 +88,7 @@ Usage:
   npx @remix-camera/sillytavern-setup [options]
 
 Options:
-  --target=sillytavern|mcp|risu|openwebui|librechat|lobechat|chatgpt-actions|agnai|telegram|discord|whatsapp|wechat|viber|vk|slack|mattermost|rocketchat|intercom|zendesk|crisp|tidio|line|zalo|kakao|messenger|instagram|teams|twilio|matrix|dify|flowise|botpress|anythingllm|typingmind|poe|langflow|langchain|vercel-ai-sdk|n8n|pipedream|make|zapier|voiceflow|manychat|nomi|kindroid|bot-framework|dialogflow-es|dialogflow-cx|rasa|amazon-lex|watsonx-assistant
+  --target=sillytavern|mcp|risu|openwebui|librechat|lobechat|jan|chatgpt-actions|agnai|telegram|discord|whatsapp|wechat|viber|vk|slack|mattermost|rocketchat|intercom|zendesk|crisp|tidio|line|zalo|kakao|messenger|instagram|teams|twilio|matrix|dify|flowise|botpress|anythingllm|typingmind|poe|langflow|langchain|vercel-ai-sdk|n8n|pipedream|make|zapier|voiceflow|manychat|nomi|kindroid|bot-framework|dialogflow-es|dialogflow-cx|rasa|amazon-lex|watsonx-assistant
   --sillytavern-dir=/path/to/SillyTavern  Use a specific local SillyTavern checkout
   --profile-id=profile_id                 Use a specific Remix.Camera character profile
   --character-name="Name"                 Override the Character Card name
@@ -176,6 +177,12 @@ function allowedOriginsForTarget(target) {
     origins.add("https://typingmind.com");
     origins.add("https://www.typingmind.com");
     origins.add("https://custom.typingmind.com");
+  }
+  if (target === "lobechat") {
+    origins.add("https://app.lobehub.com");
+    origins.add("https://chat.lobehub.com");
+    origins.add("http://localhost:3210");
+    origins.add("http://127.0.0.1:3210");
   }
   return [...origins];
 }
@@ -445,7 +452,9 @@ function printTargetInstructions(target, { healthUrl, port, configPath }) {
       `  ${path.join(adapterRoot, "risu", "remix-camera-companion-images.risu.js")}`,
       "Then set bridge_url to:",
       `  ${bridgeUrl}`,
-      "Risu exposes the tools through its MCP plugin surface.",
+      "In Risu Settings > Modules, import this MCP module and enable it globally:",
+      "  plugin:remix-camera-companion-images",
+      "Risu then exposes the tools through its MCP plugin surface.",
     ],
     openwebui: [
       "Create an Open WebUI Tool from this Python file:",
@@ -455,14 +464,24 @@ function printTargetInstructions(target, { healthUrl, port, configPath }) {
       "Use yes=True only after the user explicitly asks to spend a generation.",
     ],
     librechat: [
-      "Add a LibreChat OpenAPI Action using this local schema URL:",
+      "Add the shared local stdio MCP server to LibreChat:",
+      `  ${path.join(adapterRoot, "mcp", "remix-camera-mcp-server.mjs")}`,
+      `  Set REMIX_BRIDGE_URL=${bridgeUrl} in that MCP server entry.`,
+      "LibreChat's native MCP UI is the recommended path; the legacy OpenAPI schema remains available at:",
       `  ${bridgeUrl}/librechat/openapi.json`,
-      "The schema includes guarded generate endpoints and dry-run preview endpoints.",
     ],
     lobechat: [
-      "Install a LobeChat custom plugin with this manifest URL:",
+      "Add the shared local stdio MCP server to LobeHub:",
+      `  ${path.join(adapterRoot, "mcp", "remix-camera-mcp-server.mjs")}`,
+      `  Set REMIX_BRIDGE_URL=${bridgeUrl} in that MCP server entry.`,
+      "For legacy Lobe custom-plugin clients, the repaired manifest and gateway remain available at:",
       `  ${bridgeUrl}/lobe/manifest.json`,
-      "The manifest exposes Preview tools for dry-runs plus guarded generate tools that require yes=true.",
+    ],
+    jan: [
+      "Open Jan Settings -> MCP Servers and add this local stdio MCP server:",
+      `  ${path.join(adapterRoot, "mcp", "remix-camera-mcp-server.mjs")}`,
+      `  Set REMIX_BRIDGE_URL=${bridgeUrl} and optionally REMIX_CHARACTER_NAME=Lily.`,
+      "Keep Jan's per-tool permission prompt enabled; generate tools still require yes=true.",
     ],
     "chatgpt-actions": [
       "Create a ChatGPT Custom GPT Action from the Remix.Camera bridge OpenAPI schema:",
@@ -640,7 +659,8 @@ function printTargetInstructions(target, { healthUrl, port, configPath }) {
     ],
     dify: [
       "Add a Dify custom OpenAPI tool from this schema URL:",
-      `  ${bridgeUrl}/openapi.json`,
+      `  ${bridgeUrl}/openapi.json (native install)`,
+      `  http://host.docker.internal:${port}/openapi.json (Dify in Docker Desktop)`,
       "Add the imported Remix.Camera tool to an Agent or Workflow Tool node.",
       "Use dry-run endpoints for previews and generate endpoints only after explicit confirmation.",
     ],

@@ -15,14 +15,16 @@ See the [live setup-to-output demo](https://remix.camera/ai-girlfriend-image-gen
 
 For proof with explicit generation boundaries, see the [Sophie, Mila, and Lily case studies](demos/sillytavern/case-studies/README.md). They distinguish a live UI/bridge check, a replayed approved output, an archived real output, and a true-live paid generation.
 
-Image prompts are template-first. For every image action, the bridge searches Remix.Camera's proven prompt/template packs, selects a strong relevant match, and adapts that template to the active character, chat context, user reference photo, and SFW/NSFW model route. If no strong template match exists, the bridge can generate from an ad-hoc fallback prompt and marks that response as `promptTemplateDecision: "ad_hoc_fallback"` so the output can be reviewed before it becomes part of the future prompt library.
+Image prompts are template-first. The bridge turns the user's conversational request into a short visual search query, removes chat and memory noise, and selects the closest eligible Remix.Camera prompt template even when the match is not exact. It then adapts that template to the active character, current request, user reference photo, and SFW/NSFW model route. Mature requests explicitly opt into the mature template catalog and only use explicit templates; they never fall back to an invented prompt. A non-mature request can use an ad-hoc fallback only when the template API returns no eligible template at all.
 
-The integration has two parts:
+The package contains:
 
 - `bridge/`: a local Node.js bridge that stores `REMIX_SESSION_TOKEN` server-side and calls the Remix.Camera API.
 - `extension/`: a SillyTavern extension that adds image buttons and optional function tools for a character.
 - `characters/`: importable Character Card V2 examples with Remix.Camera visual metadata.
-- `adapters/`: wrappers for MCP clients, RisuAI, Open WebUI, LibreChat, LobeChat, ChatGPT Actions, Agnai, Telegram, Discord, WhatsApp, WeChat Official Account, Viber, VK community bots, Slack, Mattermost, Rocket.Chat, Intercom, Zendesk Sunshine Conversations, Crisp, Tidio, LINE, Zalo Official Account, KakaoTalk, Messenger, Instagram DMs, Microsoft Teams, Microsoft Bot Framework, Twilio SMS/MMS, Matrix, Dify, Flowise, Botpress, AnythingLLM, TypingMind, Poe, Langflow, LangChain JS, the Vercel AI SDK, n8n, Pipedream, Make, Zapier, Voiceflow, Manychat, Nomi, Kindroid, Dialogflow ES, Dialogflow CX, Rasa, Amazon Lex V2, and IBM watsonx Assistant.
+- `adapters/`: wrappers for MCP clients including LobeHub, LibreChat, and Jan; RisuAI; Open WebUI; legacy Lobe/OpenAPI clients; ChatGPT Actions; and the bot, framework, workflow, and messaging surfaces listed below.
+
+Current real-host compatibility evidence for RisuAI, Open WebUI, and Jan is in `demos/current-host-audit-2026-08-12/README.md`. The Risu clip shows exactly one approved generation and rendered image; Open WebUI and Jan use no-credit previews. The audit also states the blockers for hosts that could not be truthfully recorded.
 
 ## What It Enables
 
@@ -42,13 +44,20 @@ The integration has two parts:
 - A trained or ready character profile in Remix.Camera, or photos ready to create one.
 - SillyTavern installed locally.
 
-## One-Step Setup
+## Three-Step Setup
 
-Run the public GitHub setup command for SillyTavern:
+Open `https://remix.camera/account/sillytavern`, then:
+
+1. Choose the Remix.Camera profile for your SillyTavern character.
+2. Run the displayed Terminal command:
 
 ```bash
-npx --yes github:remixcamera/remix-camera-sillytavern-companion-images#v0.4.0-alpha.2 --source=github_readme
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images#v0.4.0-alpha.3 --source=github_readme
 ```
+
+3. Enter the pairing code from Terminal and select **Connect**.
+
+Once connected, return to SillyTavern, open the Remix.Camera Companion Images panel, and ask the character for a photo. Health Check and Preview Prompt remain available for no-credit verification.
 
 After the npm package is published, the shorter command will also work:
 
@@ -85,6 +94,7 @@ npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=openwebui
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=librechat
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=lobechat
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=jan
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=chatgpt-actions
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=agnai
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=telegram
@@ -138,8 +148,9 @@ Adapter files:
 - MCP clients: `adapters/mcp/remix-camera-mcp-server.mjs`
 - RisuAI: `adapters/risu/remix-camera-companion-images.risu.js`
 - Open WebUI: `adapters/openwebui/remix_camera_companion_images.py`
-- LibreChat: `http://127.0.0.1:8787/librechat/openapi.json`
-- LobeChat: `http://127.0.0.1:8787/lobe/manifest.json` with `*Preview` tools for dry-runs and guarded generate tools that require `yes=true`
+- LibreChat: native MCP through `adapters/mcp/remix-camera-mcp-server.mjs`; legacy OpenAPI remains at `http://127.0.0.1:8787/librechat/openapi.json`
+- LobeHub: native MCP through `adapters/mcp/remix-camera-mcp-server.mjs`; legacy custom-plugin clients can use the repaired manifest and gateway at `http://127.0.0.1:8787/lobe/manifest.json`
+- Jan: native stdio MCP through `adapters/mcp/remix-camera-mcp-server.mjs`
 - ChatGPT Actions: `http://127.0.0.1:8787/chatgpt-actions/openapi.json` after exposing the bridge over HTTPS and setting `REMIX_ACTION_API_KEY`
 - Agnai: `adapters/agnai/remix-camera-agnai.user.js`
 - Telegram reusable tool: `adapters/telegram/remix-telegram-tool.mjs`
@@ -226,13 +237,10 @@ Add `--deliver` plus the target's bot credentials only when the demo should send
 
 Use this flow when you already have a SillyTavern character and want to add image capabilities without replacing the character's personality or chat setup.
 
-1. Run `npx --yes github:remixcamera/remix-camera-sillytavern-companion-images`.
-2. When Remix.Camera opens, sign in and choose or create a Remix.Camera character profile for that same character.
-3. Fill in the character's bio, gender, visual style, and profile photos in Remix.Camera. These are the image identity source of truth.
-4. Approve the setup pairing code in the browser. The setup command installs the extension, writes the local bridge credential, and downloads a personalized Character Card V2 PNG.
-5. In SillyTavern, keep your existing character card if you want to preserve all text-roleplay settings. Add the prompt snippet below to that character's system prompt or creator notes.
-6. Open Extensions -> Remix.Camera Companion Images. Use Health Check, then Preview Prompt. If the card metadata did not auto-fill, set the character name and Remix.Camera profile ID there.
-7. Click Selfie, Scene, Outfit, Couple, Vacation, Date, Day Snap, or Private Snap once the dry-run prompt looks right.
+1. Open the setup page and choose the Remix.Camera profile that matches the existing SillyTavern character.
+2. Run the displayed Terminal command.
+3. Enter the pairing code and select **Connect**.
+4. Return to SillyTavern. Keep the existing card to preserve personality, lore, and chat settings, then open Remix.Camera Companion Images and ask for a photo. Health Check and Preview Prompt remain available for no-credit verification.
 
 The important mapping is one SillyTavern character to one Remix.Camera character profile. SillyTavern remains the chat and memory layer; Remix.Camera supplies the visual identity and generation tools.
 
@@ -240,13 +248,11 @@ The important mapping is one SillyTavern character to one Remix.Camera character
 
 Use this flow when you do not have a SillyTavern character yet.
 
-1. Run `npx --yes github:remixcamera/remix-camera-sillytavern-companion-images`.
-2. Sign in to Remix.Camera when the browser opens.
-3. Create a new character profile with the character's name, bio, gender, visual style, and profile photos.
-4. Approve the setup pairing code. The setup command installs the extension, starts the bridge, and downloads a personalized Character Card V2 PNG.
-5. Import the downloaded PNG from `data/default-user/characters` into SillyTavern. The PNG includes the character artwork plus embedded Character Card V2 metadata for Remix.Camera.
-6. Start a chat in SillyTavern, open the Remix.Camera extension panel, run Health Check, then use Preview Prompt before spending a generation.
-7. Keep the quick action buttons for manual control, or enable tool calls when you want the character to trigger image generation automatically.
+1. Create a Remix.Camera profile for the character.
+2. On the setup page, expand **Starting from scratch?**, customize the card, and download the Character Card PNG.
+3. Import the PNG into SillyTavern.
+4. Choose that Remix.Camera profile, run the displayed Terminal command, enter the pairing code, and select **Connect**.
+5. Start a chat and ask for a photo. Health Check and Preview Prompt remain available for no-credit verification.
 
 ## Optional Example Characters
 
@@ -289,7 +295,7 @@ You can also open Remix.Camera directly:
 https://remix.camera/account/sillytavern
 ```
 
-From there, sign in, create or choose a character profile, approve a setup pairing code, and download a personalized character card.
+From there, choose a character, run the displayed command, and enter the pairing code. Character-card creation is available under **Starting from scratch?**.
 
 ## Manual Setup
 
