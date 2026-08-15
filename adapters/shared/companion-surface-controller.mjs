@@ -102,12 +102,17 @@ export async function runCompanionBridgeCommand(parsed, options = {}) {
     input,
     fetchImpl: options.fetchImpl,
   });
+  const templateTitle = cleanString(payload?.promptTemplate?.packTitle);
   return {
     type: "bridge",
     command: parsed.command,
     input,
     payload,
-    text: payload?.dryRun ? "Image preview ready. No credits spent." : summarizeBridgePayload(payload),
+    text: payload?.dryRun
+      ? templateTitle
+        ? `Image preview ready with the “${templateTitle}” Remix.Camera template. No credits spent.`
+        : "Image preview ready. No credits spent."
+      : summarizeBridgePayload(payload),
     imageUrls: imageUrlsFromBridgePayload(payload),
     deleteAfterSeconds: 0,
   };

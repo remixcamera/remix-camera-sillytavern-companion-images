@@ -1,9 +1,8 @@
 """
 title: Remix.Camera Companion Images
 author: Remix.Camera
-version: 0.4.0
+version: 0.4.0-alpha.3
 description: Companion image tools backed by a local Remix.Camera bridge.
-requirements: pydantic
 """
 
 import json
@@ -115,4 +114,3 @@ class Tools:
             },
             yes,
         )
-

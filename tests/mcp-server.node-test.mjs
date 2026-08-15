@@ -41,6 +41,7 @@ test("MCP initialize declares tool capability", async () => {
   assert.equal(response.result.protocolVersion, "2025-11-25");
   assert.deepEqual(response.result.capabilities, { tools: { listChanged: false } });
   assert.equal(response.result.serverInfo.name, "remix-camera-companion-images");
+  assert.equal(response.result.serverInfo.version, "0.4.0-alpha.3");
 });
 
 test("MCP preview tool calls bridge dry-run endpoint", async () => {

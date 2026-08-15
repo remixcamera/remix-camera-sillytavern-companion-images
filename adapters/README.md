@@ -11,6 +11,7 @@ npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=openwebui
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=librechat
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=lobechat
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=jan
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=chatgpt-actions
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=agnai
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=telegram
@@ -67,8 +68,9 @@ npx --yes github:remixcamera/remix-camera-sillytavern-companion-images --target=
 | MCP clients | `adapters/mcp/remix-camera-mcp-server.mjs` | Local stdio MCP server for Claude Desktop, Cursor, Cline, and MCP-compatible hosts |
 | RisuAI | `adapters/risu/remix-camera-companion-images.risu.js` | RisuAI MCP plugin |
 | Open WebUI | `adapters/openwebui/remix_camera_companion_images.py` | Native Open WebUI Tool |
-| LibreChat | `http://127.0.0.1:8787/librechat/openapi.json` | OpenAPI Action |
-| LobeChat | `http://127.0.0.1:8787/lobe/manifest.json` | Lobe plugin manifest with preview and guarded generate tools |
+| LibreChat | `adapters/mcp/remix-camera-mcp-server.mjs` | Native stdio MCP; legacy OpenAPI Action remains available |
+| LobeHub | `adapters/mcp/remix-camera-mcp-server.mjs` | Native stdio MCP; repaired legacy manifest/gateway remains available |
+| Jan | `adapters/mcp/remix-camera-mcp-server.mjs` | Native stdio MCP configured in Settings -> MCP Servers |
 | ChatGPT Actions | `http://127.0.0.1:8787/chatgpt-actions/openapi.json` | Custom GPT Action schema for a public HTTPS bridge with Bearer auth |
 | Agnai | `adapters/agnai/remix-camera-agnai.user.js` | Browser userscript against local bridge |
 | Telegram | `adapters/telegram/remix-telegram-tool.mjs` + `adapters/telegram/framework-middleware.mjs` | Reusable bot integration module plus Telegraf/grammY middleware |
@@ -137,8 +139,9 @@ Supported means the package has a concrete integration surface and a runbook. Wa
 | MCP clients | Supported | Local stdio MCP server with `tools/list` and `tools/call` support. |
 | RisuAI | Supported | MCP plugin. |
 | Open WebUI | Supported | Native Tool. |
-| LibreChat | Supported | OpenAPI Action. |
-| LobeChat | Supported | Plugin manifest. |
+| LibreChat | Supported | Native MCP, with OpenAPI compatibility fallback. |
+| LobeHub | Supported | Native MCP, with repaired legacy plugin manifest/gateway fallback. |
+| Jan | Supported | Native stdio MCP with per-tool permissions. |
 | ChatGPT Actions | Supported | Custom GPT Action OpenAPI schema with Bearer auth and preview/generate endpoints. |
 | Agnai | Supported | Userscript against the local bridge. |
 | Telegram, Discord, WhatsApp, WeChat Official Account, Viber, VK community bots, Slack, Mattermost, Rocket.Chat, Intercom, Zendesk Sunshine Conversations, Crisp, Tidio, LINE, Zalo Official Account, KakaoTalk, Messenger, Instagram DMs, Microsoft Teams, Twilio SMS/MMS, Matrix | Supported | Reusable bot/webhook/skill/support-chat modules plus Lily proof wrappers where a direct Lily wrapper is useful. |
@@ -159,6 +162,7 @@ Supported means the package has a concrete integration surface and a runbook. Wa
 - Open WebUI OpenAPI: `GET http://127.0.0.1:8787/openwebui/openapi.json`
 - ChatGPT Actions OpenAPI: `GET http://127.0.0.1:8787/chatgpt-actions/openapi.json`
 - Lobe manifest: `GET http://127.0.0.1:8787/lobe/manifest.json`
+- Legacy Lobe gateway: `POST http://127.0.0.1:8787/lobe/gateway`
 
 Every command has:
 

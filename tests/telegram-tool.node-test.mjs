@@ -127,6 +127,10 @@ test("contextual undress requests pass the last generated image to the bridge", 
           modelId: "seedream-v4.5-edit",
           matureContent: true,
           usesImageToImage: true,
+          promptTemplateDecision: "template",
+          promptTemplate: {
+            packTitle: "Proven Private Adult Snap Pack",
+          },
         }),
         { status: 200, headers: { "Content-Type": "application/json" } },
       );
@@ -152,6 +156,10 @@ test("contextual undress requests pass the last generated image to the bridge", 
   assert.equal(calls[0].body.sourceImageUrl, "https://remix.camera/api/s3-file?key=lily-private.jpg");
   assert.equal(calls[0].body.matureContent, true);
   assert.equal(calls[0].body.yes, undefined);
+  assert.equal(
+    details.result.text,
+    "Image preview ready with the “Proven Private Adult Snap Pack” Remix.Camera template. No credits spent.",
+  );
 });
 
 test("Telegram bridge input routes couple and private generation like natural chat", () => {

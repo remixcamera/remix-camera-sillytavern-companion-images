@@ -7,7 +7,10 @@ import { test } from "node:test";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const packageRoot = path.resolve(__dirname, "..");
 const extensionPath = path.join(packageRoot, "extension", "remix-camera-companion-images", "index.js");
+const packageJsonPath = path.join(packageRoot, "package.json");
+const rootManifestPath = path.join(packageRoot, "manifest.json");
 const manifestPath = path.join(packageRoot, "extension", "remix-camera-companion-images", "manifest.json");
+const bridgePath = path.join(packageRoot, "bridge", "server.mjs");
 const stylePath = path.join(packageRoot, "extension", "remix-camera-companion-images", "style.css");
 const rootStylePath = path.join(packageRoot, "style.css");
 const sharedParserPath = path.join(packageRoot, "shared", "companion-command-parser.mjs");
@@ -22,6 +25,26 @@ const quickTryAssets = [
   "quick-try-daily.jpg",
   "quick-try-snap.png",
 ];
+
+test("release metadata stays aligned across package entrypoints", async () => {
+  const [packageSource, rootManifestSource, manifestSource, bridgeSource] = await Promise.all([
+    readFile(packageJsonPath, "utf8"),
+    readFile(rootManifestPath, "utf8"),
+    readFile(manifestPath, "utf8"),
+    readFile(bridgePath, "utf8"),
+  ]);
+  const packageJson = JSON.parse(packageSource);
+  const rootManifest = JSON.parse(rootManifestSource);
+  const manifest = JSON.parse(manifestSource);
+
+  assert.equal(rootManifest.version, packageJson.version, "root SillyTavern manifest should match the package version.");
+  assert.equal(manifest.version, packageJson.version, "installed extension manifest should match the package version.");
+  assert.match(
+    bridgeSource,
+    new RegExp(`const VERSION = ["']${packageJson.version.replaceAll(".", "\\.")}["'];`),
+    "bridge health version should match the package version.",
+  );
+});
 
 test("extension scopes character overrides by SillyTavern card identity before placeholder profile id", async () => {
   const source = await readFile(extensionPath, "utf8");

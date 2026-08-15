@@ -6,11 +6,16 @@ import { readFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { URL } from "node:url";
-import { createBridgeOpenApiDocument, createChatGptActionsOpenApiDocument, createLobeManifest } from "../lib/companion-tools.mjs";
 import { createInstallTelemetryClient } from "../lib/install-telemetry.mjs";
+import {
+  COMPANION_COMMANDS,
+  createBridgeOpenApiDocument,
+  createChatGptActionsOpenApiDocument,
+  createLobeManifest,
+} from "../lib/companion-tools.mjs";
 
 const SERVICE = "remix-camera-sillytavern-bridge";
-const VERSION = "0.4.0-alpha.2";
+const VERSION = "0.4.0-alpha.3";
 const COMMANDS = new Set([
   "send-selfie",
   "generate-selfie",
@@ -40,7 +45,7 @@ const PROMPT_TEMPLATE_QUERIES = {
   "couples-vacation": "couple vacation travel photo set beach hotel weekend cohesive romantic destination",
   "date-night": "date night restaurant bar romantic phone selfie dinner booth warm light",
   "daily-life-snap": "daily life candid selfie at home cafe errands phone camera natural update",
-  "private-snap": "adult private snap bedroom mirror lingerie phone camera mature intimate selfie",
+  "private-snap": "adult explicit nude private mirror selfie intimate",
 };
 const PROMPT_TEMPLATE_SEARCH_PAGE_SIZE = 8;
 const PROMPT_TEMPLATE_DETAIL_LIMIT = 6;
@@ -126,6 +131,19 @@ const PROMPT_TEMPLATE_INTENT_GROUPS = [
     candidate: /\b(office|desk|work|coworking|laptop|meeting)\b/i,
   },
 ];
+const PROMPT_TEMPLATE_INTENT_QUERY_TERMS = new Map([
+  ["bathroom", "bathroom bath shower"],
+  ["beach_pool", "beach pool swim"],
+  ["bedroom", "bedroom bed"],
+  ["cafe", "cafe coffee"],
+  ["living_room", "living room couch"],
+  ["kitchen", "kitchen cooking"],
+  ["restaurant_bar", "restaurant bar date night"],
+  ["gym", "gym workout fitness"],
+  ["tennis", "tennis court"],
+  ["car", "car driving"],
+  ["office", "office work desk"],
+]);
 const PROMPT_TEMPLATE_GENERIC_USER_TOKENS = new Set([
   "send",
   "take",
@@ -180,6 +198,36 @@ const PROMPT_TEMPLATE_GENERIC_USER_TOKENS = new Set([
   "what",
   "were",
   "talking",
+]);
+const PROMPT_TEMPLATE_SEARCH_NOISE_TOKENS = new Set([
+  ...PROMPT_TEMPLATE_GENERIC_USER_TOKENS,
+  "ask",
+  "asked",
+  "could",
+  "would",
+  "should",
+  "can",
+  "will",
+  "just",
+  "really",
+  "maybe",
+  "something",
+  "anything",
+  "now",
+  "today",
+  "tonight",
+  "again",
+  "little",
+  "bit",
+  "like",
+  "think",
+  "know",
+  "said",
+  "tell",
+  "talk",
+  "chat",
+  "message",
+  "reply",
 ]);
 const DEFAULT_ALLOWED_ORIGINS = [
   "http://127.0.0.1:8000",
@@ -314,6 +362,13 @@ function corsHeaders(req) {
   if (origin && isAllowedOrigin(origin)) {
     headers["Access-Control-Allow-Origin"] = origin;
   }
+  if (
+    origin &&
+    isAllowedOrigin(origin) &&
+    cleanString(req.headers["access-control-request-private-network"]).toLowerCase() === "true"
+  ) {
+    headers["Access-Control-Allow-Private-Network"] = "true";
+  }
   return headers;
 }
 
@@ -343,6 +398,16 @@ function sendJson(req, res, status, body) {
   res.writeHead(status, {
     ...corsHeaders(req),
     "Content-Type": "application/json; charset=utf-8",
+    "Content-Length": Buffer.byteLength(payload),
+  });
+  res.end(payload);
+}
+
+function sendText(req, res, status, body) {
+  const payload = String(body ?? "");
+  res.writeHead(status, {
+    ...corsHeaders(req),
+    "Content-Type": "text/plain; charset=utf-8",
     "Content-Length": Buffer.byteLength(payload),
   });
   res.end(payload);
@@ -424,6 +489,38 @@ function clampInteger(value, min, max, fallback) {
 function normalizeCommand(command) {
   const normalized = cleanString(command).toLowerCase();
   return normalized === "generate-selfie" ? "send-selfie" : normalized;
+}
+
+function parseLobeArguments(value) {
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    return value;
+  }
+  const raw = cleanString(value);
+  if (!raw) {
+    return {};
+  }
+  try {
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      throw new Error("not an object");
+    }
+    return parsed;
+  } catch {
+    throw httpError(400, "Lobe plugin arguments must be a JSON object string.");
+  }
+}
+
+function resolveLobeApi(apiName) {
+  const requestedName = cleanString(apiName);
+  for (const command of COMPANION_COMMANDS) {
+    if (requestedName === `${command.toolName}Preview`) {
+      return { command: command.name, action: "dry-run" };
+    }
+    if (requestedName === command.toolName) {
+      return { command: command.name, action: "generate" };
+    }
+  }
+  throw httpError(400, `Unsupported Lobe plugin API: ${requestedName || "(missing)"}`);
 }
 
 function isAffirmativeConsent(value) {
@@ -569,37 +666,25 @@ function tokenizeText(value) {
 }
 
 function promptTemplateUserSituationText(input) {
-  return [
+  const directVisualRequest = [
     input.theme,
     input.location,
     input.outfit,
-    input.mood,
     input.pose,
-    input.chatText,
-    input.memory,
+    input.mood,
   ]
     .map((part) => cleanString(part))
     .filter(Boolean)
     .join(" ");
+  const chatText = cleanString(input.chatText);
+  if (input.command === "auto-selfie-from-chat") {
+    return [directVisualRequest, chatText].filter(Boolean).join(" ");
+  }
+  return directVisualRequest || chatText;
 }
 
 function promptTemplateSpecificRequestText(input) {
-  const mood = cleanString(input.mood);
-  const moodLooksLikeImageRequest =
-    /\b(selfie|photo|picture|pic|image|snap|shot|portrait)\b/i.test(mood) ||
-    PROMPT_TEMPLATE_INTENT_GROUPS.some((group) => group.requested.test(mood));
-  return [
-    input.theme,
-    input.location,
-    input.command === "outfit-try-on" ? "" : input.outfit,
-    input.pose,
-    input.chatText,
-    input.memory,
-    moodLooksLikeImageRequest ? mood : "",
-  ]
-    .map((part) => cleanString(part))
-    .filter(Boolean)
-    .join(" ");
+  return promptTemplateUserSituationText(input);
 }
 
 function promptTemplateIntentGroups(input) {
@@ -612,11 +697,16 @@ function promptTemplateIntentGroups(input) {
 
 function promptTemplateSearchQuery(input) {
   const commandQuery = PROMPT_TEMPLATE_QUERIES[input.command] || PROMPT_TEMPLATE_QUERIES["send-selfie"];
-  const situation = promptTemplateUserSituationText(input);
-  const intentText = promptTemplateIntentGroups(input)
-    .map((group) => group.label)
-    .join(" ");
-  return clipText(`${situation} ${intentText} ${commandQuery}`, PROMPT_TEMPLATE_QUERY_MAX_LENGTH);
+  const routeQuery = isMatureContentRequested(input) && input.command !== "private-snap"
+    ? `${PROMPT_TEMPLATE_QUERIES["private-snap"]} ${commandQuery}`
+    : commandQuery;
+  const requestTokens = [...tokenizeText(promptTemplateUserSituationText(input))]
+    .filter((token) => !PROMPT_TEMPLATE_SEARCH_NOISE_TOKENS.has(token))
+    .slice(0, 12);
+  const intentTokens = promptTemplateIntentGroups(input)
+    .flatMap((group) => [...tokenizeText(PROMPT_TEMPLATE_INTENT_QUERY_TERMS.get(group.id) || group.label)]);
+  const routeTokens = [...tokenizeText(routeQuery)];
+  return clipText([...new Set([...intentTokens, ...requestTokens, ...routeTokens])].join(" "), PROMPT_TEMPLATE_QUERY_MAX_LENGTH);
 }
 
 function normalizeTemplatePrompt(entry) {
@@ -636,8 +726,23 @@ function normalizeTemplatePrompt(entry) {
     aspectRatio: cleanString(entry.aspectRatio) || null,
     cropStyle: cleanString(entry.cropStyle) || null,
     poseType: cleanString(entry.poseType) || null,
-    modelType: cleanString(entry.modelType) || null,
+    modelType: cleanString(entry.modelType || entry.recommendedModelId) || null,
   };
+}
+
+function promptTemplateGender(input) {
+  const gender = cleanString(input?.gender).toLowerCase();
+  if (/\b(female|woman)\b/.test(gender)) {
+    return "female";
+  }
+  if (/\b(male|man)\b/.test(gender)) {
+    return "male";
+  }
+  return "";
+}
+
+function isExplicitPromptTemplate(template) {
+  return template?.matureContent?.explicitNudity === true;
 }
 
 function normalizePromptTemplateQuality(value) {
@@ -667,6 +772,29 @@ function sortPromptTemplatePackSummaries(packs) {
     const bScore = typeof b.searchScore === "number" ? b.searchScore : 0;
     return bScore - aScore;
   });
+}
+
+function normalizePromptTemplateSummary(template) {
+  if (!template || typeof template !== "object") {
+    return null;
+  }
+  const proven = template.proven && typeof template.proven === "object" ? template.proven : {};
+  const match = template.match && typeof template.match === "object" ? template.match : {};
+  const prompt = normalizeTemplatePrompt({ prompt: template.prompt, index: 0 });
+  return {
+    id: cleanString(template.id),
+    slug: cleanString(template.slug) || null,
+    title: cleanString(template.title) || "Remix.Camera prompt template",
+    description: cleanString(template.description) || null,
+    adminPriorityStatus: normalizePromptTemplateQuality(proven.qualityTier) || null,
+    qualityRating: normalizePromptTemplateQuality(proven.qualityTier) || null,
+    matchedText: cleanString(match.why || template.prompt) || null,
+    searchScore: typeof match.score === "number" ? match.score : 0,
+    matureContent: template.matureContent && typeof template.matureContent === "object"
+      ? template.matureContent
+      : null,
+    prompts: prompt ? [prompt] : [],
+  };
 }
 
 function promptTemplateCommandFitScore(input, text) {
@@ -810,13 +938,14 @@ function scorePromptTemplate({ query, input, pack, prompt }) {
   };
 }
 
-async function fetchPromptTemplatePackDetail(pack) {
+async function fetchPromptTemplateDetail(pack, { includeExplicit = false } = {}) {
   const idOrSlug = cleanString(pack.id || pack.slug);
   if (!idOrSlug) {
     return null;
   }
-  const payload = await remixFetch(`/api/v1/design/packs/${encodeURIComponent(idOrSlug)}`);
-  const detail = payload?.pack && typeof payload.pack === "object" ? payload.pack : null;
+  const explicitParam = includeExplicit ? "?includeExplicit=true" : "";
+  const payload = await remixFetch(`/api/v1/design/templates/${encodeURIComponent(idOrSlug)}${explicitParam}`);
+  const detail = payload?.template && typeof payload.template === "object" ? payload.template : null;
   if (!detail) {
     return null;
   }
@@ -828,6 +957,9 @@ async function fetchPromptTemplatePackDetail(pack) {
     adminPriorityStatus: normalizePromptTemplateQuality(detail.adminPriorityStatus || pack.adminPriorityStatus) || null,
     qualityRating: normalizePromptTemplateQuality(detail.qualityRating || pack.qualityRating) || null,
     matchedText: cleanString(pack.matchedText) || null,
+    matureContent: detail.matureContent && typeof detail.matureContent === "object"
+      ? detail.matureContent
+      : pack.matureContent,
     prompts: Array.isArray(detail.prompts)
       ? detail.prompts.map(normalizeTemplatePrompt).filter(Boolean)
       : [],
@@ -840,17 +972,36 @@ async function resolvePromptTemplate(input) {
   }
 
   const query = promptTemplateSearchQuery(input);
-  const searchPayload = await remixFetch("/api/v1/design/packs/search", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ query, pageSize: PROMPT_TEMPLATE_SEARCH_PAGE_SIZE }),
+  const matureRequest = isMatureContentRequested(input);
+  const searchParams = new URLSearchParams({
+    query,
+    pageSize: String(PROMPT_TEMPLATE_SEARCH_PAGE_SIZE),
+    maxResults: String(PROMPT_TEMPLATE_SEARCH_PAGE_SIZE),
   });
-  const packs = Array.isArray(searchPayload?.packs) ? searchPayload.packs : [];
+  if (matureRequest) {
+    searchParams.set("includeExplicit", "true");
+  }
+  const gender = promptTemplateGender(input);
+  if (gender) {
+    searchParams.set("gender", gender);
+  }
+  const searchPayload = await remixFetch(`/api/v1/design/templates?${searchParams.toString()}`);
+  const templates = Array.isArray(searchPayload?.templates)
+    ? searchPayload.templates.map(normalizePromptTemplateSummary).filter(Boolean)
+    : [];
+  const packs = templates.filter((template) =>
+    matureRequest ? isExplicitPromptTemplate(template) : !isExplicitPromptTemplate(template),
+  );
   const rankedPacks = sortPromptTemplatePackSummaries(packs);
   let best = null;
 
   for (const packSummary of rankedPacks.slice(0, PROMPT_TEMPLATE_DETAIL_LIMIT)) {
-    const pack = await fetchPromptTemplatePackDetail(packSummary).catch(() => null);
+    const pack =
+      (await fetchPromptTemplateDetail(packSummary, { includeExplicit: matureRequest }).catch(() => null)) ||
+      packSummary;
+    if (matureRequest && !isExplicitPromptTemplate(pack)) {
+      continue;
+    }
     if (!pack?.prompts?.length) {
       continue;
     }
@@ -878,15 +1029,26 @@ async function resolvePromptTemplate(input) {
     }
   }
 
-  if (
-    best &&
-    best.score >= PROMPT_TEMPLATE_STRONG_MATCH_MIN_SCORE &&
-    (!Array.isArray(best.missingIntentGroups) || best.missingIntentGroups.length === 0)
-  ) {
+  if (best) {
+    const isStrongMatch =
+      best.score >= PROMPT_TEMPLATE_STRONG_MATCH_MIN_SCORE &&
+      (!Array.isArray(best.missingIntentGroups) || best.missingIntentGroups.length === 0);
     return {
       ...best,
-      matchStrength: "strong",
+      matchStrength: isStrongMatch ? "strong" : "closest",
     };
+  }
+
+  if (matureRequest) {
+    throw httpError(
+      422,
+      "I couldn't find a matching explicit Remix.Camera template for that private snap. Try a different adult scene.",
+      {
+        query,
+        templatesReturned: templates.length,
+        eligibleExplicitTemplates: packs.length,
+      },
+    );
   }
 
   if (config.allowAdHocPromptFallback) {
@@ -2011,6 +2173,26 @@ async function route(req, res) {
     return;
   }
 
+  if (req.method === "POST" && url.pathname === "/lobe/gateway") {
+    const request = await readJsonBody(req);
+    if (cleanString(request.identifier) !== "remix-camera-companion-images") {
+      throw httpError(400, "Unsupported Lobe plugin identifier.");
+    }
+    const target = resolveLobeApi(request.apiName);
+    const body = normalizeBody({
+      ...parseLobeArguments(request.arguments),
+      command: target.command,
+    });
+    if (target.action === "dry-run") {
+      const plan = await buildPlan(body);
+      recordPlanQaEvent("dry-run", plan, { dryRun: true, integration: "lobe-legacy-plugin" });
+      sendText(req, res, 200, JSON.stringify({ ok: true, dryRun: true, ...plan }));
+      return;
+    }
+    sendText(req, res, 200, JSON.stringify(await generate(body)));
+    return;
+  }
+
   const chatGptActionToolMatch = url.pathname.match(/^\/chatgpt-actions\/v1\/tools\/([^/]+)\/(dry-run|generate)$/);
   if (req.method === "POST" && chatGptActionToolMatch) {
     requireActionApiKey(req);
@@ -2097,6 +2279,7 @@ async function route(req, res) {
       "GET /chatgpt-actions/openapi.json",
       "GET /chatgpt-actions/health",
       "GET /lobe/manifest.json",
+      "POST /lobe/gateway",
       "GET /v1/images/:id",
       "POST /v1/feedback",
       "POST /v1/commands/dry-run",
