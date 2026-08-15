@@ -1,6 +1,6 @@
 # MCP Adapter
 
-The MCP adapter exposes Remix.Camera companion image tools to MCP clients such as Claude Desktop, Cursor, Cline, Windsurf-style IDE agents, and any bot host that can launch a local stdio MCP server.
+The MCP adapter exposes Remix.Camera companion image tools to MCP clients such as LobeHub, LibreChat, Jan, Open WebUI through MCPO, Claude Desktop, Cursor, Cline, and any bot host that can launch a local stdio MCP server.
 
 It does not store a Remix.Camera token in the MCP client. The MCP server talks only to the local Remix.Camera bridge, and the bridge keeps the scoped `dapi_...` session token in the local config file created by setup.
 
@@ -85,3 +85,5 @@ Generate that Lily selfie now with yes=true.
 ```
 
 The result returns text plus image resource links when Remix.Camera returns production image URLs.
+
+The server intentionally speaks the legacy-compatible `2025-11-25` MCP protocol over stdio and supports `initialize`, `ping`, `tools/list`, and `tools/call`. That is the handshake used by the Jan `0.8.4` compatibility audit. MCP `2026-07-28` is a newer stateless protocol era; this alpha does not claim support for that wire contract yet.

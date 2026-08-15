@@ -15,7 +15,7 @@ import {
 export const MCP_PROTOCOL_VERSION = "2025-11-25";
 export const MCP_SERVER_INFO = {
   name: "remix-camera-companion-images",
-  version: "0.4.0",
+  version: "0.4.0-alpha.3",
 };
 
 const JSON_RPC_VERSION = "2.0";

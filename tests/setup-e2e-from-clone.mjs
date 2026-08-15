@@ -85,29 +85,33 @@ const api = http.createServer(async (req, res) => {
     });
     return res.end(payload);
   }
-  if (req.method === "POST" && url.pathname === "/api/v1/design/packs/search") {
+  if (req.method === "GET" && url.pathname === "/api/v1/design/templates") {
     return json(res, 200, {
-      packs: [{
+      templates: [{
         id: "pack_e2e",
         slug: "fresh-clone-selfie",
         title: "Fresh Clone Selfie",
-        promptCount: 1,
-        adminPriorityStatus: "excellent",
-        qualityRating: "great",
-        matchedText: "A realistic phone-camera selfie in a warm room, natural light, believable social photo.",
-        searchScore: 0.99,
+        prompt: "A realistic phone-camera selfie in a warm room, natural light, believable social photo.",
+        proven: { qualityTier: "excellent" },
+        match: {
+          why: "A realistic phone-camera selfie in a warm room, natural light, believable social photo.",
+          score: 0.99,
+        },
       }],
     });
   }
-  if (req.method === "GET" && url.pathname === "/api/v1/design/packs/pack_e2e") {
+  if (req.method === "GET" && url.pathname === "/api/v1/design/templates/pack_e2e") {
     return json(res, 200, {
-      pack: {
+      template: {
         id: "pack_e2e",
         slug: "fresh-clone-selfie",
         title: "Fresh Clone Selfie",
-        adminPriorityStatus: "excellent",
-        qualityRating: "great",
-        prompts: [{ index: 0, text: "A realistic phone-camera selfie in a warm room, natural light, believable social photo.", aspectRatio: "1:1", modelType: "nano-banana" }],
+        prompts: [{
+          index: 0,
+          prompt: "A realistic phone-camera selfie in a warm room, natural light, believable social photo.",
+          aspectRatio: "1:1",
+          recommendedModelId: "nano-banana",
+        }],
       },
     });
   }
@@ -168,6 +172,7 @@ await waitFor(async () => {
 }, 5_000, () => setupOutput);
 const health = await (await fetch(`${bridgeUrl}/health`)).json();
 assert.equal(health.ok, true);
+assert.equal(health.version, "0.4.0-alpha.3");
 assert.equal(health.defaultProfileId, "profile_e2e");
 
 const generatedResponse = await fetch(`${bridgeUrl}/v1/commands/generate`, {
@@ -210,6 +215,7 @@ for (const event of telemetryEvents) {
     "packageVersion",
     "target",
   ]);
+  assert.equal(event.packageVersion, "0.4.0-alpha.3");
 }
 
 const bridgeProcessId = Number((await import("node:child_process")).execFileSync("lsof", ["-ti", `tcp:${bridgePort}`], { encoding: "utf8" }).trim());

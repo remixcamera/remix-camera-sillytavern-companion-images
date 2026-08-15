@@ -133,6 +133,7 @@ const mockPromptPacks = {
     title: "Proven Private Adult Snap Pack",
     adminPriorityStatus: "excellent",
     qualityRating: "great",
+    matureContent: { explicitNudity: true },
     prompt:
       "An adult private bedroom mirror snap, tasteful lingerie styling, intimate phone-camera framing, confident clearly adult subject, warm low light, consensual mature mood, no text overlay.",
   },
@@ -140,6 +141,8 @@ const mockPromptPacks = {
 
 function chooseMockPromptPacks(query) {
   const text = String(query || "").toLowerCase();
+  if (text.includes("explicit-template-miss")) return [mockPromptPacks.excellentSelfie];
+  if (text.includes("closest-explicit-template")) return [mockPromptPacks.private];
   if (text.includes("excellent-first-test")) return [mockPromptPacks.genericSelfie, mockPromptPacks.excellentSelfie];
   if (text.includes("spaceship") || text.includes("astronaut")) return [mockPromptPacks.excellentSelfie];
   if (text.includes("bath") || text.includes("bathroom") || text.includes("shower")) {
@@ -156,11 +159,13 @@ function chooseMockPromptPacks(query) {
   if (text.startsWith("realistic couple selfie")) return [mockPromptPacks.couple];
   if (text.startsWith("realistic companion selfie") || text.startsWith("realistic candid companion selfie")) return [mockPromptPacks.selfie];
   if (text.includes("vacation") || text.includes("amalfi") || text.includes("travel")) return [mockPromptPacks.vacation];
+  if (text.includes("explicit") || text.includes("private") || text.includes("lingerie") || text.includes("adult")) {
+    return [mockPromptPacks.private];
+  }
   if (text.includes("outfit") || text.includes("fashion") || text.includes("clothing")) return [mockPromptPacks.outfit];
   if (text.includes("couple") || text.includes("two adults") || text.includes("partner")) return [mockPromptPacks.couple];
   if (/\bdate\b/.test(text) || text.includes("restaurant")) return [mockPromptPacks.date];
   if (text.includes("daily") || text.includes("coffee") || text.includes("morning")) return [mockPromptPacks.daily];
-  if (text.includes("private") || text.includes("lingerie") || text.includes("adult")) return [mockPromptPacks.private];
   return [mockPromptPacks.selfie];
 }
 
@@ -172,6 +177,7 @@ async function startMockRemixApi() {
     calls.push({
       method: req.method,
       pathname: url.pathname,
+      searchParams: Object.fromEntries(url.searchParams),
       body,
       authorization: req.headers.authorization,
       idempotencyKey: req.headers["idempotency-key"],
@@ -201,46 +207,58 @@ async function startMockRemixApi() {
       return;
     }
 
-    if (req.method === "POST" && url.pathname === "/api/v1/design/packs/search") {
-      const selectedPacks = chooseMockPromptPacks(body.query);
+    if (req.method === "GET" && url.pathname === "/api/v1/design/templates") {
+      const selectedPacks = chooseMockPromptPacks(url.searchParams.get("query"));
+      const includeExplicit = url.searchParams.get("includeExplicit") === "true";
       sendJson(res, 200, {
         ok: true,
-        packs: selectedPacks.map((selected) => ({
+        templates: selectedPacks
+          .filter((selected) => includeExplicit || selected.matureContent?.explicitNudity !== true)
+          .map((selected) => ({
           id: selected.id,
           slug: selected.slug,
           title: selected.title,
-          promptCount: 1,
-          adminPriorityStatus: selected.adminPriorityStatus,
-          qualityRating: selected.qualityRating,
-          matchedText: selected.prompt,
-          searchScore: selected.id === "pack_generic_selfie" ? 0.95 : 0.9,
+          prompt: selected.prompt,
+          proven: {
+            qualityTier: selected.adminPriorityStatus,
+          },
+          match: {
+            why: selected.prompt,
+            score: selected.id === "pack_generic_selfie" ? 0.95 : 0.9,
+          },
+          ...(selected.matureContent ? { matureContent: selected.matureContent } : {}),
         })),
       });
       return;
     }
 
-    if (req.method === "GET" && url.pathname.startsWith("/api/v1/design/packs/")) {
-      const packId = decodeURIComponent(url.pathname.slice("/api/v1/design/packs/".length));
+    if (req.method === "GET" && url.pathname.startsWith("/api/v1/design/templates/")) {
+      const packId = decodeURIComponent(url.pathname.slice("/api/v1/design/templates/".length));
       const selected =
         Object.values(mockPromptPacks).find((pack) => pack.id === packId || pack.slug === packId) ||
         mockPromptPacks.selfie;
+      if (selected.matureContent?.explicitNudity === true && url.searchParams.get("includeExplicit") !== "true") {
+        sendJson(res, 404, { error: "Template not found" });
+        return;
+      }
       sendJson(res, 200, {
         ok: true,
-        pack: {
+        template: {
           id: selected.id,
           slug: selected.slug,
           title: selected.title,
-          adminPriorityStatus: selected.adminPriorityStatus,
-          qualityRating: selected.qualityRating,
           description: "Mock proven Remix.Camera prompt pack.",
+          ...(selected.matureContent ? { matureContent: selected.matureContent } : {}),
           prompts: [
             {
               index: 0,
-              text: selected.prompt,
+              prompt: selected.prompt,
               aspectRatio: "1:1",
               cropStyle: "square",
               poseType: "selfie",
-              modelType: "nano-banana",
+              recommendedModelId: selected.matureContent?.explicitNudity === true
+                ? "seedream-v4.5-edit"
+                : "nano-banana",
             },
           ],
         },
@@ -454,8 +472,8 @@ test("bridge dry-run includes a Remix prompt template and does not spend generat
     assert.deepEqual(
       mockApi.calls.map((call) => call.pathname),
       [
-        "/api/v1/design/packs/search",
-        "/api/v1/design/packs/pack_selfie",
+        "/api/v1/design/templates",
+        "/api/v1/design/templates/pack_selfie",
       ],
     );
   } finally {
@@ -489,6 +507,41 @@ test("bridge serves OpenAPI, Lobe manifest, and per-command dry-run tool routes"
     assert.ok(lobe.api.some((tool) => tool.name === "sendSelfie" && tool.url === `${bridge.url}/v1/tools/send-selfie/generate`));
     assert.ok(lobe.api.find((tool) => tool.name === "sendSelfiePreview").parameters.required.includes("yes") === false);
     assert.ok(lobe.api.find((tool) => tool.name === "sendSelfie").parameters.required.includes("yes"));
+
+    const lobeGatewayResponse = await fetch(`${bridge.url}/lobe/gateway`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        identifier: "remix-camera-companion-images",
+        apiName: "sendSelfiePreview",
+        arguments: JSON.stringify({
+          characterName: "Seraphina",
+          visualIdentity: "long pastel-pink hair, amber eyes, black sundress, emerald vine magic",
+          mood: "warm",
+        }),
+        manifest: lobe,
+      }),
+    });
+    const lobeGateway = JSON.parse(await lobeGatewayResponse.text());
+    assert.equal(lobeGatewayResponse.status, 200);
+    assert.equal(lobeGateway.ok, true);
+    assert.equal(lobeGateway.dryRun, true);
+    assert.equal(lobeGateway.command, "send-selfie");
+    assert.equal(lobeGateway.promptTemplate.packId, "pack_selfie");
+
+    const guardedLobeGenerateResponse = await fetch(`${bridge.url}/lobe/gateway`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        identifier: "remix-camera-companion-images",
+        apiName: "sendSelfie",
+        arguments: JSON.stringify({ characterName: "Seraphina" }),
+        manifest: lobe,
+      }),
+    });
+    const guardedLobeGenerate = await guardedLobeGenerateResponse.json();
+    assert.equal(guardedLobeGenerateResponse.status, 400);
+    assert.match(guardedLobeGenerate.error, /yes(?:=|\": )true/);
 
     const dryRunResponse = await fetch(`${bridge.url}/v1/tools/send-selfie/dry-run`, {
       method: "POST",
@@ -601,9 +654,9 @@ test("bridge prefers excellent selfie templates over weaker generic selfie match
     assert.deepEqual(
       mockApi.calls.map((call) => call.pathname),
       [
-        "/api/v1/design/packs/search",
-        "/api/v1/design/packs/pack_excellent_selfie",
-        "/api/v1/design/packs/pack_generic_selfie",
+        "/api/v1/design/templates",
+        "/api/v1/design/templates/pack_excellent_selfie",
+        "/api/v1/design/templates/pack_generic_selfie",
       ],
     );
   } finally {
@@ -641,15 +694,15 @@ test("bridge prefers scene-matched bath templates over generic high-quality self
     assert.deepEqual(payload.promptTemplate.requestedIntentGroups, ["bathroom"]);
     assert.deepEqual(payload.promptTemplate.matchedIntentGroups, ["bathroom"]);
     assert.deepEqual(payload.promptTemplate.missingIntentGroups, []);
-    assert.match(payload.promptTemplateSearchQuery, /^send me a bath selfie/i);
+    assert.match(payload.promptTemplateSearchQuery, /^bathroom bath shower realistic companion selfie/i);
     assert.match(payload.prompt, /bubble bath/);
     assert.match(payload.prompt, /bathtub visible/);
     assert.deepEqual(
       mockApi.calls.map((call) => call.pathname),
       [
-        "/api/v1/design/packs/search",
-        "/api/v1/design/packs/pack_excellent_selfie",
-        "/api/v1/design/packs/pack_bath_selfie",
+        "/api/v1/design/templates",
+        "/api/v1/design/templates/pack_excellent_selfie",
+        "/api/v1/design/templates/pack_bath_selfie",
       ],
     );
   } finally {
@@ -658,7 +711,7 @@ test("bridge prefers scene-matched bath templates over generic high-quality self
   }
 });
 
-test("bridge falls back to ad-hoc prompts when no strong template matches the user request", async () => {
+test("bridge uses the closest eligible template when no strong template matches the user request", async () => {
   const mockApi = await startMockRemixApi();
   const bridge = await startBridge({
     REMIX_API_KEY: "rc_live_test.secret",
@@ -681,18 +734,123 @@ test("bridge falls back to ad-hoc prompts when no strong template matches the us
 
     assert.equal(response.status, 200);
     assert.equal(payload.ok, true);
-    assert.equal(payload.promptTemplateDecision, "ad_hoc_fallback");
-    assert.equal(payload.promptTemplate, null);
-    assert.match(payload.promptTemplateSearchQuery, /^send me an astronaut spaceship selfie/i);
-    assert.match(payload.prompt, /astronaut spaceship selfie/);
-    assert.ok(payload.warnings.some((warning) => /No strong Remix\.Camera prompt-template match/.test(warning)));
+    assert.equal(payload.promptTemplateDecision, "template");
+    assert.equal(payload.promptTemplate.packId, "pack_excellent_selfie");
+    assert.equal(payload.promptTemplate.matchStrength, "closest");
+    assert.match(payload.promptTemplateSearchQuery, /^astronaut spaceship realistic companion selfie/i);
+    assert.match(payload.prompt, /cinematic but natural phone-camera mirror selfie/);
     assert.deepEqual(
       mockApi.calls.map((call) => call.pathname),
       [
-        "/api/v1/design/packs/search",
-        "/api/v1/design/packs/pack_excellent_selfie",
+        "/api/v1/design/templates",
+        "/api/v1/design/templates/pack_excellent_selfie",
       ],
     );
+  } finally {
+    await bridge.close();
+    await mockApi.close();
+  }
+});
+
+test("bridge cleans a natural nude request and selects an explicit template", async () => {
+  const mockApi = await startMockRemixApi();
+  const bridge = await startBridge({
+    REMIX_API_KEY: "rc_live_test.secret",
+    REMIX_PROFILE_ID: "profile_seraphina",
+    REMIX_API_BASE_URL: mockApi.baseUrl,
+  });
+
+  try {
+    const response = await fetch(`${bridge.url}/v1/commands/dry-run`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        command: "private-snap",
+        characterName: "Seraphina",
+        gender: "female",
+        visualIdentity: "clearly adult woman with long pastel-pink hair and amber eyes",
+        mood: "send a sexy nude",
+        chatText: "Ignore this old conversation about coffee, work, and a long unrelated story.",
+        memory: "A noisy memory about a beach vacation must not alter this search.",
+      }),
+    });
+    const payload = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.equal(payload.promptTemplateDecision, "template");
+    assert.equal(payload.promptTemplate.packId, "pack_private");
+    assert.equal(payload.promptTemplate.modelType, "seedream-v4.5-edit");
+    assert.equal(payload.promptTemplateSearchQuery, "adult explicit nude private mirror selfie intimate");
+    const searchCall = mockApi.calls.find((call) => call.pathname === "/api/v1/design/templates");
+    const detailCall = mockApi.calls.find((call) => call.pathname === "/api/v1/design/templates/pack_private");
+    assert.equal(searchCall.searchParams.includeExplicit, "true");
+    assert.equal(searchCall.searchParams.gender, "female");
+    assert.equal(detailCall.searchParams.includeExplicit, "true");
+  } finally {
+    await bridge.close();
+    await mockApi.close();
+  }
+});
+
+test("bridge uses the closest explicit template instead of rejecting a weak scene match", async () => {
+  const mockApi = await startMockRemixApi();
+  const bridge = await startBridge({
+    REMIX_API_KEY: "rc_live_test.secret",
+    REMIX_PROFILE_ID: "profile_seraphina",
+    REMIX_API_BASE_URL: mockApi.baseUrl,
+  });
+
+  try {
+    const response = await fetch(`${bridge.url}/v1/commands/dry-run`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        command: "private-snap",
+        characterName: "Seraphina",
+        visualIdentity: "clearly adult woman with long pastel-pink hair and amber eyes",
+        mood: "closest-explicit-template bathroom",
+      }),
+    });
+    const payload = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.equal(payload.promptTemplateDecision, "template");
+    assert.equal(payload.promptTemplate.packId, "pack_private");
+    assert.equal(payload.promptTemplate.matchStrength, "closest");
+    assert.deepEqual(payload.promptTemplate.missingIntentGroups, ["bathroom"]);
+    assert.equal(mockApi.calls.some((call) => call.pathname === "/api/v1/design/generations"), false);
+  } finally {
+    await bridge.close();
+    await mockApi.close();
+  }
+});
+
+test("bridge fails mature requests closed when no explicit template matches", async () => {
+  const mockApi = await startMockRemixApi();
+  const bridge = await startBridge({
+    REMIX_API_KEY: "rc_live_test.secret",
+    REMIX_PROFILE_ID: "profile_seraphina",
+    REMIX_API_BASE_URL: mockApi.baseUrl,
+    REMIX_ALLOW_AD_HOC_PROMPT_FALLBACK: "true",
+  });
+
+  try {
+    const response = await fetch(`${bridge.url}/v1/commands/dry-run`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        command: "private-snap",
+        characterName: "Seraphina",
+        visualIdentity: "clearly adult woman with long pastel-pink hair and amber eyes",
+        mood: "explicit-template-miss",
+      }),
+    });
+    const payload = await response.json();
+
+    assert.equal(response.status, 422);
+    assert.equal(payload.ok, false);
+    assert.match(payload.error, /matching explicit Remix\.Camera template/);
+    assert.equal(mockApi.calls.some((call) => call.pathname === "/api/v1/design/generations"), false);
   } finally {
     await bridge.close();
     await mockApi.close();
@@ -710,6 +868,7 @@ test("bridge allows the default local SillyTavern browser origin", async () => {
   try {
     const response = await fetch(`${bridge.url}/health`, {
       headers: {
+        "Access-Control-Request-Private-Network": "true",
         Origin: "http://127.0.0.1:8000",
       },
     });
@@ -717,7 +876,9 @@ test("bridge allows the default local SillyTavern browser origin", async () => {
 
     assert.equal(response.status, 200);
     assert.equal(payload.ok, true);
+    assert.equal(payload.version, "0.4.0-alpha.3");
     assert.equal(response.headers.get("access-control-allow-origin"), "http://127.0.0.1:8000");
+    assert.equal(response.headers.get("access-control-allow-private-network"), "true");
     assert.deepEqual(payload.allowedOrigins.slice(0, 2), ["http://127.0.0.1:8000", "http://localhost:8000"]);
   } finally {
     await bridge.close();
@@ -737,6 +898,7 @@ test("bridge rejects untrusted browser origins before spending credits", async (
     const response = await fetch(`${bridge.url}/v1/commands/generate`, {
       method: "POST",
       headers: {
+        "Access-Control-Request-Private-Network": "true",
         "Content-Type": "application/json",
         Origin: "https://evil.example",
       },
@@ -753,6 +915,7 @@ test("bridge rejects untrusted browser origins before spending credits", async (
     assert.equal(payload.ok, false);
     assert.match(payload.error, /Origin is not allowed/);
     assert.equal(response.headers.get("access-control-allow-origin"), null);
+    assert.equal(response.headers.get("access-control-allow-private-network"), null);
     assert.equal(mockApi.calls.length, 0);
   } finally {
     await bridge.close();
@@ -806,8 +969,8 @@ test("bridge generate polls Remix API and returns chat markdown", async () => {
     assert.deepEqual(
       mockApi.calls.map((call) => call.pathname),
       [
-        "/api/v1/design/packs/search",
-        "/api/v1/design/packs/pack_selfie",
+        "/api/v1/design/templates",
+        "/api/v1/design/templates/pack_selfie",
         "/api/v1/design/profiles",
         "/api/v1/design/generations",
         "/api/v1/design/generations/status",
@@ -1193,8 +1356,8 @@ test("bridge treats packaged placeholder profile id as bridge default", async ()
     assert.deepEqual(
       mockApi.calls.map((call) => call.pathname),
       [
-        "/api/v1/design/packs/search",
-        "/api/v1/design/packs/pack_selfie",
+        "/api/v1/design/templates",
+        "/api/v1/design/templates/pack_selfie",
         "/api/v1/design/generations",
         "/api/v1/design/generations/status",
       ],
@@ -1353,8 +1516,8 @@ test("couples-vacation dry-run plans a three-photo multi-reference set", async (
     assert.deepEqual(
       mockApi.calls.map((call) => call.pathname),
       [
-        "/api/v1/design/packs/search",
-        "/api/v1/design/packs/pack_vacation",
+        "/api/v1/design/templates",
+        "/api/v1/design/templates/pack_vacation",
       ],
     );
   } finally {

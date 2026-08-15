@@ -1,0 +1,65 @@
+{
+  "auditDate": "2026-08-13",
+  "creditsSpent": 1,
+  "generationCalls": 1,
+  "generatedImages": 1,
+  "scenario": "Chris explicitly asks Lily, a warm and playful adult girlfriend, to generate exactly one cozy selfie during a real companion chat.",
+  "modelFixture": {
+    "type": "deterministic local OpenAI-compatible model",
+    "purpose": "repeatable host tool selection only",
+    "productionComponent": false
+  },
+  "demos": [
+    {
+      "host": "RisuAI",
+      "hostVersion": "2026.6.215",
+      "adapter": "adapters/risu/remix-camera-companion-images.risu.js",
+      "artifact": "risu-api-v3-ai-gf-chat.webm",
+      "capture": "continuous-real-host",
+      "result": "passed",
+      "tool": "remix_send_selfie",
+      "userName": "Chris",
+      "generationId": "57Wgx5tShdxblfS21WRL",
+      "template": "Cozy Bedroom Mirror Selfie Night Relaxed Pose",
+      "renderedImageVisible": true,
+      "dryRun": false
+    },
+    {
+      "host": "Open WebUI",
+      "hostVersion": "0.11",
+      "adapter": "adapters/openwebui/remix_camera_companion_images.py",
+      "artifact": "openwebui-python-tool-ai-gf-chat.webm",
+      "capture": "continuous-real-host",
+      "result": "passed",
+      "tool": "send_selfie",
+      "dryRun": true
+    },
+    {
+      "host": "Jan",
+      "hostVersion": "0.8.4",
+      "adapter": "adapters/mcp/remix-camera-mcp-server.mjs",
+      "artifact": "jan-mcp-ai-gf-chat-step-through.mp4",
+      "capture": "real-host-ui-step-through",
+      "result": "passed",
+      "tool": "remix_camera_send_selfie_preview",
+      "mcpProtocol": "2025-11-25",
+      "mcpProtocolEra": "legacy",
+      "template": "Cozy Bedroom Mirror Selfie Night Relaxed Pose",
+      "dryRun": true
+    }
+  ],
+  "blockedCurrentHostRecordings": [
+    {
+      "host": "LobeHub",
+      "reason": "hosted session required reauthentication; current local 2.2.12 host requires database/key-vault services"
+    },
+    {
+      "host": "LibreChat",
+      "reason": "no current LibreChat runtime or Docker available on the audit machine"
+    },
+    {
+      "host": "Dify",
+      "reason": "no current Dify runtime or Docker available on the audit machine"
+    }
+  ]
+}

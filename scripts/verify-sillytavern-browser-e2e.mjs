@@ -1261,6 +1261,7 @@ const mockPromptPacks = {
     title: "Proven Private Adult Snap Pack",
     adminPriorityStatus: "excellent",
     qualityRating: "great",
+    matureContent: { explicitNudity: true },
     prompt: "An adult private bedroom mirror snap, tasteful lingerie styling, intimate phone-camera framing, confident clearly adult subject, warm low light, consensual mature mood, no text overlay.",
   },
 };
@@ -1302,46 +1303,50 @@ function startMockRemixApi() {
           ],
         });
       }
-      if (req.method === "POST" && url.pathname === "/api/v1/design/packs/search") {
-        const body = await readJson(req);
-        const selected = chooseMockPromptPack(body.query);
+      if (req.method === "GET" && url.pathname === "/api/v1/design/templates") {
+        const selected = chooseMockPromptPack(url.searchParams.get("query"));
+        const includeExplicit = url.searchParams.get("includeExplicit") === "true";
         return sendJson(res, 200, {
           ok: true,
-          packs: [
+          templates: selected.matureContent?.explicitNudity === true && !includeExplicit ? [] : [
             {
               id: selected.id,
               slug: selected.slug,
               title: selected.title,
-              promptCount: 1,
-              adminPriorityStatus: selected.adminPriorityStatus,
-              qualityRating: selected.qualityRating,
-              matchedText: selected.prompt,
+              prompt: selected.prompt,
+              proven: { qualityTier: selected.adminPriorityStatus },
+              match: { why: selected.prompt, score: 0.9 },
+              ...(selected.matureContent ? { matureContent: selected.matureContent } : {}),
             },
           ],
         });
       }
-      if (req.method === "GET" && url.pathname.startsWith("/api/v1/design/packs/")) {
-        const packId = decodeURIComponent(url.pathname.slice("/api/v1/design/packs/".length));
+      if (req.method === "GET" && url.pathname.startsWith("/api/v1/design/templates/")) {
+        const packId = decodeURIComponent(url.pathname.slice("/api/v1/design/templates/".length));
         const selected =
           Object.values(mockPromptPacks).find((pack) => pack.id === packId || pack.slug === packId) ||
           mockPromptPacks.selfie;
+        if (selected.matureContent?.explicitNudity === true && url.searchParams.get("includeExplicit") !== "true") {
+          return sendJson(res, 404, { error: "Template not found" });
+        }
         return sendJson(res, 200, {
           ok: true,
-          pack: {
+          template: {
             id: selected.id,
             slug: selected.slug,
             title: selected.title,
-            adminPriorityStatus: selected.adminPriorityStatus,
-            qualityRating: selected.qualityRating,
             description: "Mock proven Remix.Camera prompt pack.",
+            ...(selected.matureContent ? { matureContent: selected.matureContent } : {}),
             prompts: [
               {
                 index: 0,
-                text: selected.prompt,
+                prompt: selected.prompt,
                 aspectRatio: "1:1",
                 cropStyle: "square",
                 poseType: "selfie",
-                modelType: "nano-banana",
+                recommendedModelId: selected.matureContent?.explicitNudity === true
+                  ? "seedream-v4.5-edit"
+                  : "nano-banana",
               },
             ],
           },
