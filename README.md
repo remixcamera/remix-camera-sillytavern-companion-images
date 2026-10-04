@@ -1,69 +1,50 @@
-# Remix.Camera SillyTavern Companion Images
+# Remix.Camera for SillyTavern
 
-Give your SillyTavern character consistent image replies with Remix.Camera. Generate selfies, outfits, and scenes inside your existing chat while keeping your character, model, lore, and memory.
+## Give your character a camera
 
-> **Get started:** Connect with any signed-in Remix.Camera account. The source and installer are public, the Telegram adapter is free to install, and new accounts include free generation credits. Generated images use your account's available credits.
+Realistic selfies, outfits, dates, and everyday moments—generated with your character's visual profile and delivered inside your existing chat.
 
-## The 60-second version
+Keep your character card, personality, lore, memory, and chat model. Remix.Camera adds the images.
 
-1. Keep the SillyTavern character, model, lore, memory, and chat you already use.
-2. Run one setup command and approve the device code with a signed-in Remix.Camera account.
-3. Pair the Remix.Camera visual profile that belongs to that character.
-4. Run **Health Check** and **Preview Prompt**, then generate your first image in the chat.
+**[Connect SillyTavern](https://remix.camera/account/sillytavern?utm_source=github&utm_medium=repository&utm_campaign=sillytavern&utm_content=hero_install)** · **[Watch the demo](https://remix.camera/integrations/sillytavern?utm_source=github&utm_medium=repository&utm_campaign=sillytavern&utm_content=hero_demo)**
 
-See the [live setup-to-output demo](https://remix.camera/ai-girlfriend-image-generation?utm_source=github&utm_medium=repository&utm_campaign=sillytavern_alpha&utm_content=readme_demo) before installing.
+[![See Remix.Camera image replies in SillyTavern](demos/sillytavern/sophie-setup-2026-07-21/sophie-setup-hero.png)](https://remix.camera/integrations/sillytavern?utm_source=github&utm_medium=repository&utm_campaign=sillytavern&utm_content=demo_poster)
 
-For proof with explicit generation boundaries, see the [Sophie, Mila, and Lily case studies](demos/sillytavern/case-studies/README.md). They distinguish a live UI/bridge check, a replayed approved output, an archived real output, and a true-live paid generation.
+## Better inspiration. Your character. The right moment.
 
-Image prompts are template-first. The bridge turns the user's conversational request into a short visual search query, removes chat and memory noise, and selects the closest eligible Remix.Camera prompt template even when the match is not exact. It then adapts that template to the active character, current request, user reference photo, and SFW/NSFW model route. Mature requests explicitly opt into the mature template catalog and only use explicit templates; they never fall back to an invented prompt. A non-mature request can use an ad-hoc fallback only when the template API returns no eligible template at all.
+Powered by **50,000+ proven portrait templates**, Remix.Camera finds a scene that fits your request and adapts it to your character and conversation. Your paired visual profile keeps their look recognizable across new images.
 
-The package contains:
+Ask for a café selfie, tonight's outfit, or a photo from your beach trip. Give the conversation something to show.
 
-- `bridge/`: a local Node.js bridge that stores `REMIX_SESSION_TOKEN` server-side and calls the Remix.Camera API.
-- `extension/`: a SillyTavern extension that adds image buttons and optional function tools for a character.
-- `characters/`: importable Character Card V2 examples with Remix.Camera visual metadata.
-- `adapters/`: wrappers for MCP clients including LobeHub, LibreChat, and Jan; RisuAI; Open WebUI; legacy Lobe/OpenAPI clients; ChatGPT Actions; and the bot, framework, workflow, and messaging surfaces listed below.
+## Make more with Remix.Camera
 
-Current real-host compatibility evidence for RisuAI, Open WebUI, and Jan is in `demos/current-host-audit-2026-08-12/README.md`. The Risu clip shows exactly one approved generation and rendered image; Open WebUI and Jan use no-credit previews. The audit also states the blockers for hosts that could not be truthfully recorded.
+| Feature | Make it yours | Try it |
+| --- | --- | --- |
+| **Explore** | Browse 50,000+ proven portrait templates for selfies, outfits, dates, and new scenes. Recreate your favorite looks with your character. | [Browse Explore](https://remix.camera/explore?utm_source=github&utm_medium=repository&utm_campaign=sillytavern&utm_content=explore) |
+| **Camera · Studio** | Train your character's signature look with our custom Studio pipeline. Create realistic, consistent portraits—from candid selfies to sexy, glamorous scenes. | [Open Camera](https://remix.camera/camera?utm_source=github&utm_medium=repository&utm_campaign=sillytavern&utm_content=studio) and select **Studio**. |
+| **Chat** | Experience Remix.Camera's in-app companion conversations and stunning, realistic image replies that bring the moment to life. | [Open Chat](https://remix.camera/chat?utm_source=github&utm_medium=repository&utm_campaign=sillytavern&utm_content=chat) |
 
-## What It Enables
+Use Remix.Camera to develop your character's visual look and discover new scenes, then bring image replies into the SillyTavern chats you already love.
 
-- `send-selfie`: generate an in-character selfie.
-- `auto-selfie-from-chat`: turn recent chat context into a natural selfie.
-- `outfit-try-on`: generate a new outfit look from a source image URL.
-- `couple-photo`: create a shared image with the user after explicit consent, optionally using the user's uploaded photo as the male reference.
-- `couples-vacation`: create a cohesive 3-photo trip set with the user after explicit consent.
-- `date-night`: send a date-scene image that matches the current conversation.
-- `daily-life-snap`: send a casual "what I am doing right now" photo from chat context.
-- `private-snap`: send an opted-in mature snap that stays in the chat like other generated images.
+## Connect in three steps
 
-## Requirements
-
-- Node.js 20 or newer.
-- A Remix.Camera account.
-- A trained or ready character profile in Remix.Camera, or photos ready to create one.
-- SillyTavern installed locally.
-
-## Three-Step Setup
-
-Open `https://remix.camera/account/sillytavern`, then:
-
-1. Choose the Remix.Camera profile for your SillyTavern character.
-2. Run the displayed Terminal command:
+1. [Sign in to Remix.Camera](https://remix.camera/account/sillytavern?utm_source=github&utm_medium=repository&utm_campaign=sillytavern&utm_content=setup) and choose your character's visual profile.
+2. Run the setup command and approve the pairing code:
 
 ```bash
 npx --yes github:remixcamera/remix-camera-sillytavern-companion-images#v0.4.0-alpha.3 --source=github_readme
 ```
 
-3. Enter the pairing code from Terminal and select **Connect**.
+3. Return to SillyTavern, open **Remix.Camera Companion Images**, and ask your character for a photo.
 
-Once connected, return to SillyTavern, open the Remix.Camera Companion Images panel, and ask the character for a photo. Health Check and Preview Prompt remain available for no-credit verification.
+Run **Health Check** and **Preview Prompt** to check your setup without spending credits.
 
-After the npm package is published, the shorter command will also work:
+**You'll need:** Node.js 20+, a Remix.Camera account, a ready character profile, and a local SillyTavern installation. New accounts include free generation credits; images use your account's credit balance.
 
-```bash
-npx @remix-camera/sillytavern-setup
-```
+[Use an existing character](#use-an-existing-sillytavern-character) · [Create a character](#start-from-scratch) · [Setup and troubleshooting](#manual-setup) · [Report an issue](https://github.com/remixcamera/remix-camera-sillytavern-companion-images/issues)
+
+<details>
+<summary><strong>Advanced setup, adapters, and developer reference</strong></summary>
 
 This is the intended path for bringing Remix.Camera image tools to your own SillyTavern companion. The setup command:
 
@@ -615,3 +596,5 @@ npm run test:browser:live -- --yes --commands=all --max-generations=10
 ```
 
 Use a narrower comma-separated command list for normal live verification, such as `--commands=send-selfie,auto-selfie-from-chat` with `--max-generations=2`. `couples-vacation` counts as three generations. Live browser E2E writes the same `tmp/browser-e2e/` video, poster, and `result.json` paths, with mode `browser-e2e-live-remix-api` and the inserted image URLs.
+
+</details>
