@@ -1,17 +1,17 @@
 # Remix.Camera SillyTavern Companion Images
 
-This package connects a SillyTavern character to the Remix.Camera AI Companion Image Toolset without putting a Remix.Camera credential in the browser.
+Give your SillyTavern character consistent image replies with Remix.Camera. Generate selfies, outfits, and scenes inside your existing chat while keeping your character, model, lore, and memory.
 
-> **Public preview:** The source and installer are public. Any signed-in Remix.Camera account can pair SillyTavern or Telegram; the Telegram adapter is free to install, and new accounts include free generation credits. Generated images use the account's available credits.
+> **Get started:** Connect with any signed-in Remix.Camera account. The source and installer are public, the Telegram adapter is free to install, and new accounts include free generation credits. Generated images use your account's available credits.
 
 ## The 60-second version
 
 1. Keep the SillyTavern character, model, lore, memory, and chat you already use.
 2. Run one setup command and approve the device code with a signed-in Remix.Camera account.
 3. Pair the Remix.Camera visual profile that belongs to that character.
-4. Run **Health Check** and **Preview Prompt**, then generate one reviewable image.
+4. Run **Health Check** and **Preview Prompt**, then generate your first image in the chat.
 
-See the [live setup-to-output demo](https://remix.camera/ai-girlfriend-image-generation?utm_source=github&utm_medium=repository&utm_campaign=sillytavern_alpha&utm_content=readme_demo) before installing. The first alpha activation milestone is one image generated and inserted into the active SillyTavern chat.
+See the [live setup-to-output demo](https://remix.camera/ai-girlfriend-image-generation?utm_source=github&utm_medium=repository&utm_campaign=sillytavern_alpha&utm_content=readme_demo) before installing.
 
 For proof with explicit generation boundaries, see the [Sophie, Mila, and Lily case studies](demos/sillytavern/case-studies/README.md). They distinguish a live UI/bridge check, a replayed approved output, an archived real output, and a true-live paid generation.
 
