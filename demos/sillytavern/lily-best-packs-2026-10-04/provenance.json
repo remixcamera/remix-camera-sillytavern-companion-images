@@ -14,15 +14,17 @@
     "selection": "Existing canonical Lily pack example, visually reviewed"
   },
   {
-    "file": "lily-casual-selfie.jpg",
-    "key": "camera:MWOzGLRt7a50RPHx8YVn",
+    "file": "lily-best-casual-selfie.jpg",
+    "key": "camera:KnsrzRzIts1TDGorBosf",
     "persona": "Lily",
-    "pack_id": "O4eshM0hZduIvRxZxarg",
-    "pack_url": "https://remix.camera/explore/packs/silky-nightwear-kitchen-mirror-selfie-soft-lighting",
-    "source_url": "https://remix.camera/api/s3-file?key=camera%2Fphotos%2FGLUCbfOgIzOLe37Ft4G7S97B0fu2%2FMWOzGLRt7a50RPHx8YVn%2Fcamera-MWOzGLRt7a50RPHx8YVn.jpg",
-    "sha256": "3f2829630a13d6e03f2c7657c48d1d31e6c9cd4ab35a816e6a9883805036a141",
+    "pack_id": "mTQgI8jZ5lEll7w4hh5D",
+    "pack_url": "https://remix.camera/explore/packs/young-woman-closet-mirror-selfie",
+    "source_url": "https://remix.camera/api/s3-file?key=camera%2Fphotos%2FGLUCbfOgIzOLe37Ft4G7S97B0fu2%2FKnsrzRzIts1TDGorBosf%2Fcamera-KnsrzRzIts1TDGorBosf.jpg",
+    "sha256": "962513a809b19a11c2cc2ef1e6fe998b05273da98863403de657dca680894058",
     "blog_url": "https://remix.camera/blog/ai-girlfriend-mirror-selfie-prompts",
-    "selection": "Existing canonical Lily casual kitchen mirror selfie, visually reviewed"
+    "adminPriorityStatus": "best",
+    "admin_tag_verified_on": "2026-10-04",
+    "selection": "Existing canonical Lily closet mirror selfie; visually reviewed and current admin best tag verified"
   },
   {
     "file": "lily-paris-cafe.jpg",

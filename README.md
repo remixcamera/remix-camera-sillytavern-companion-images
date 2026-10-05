@@ -14,8 +14,8 @@ Lily, from a night out to a Paris café date. Recreate each look with your chara
 
 | Nightlife look | Casual selfie | Paris café date |
 | --- | --- | --- |
-| <img src="demos/sillytavern/lily-best-packs-2026-10-04/lily-nightlife.jpg" alt="Lily in a red nightlife look" width="260" /> | <img src="demos/sillytavern/lily-best-packs-2026-10-04/lily-casual-selfie.jpg" alt="Lily taking a casual kitchen mirror selfie in satin lounge shorts" width="260" /> | <img src="demos/sillytavern/lily-best-packs-2026-10-04/lily-paris-cafe.jpg" alt="Lily on a Paris café date" width="260" /> |
-| [Try this pack](https://remix.camera/explore/packs/sexy?utm_source=github&utm_medium=repository&utm_campaign=sillytavern&utm_content=showcase_nightlife) | [Try this pack](https://remix.camera/explore/packs/silky-nightwear-kitchen-mirror-selfie-soft-lighting?utm_source=github&utm_medium=repository&utm_campaign=sillytavern&utm_content=showcase_casual_selfie) | [Try this pack](https://remix.camera/explore/packs/realistic-paris-cafe-woman-white-dress?utm_source=github&utm_medium=repository&utm_campaign=sillytavern&utm_content=showcase_paris_cafe) |
+| <img src="demos/sillytavern/lily-best-packs-2026-10-04/lily-nightlife.jpg" alt="Lily in a red nightlife look" width="260" /> | <img src="demos/sillytavern/lily-best-packs-2026-10-04/lily-best-casual-selfie.jpg" alt="Lily taking a casual closet mirror selfie in a black crop top and shorts" width="260" /> | <img src="demos/sillytavern/lily-best-packs-2026-10-04/lily-paris-cafe.jpg" alt="Lily on a Paris café date" width="260" /> |
+| [Try this pack](https://remix.camera/explore/packs/sexy?utm_source=github&utm_medium=repository&utm_campaign=sillytavern&utm_content=showcase_nightlife) | [Try this pack](https://remix.camera/explore/packs/young-woman-closet-mirror-selfie?utm_source=github&utm_medium=repository&utm_campaign=sillytavern&utm_content=showcase_casual_selfie) | [Try this pack](https://remix.camera/explore/packs/realistic-paris-cafe-woman-white-dress?utm_source=github&utm_medium=repository&utm_campaign=sillytavern&utm_content=showcase_paris_cafe) |
 
 ## Better inspiration. Your character. The right moment.
 
