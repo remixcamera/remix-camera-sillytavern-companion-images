@@ -14,8 +14,8 @@ Nightlife, a casual selfie, and a Paris café date. Recreate each look with your
 
 | Nightlife look | Casual selfie | Paris café date |
 | --- | --- | --- |
-| <img src="demos/sillytavern/lily-best-packs-2026-10-04/lily-nightlife.jpg" alt="Lily in a red nightlife look" width="260" /> | <img src="demos/sillytavern/lily-best-packs-2026-10-04/casual-selfie-pack.webp" alt="Casual sexy bedroom mirror selfie pack" width="260" /> | <img src="demos/sillytavern/lily-best-packs-2026-10-04/lily-paris-cafe.jpg" alt="Lily on a Paris café date" width="260" /> |
-| [Try this pack](https://remix.camera/explore/packs/sexy?utm_source=github&utm_medium=repository&utm_campaign=sillytavern&utm_content=showcase_nightlife) | [Try this pack](https://remix.camera/explore/packs/bedroom-selfie-squat?utm_source=github&utm_medium=repository&utm_campaign=sillytavern&utm_content=showcase_casual_selfie) | [Try this pack](https://remix.camera/explore/packs/realistic-paris-cafe-woman-white-dress?utm_source=github&utm_medium=repository&utm_campaign=sillytavern&utm_content=showcase_paris_cafe) |
+| <img src="demos/sillytavern/lily-best-packs-2026-10-04/lily-nightlife.jpg" alt="Lily in a red nightlife look" width="260" /> | <img src="demos/sillytavern/lily-best-packs-2026-10-04/lily-best-selfie-pack.jpg" alt="Lily in a pink crop top and shorts taking a relaxed armchair selfie" width="260" /> | <img src="demos/sillytavern/lily-best-packs-2026-10-04/lily-paris-cafe.jpg" alt="Lily on a Paris café date" width="260" /> |
+| [Try this pack](https://remix.camera/explore/packs/sexy?utm_source=github&utm_medium=repository&utm_campaign=sillytavern&utm_content=showcase_nightlife) | [Try this pack](https://remix.camera/explore/packs/girl-in-beige-armchair-2012-style-selfie?utm_source=github&utm_medium=repository&utm_campaign=sillytavern&utm_content=showcase_casual_selfie) | [Try this pack](https://remix.camera/explore/packs/realistic-paris-cafe-woman-white-dress?utm_source=github&utm_medium=repository&utm_campaign=sillytavern&utm_content=showcase_paris_cafe) |
 
 ## Better inspiration. Your character. The right moment.
 

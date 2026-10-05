@@ -14,16 +14,17 @@
     "selection": "Existing canonical Lily pack example, visually reviewed"
   },
   {
-    "file": "casual-selfie-pack.webp",
-    "key": "public-post:5mjMAzuYt8UbAdQjNPh4/image-01.webp",
-    "pack_id": "5mjMAzuYt8UbAdQjNPh4",
-    "pack_url": "https://remix.camera/explore/packs/bedroom-selfie-squat",
-    "source_url": "https://r2-images.remix.camera/outputs/public_posts/5mjMAzuYt8UbAdQjNPh4/image-01.webp",
+    "file": "lily-best-selfie-pack.jpg",
+    "key": "public-post:TzSGwFzbmjjPRy5yVpQC/01.jpg",
+    "persona": "Lily",
+    "pack_id": "TzSGwFzbmjjPRy5yVpQC",
+    "pack_url": "https://remix.camera/explore/packs/girl-in-beige-armchair-2012-style-selfie",
+    "source_url": "https://r2-images.remix.camera/outputs/public_posts/TzSGwFzbmjjPRy5yVpQC/01.jpg",
     "source_field": "public_posts.images[0]",
-    "sha256": "b77b342a294f99efbcbf66c8ce071dc76a9fd4a92d77e110bc1fb51e7f460cf6",
+    "sha256": "278c48ac0a79e66ab6b86fd485b93a08779a140b3fe3e73e8f5c3b5dd2faa373",
     "adminPriorityStatus": "best",
     "admin_tag_verified_on": "2026-10-04",
-    "selection": "Actual public pack image, visually reviewed; current pack admin best tag verified"
+    "selection": "Actual Lily public pack image, visually reviewed; current pack admin best tag verified"
   },
   {
     "file": "lily-paris-cafe.jpg",
