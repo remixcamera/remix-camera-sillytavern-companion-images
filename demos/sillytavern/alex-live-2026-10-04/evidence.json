@@ -1,0 +1,30 @@
+{
+  "date": "2026-10-04 America/Los_Angeles",
+  "character": "Alex",
+  "model": "nano-banana",
+  "reference_sha256": "e2f9ef56653fb61c14925ac212d7639a1ddcd574b1822ac0dd46348727073f65",
+  "capture": "Two genuine UI states from a fresh generation; waiting time condensed for the GIF. No archived output replay.",
+  "images": [
+    {
+      "file": "alex-date.jpg",
+      "generation_id": "DCnlGriPvMiXNMolsd8c",
+      "completed_at": "2026-10-05T03:59:12.297Z",
+      "template_id": "qD9jGOQ83hMAFNpVY2VX",
+      "sha256": "210636068732e122cbc8e93d4f0097f6216c6c701d9c871875dc5f55a8ca24bb"
+    },
+    {
+      "file": "alex-outfit.jpg",
+      "generation_id": "niFQKdLcx8AyHDSzs3Lo",
+      "completed_at": "2026-10-05T03:57:45.819Z",
+      "template_id": "Tuih5b5W1DwhklFBNZQl",
+      "sha256": "605b4222d3a0803f18e5a3015a606ffd2734cd7c6584bd014934c087154e0113"
+    },
+    {
+      "file": "alex-cafe.jpg",
+      "generation_id": "Cy9tvksRX38kWFRRmMoF",
+      "completed_at": "2026-10-05T03:56:48.965Z",
+      "template_id": "sZ2JSafXwDb3rbPdNhB5",
+      "sha256": "35a22ac57dc8a91c3a08e855f5bec6daf32e41a422f2c0ed722d253a559b6c81"
+    }
+  ]
+}

@@ -876,7 +876,7 @@ test("bridge allows the default local SillyTavern browser origin", async () => {
 
     assert.equal(response.status, 200);
     assert.equal(payload.ok, true);
-    assert.equal(payload.version, "0.4.0-alpha.3");
+    assert.equal(payload.version, "0.4.0-alpha.4");
     assert.equal(response.headers.get("access-control-allow-origin"), "http://127.0.0.1:8000");
     assert.equal(response.headers.get("access-control-allow-private-network"), "true");
     assert.deepEqual(payload.allowedOrigins.slice(0, 2), ["http://127.0.0.1:8000", "http://localhost:8000"]);
@@ -1092,7 +1092,7 @@ test("bridge uses Seedream for mature prompt-only generations", async () => {
   }
 });
 
-test("bridge forwards explicit reference image key on Nano prompt generations", async () => {
+test("bridge selects the character identity photo without sending an edit reference to /generations", async () => {
   const mockApi = await startMockRemixApi();
   const bridge = await startBridge({
     REMIX_API_KEY: "rc_live_test.secret",
@@ -1121,7 +1121,8 @@ test("bridge forwards explicit reference image key on Nano prompt generations", 
     assert.equal(payload.referenceImageKey, "camera/training/seraphina/reference.jpg");
     const generationCall = mockApi.calls.find((call) => call.pathname === "/api/v1/design/generations");
     assert.equal(generationCall.body.modelId, "nano-banana");
-    assert.deepEqual(generationCall.body.referenceImage, { s3Key: "camera/training/seraphina/reference.jpg" });
+    assert.equal(generationCall.body.referenceImage, undefined);
+    assert.deepEqual(generationCall.body.selectedReferenceImages, { profile_seraphina: "camera/training/seraphina/reference.jpg" });
   } finally {
     await bridge.close();
     await mockApi.close();

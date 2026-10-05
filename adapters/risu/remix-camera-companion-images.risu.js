@@ -1,7 +1,7 @@
 //@name remix_camera_companion_images
 //@display-name Remix.Camera Companion Images
 //@api 3.0
-//@version 0.4.0-alpha.3
+//@version 0.4.0-alpha.4
 //@update-url https://raw.githubusercontent.com/remixcamera/remix-camera-sillytavern-companion-images/main/adapters/risu/remix-camera-companion-images.risu.js
 //@arg bridge_url string Local bridge URL, default http://127.0.0.1:8787
 //@arg profile_id string Optional Remix.Camera profile ID override
@@ -202,7 +202,7 @@
     {
       identifier: "plugin:remix-camera-companion-images",
       name: "Remix.Camera Companion Images",
-      version: "0.4.0-alpha.3",
+      version: "0.4.0-alpha.4",
       description: "AI companion image tools backed by Remix.Camera prompt templates and a local bridge.",
     },
     async () =>

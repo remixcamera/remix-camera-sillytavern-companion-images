@@ -1,3 +1,8 @@
+# 0.4.0-alpha.4
+
+- Select paired character identity photos through the supported profile-reference contract, fixing HTTP 400 on photo replies.
+- Add three freshly generated examples and live SillyTavern delivery captures.
+
 # Changelog
 
 ## Unreleased

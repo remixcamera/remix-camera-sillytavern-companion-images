@@ -15,7 +15,7 @@ import {
 } from "../lib/companion-tools.mjs";
 
 const SERVICE = "remix-camera-sillytavern-bridge";
-const VERSION = "0.4.0-alpha.3";
+const VERSION = "0.4.0-alpha.4";
 const COMMANDS = new Set([
   "send-selfie",
   "generate-selfie",
@@ -1830,7 +1830,13 @@ async function submitGeneration(plan) {
   }
   const generationReferenceImageKey = plan.userReferenceImageKey || plan.referenceImageKey;
   if (generationReferenceImageKey) {
-    commonBody.referenceImage = { s3Key: generationReferenceImageKey };
+    if (!plan.usesImageToImage && !plan.userReferenceImageKey) {
+      // Identity photos belong to the selected profile, not a new edit source.
+      // The Design API validates this key against the owned profile.
+      commonBody.selectedReferenceImages = { [profileId]: generationReferenceImageKey };
+    } else {
+      commonBody.referenceImage = { s3Key: generationReferenceImageKey };
+    }
   }
   if (plan.selectedReferenceImages) {
     commonBody.selectedReferenceImages = plan.selectedReferenceImages;

@@ -8,13 +8,22 @@ Keep your character card, personality, lore, memory, and chat model. Remix.Camer
 
 **[Connect SillyTavern](https://remix.camera/account/sillytavern?utm_source=github&utm_medium=repository&utm_campaign=sillytavern&utm_content=hero_install)** · **[Watch the demo](https://remix.camera/integrations/sillytavern?utm_source=github&utm_medium=repository&utm_campaign=sillytavern&utm_content=hero_demo)**
 
-[![See Remix.Camera image replies in SillyTavern](demos/sillytavern/sophie-setup-2026-07-21/sophie-setup-hero.png)](https://remix.camera/integrations/sillytavern?utm_source=github&utm_medium=repository&utm_campaign=sillytavern&utm_content=demo_poster)
+[![A fresh Remix.Camera image reply delivered inside SillyTavern](demos/sillytavern/alex-live-2026-10-04/live-image-reply.gif)](https://remix.camera/integrations/sillytavern?utm_source=github&utm_medium=repository&utm_campaign=sillytavern&utm_content=demo_poster)
 
 ## Better inspiration. Your character. The right moment.
 
 Powered by **50,000+ proven portrait templates**, Remix.Camera finds a scene that fits your request and adapts it to your character and conversation. Your paired visual profile keeps their look recognizable across new images.
 
 Ask for a café selfie, tonight's outfit, or a photo from your beach trip. Give the conversation something to show.
+
+## One character. Three moments.
+
+These images were freshly generated and delivered inside SillyTavern using the same character reference.
+
+| Café selfie | Tonight’s outfit | Dinner date |
+| --- | --- | --- |
+| ![Alex sends a café selfie](demos/sillytavern/alex-live-2026-10-04/alex-cafe.jpg) | ![Alex shows his outfit](demos/sillytavern/alex-live-2026-10-04/alex-outfit.jpg) | ![Alex at dinner](demos/sillytavern/alex-live-2026-10-04/alex-date.jpg) |
+| “Send me a selfie from the cafe.” | “Show me your outfit before our date.” | “Send me a photo from our dinner date.” |
 
 ## Make more with Remix.Camera
 
@@ -32,14 +41,14 @@ Use Remix.Camera to develop your character's visual look and discover new scenes
 2. Run the setup command and approve the pairing code:
 
 ```bash
-npx --yes github:remixcamera/remix-camera-sillytavern-companion-images#v0.4.0-alpha.3 --source=github_readme
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images#v0.4.0-alpha.4 --source=github_readme
 ```
 
 3. Return to SillyTavern, open **Remix.Camera Companion Images**, and ask your character for a photo.
 
 Run **Health Check** and **Preview Prompt** to check your setup without spending credits.
 
-**You'll need:** Node.js 20+, a Remix.Camera account, a ready character profile, and a local SillyTavern installation. New accounts include free generation credits; images use your account's credit balance.
+**You'll need:** Node.js 20+, a Remix.Camera account, a character profile, and a local SillyTavern installation. New accounts include free generation credits; images use your account's credit balance.
 
 [Use an existing character](#use-an-existing-sillytavern-character) · [Create a character](#start-from-scratch) · [Setup and troubleshooting](#manual-setup) · [Report an issue](https://github.com/remixcamera/remix-camera-sillytavern-companion-images/issues)
 
