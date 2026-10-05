@@ -1,6 +1,6 @@
 # 0.4.0-alpha.5
 
-- Showcase canonical Lily images from three best portrait packs, with direct links to recreate each look.
+- Showcase canonical Lily images, including curated AI girlfriend date-night blog examples, with direct links to recreate each look.
 
 # 0.4.0-alpha.4
 

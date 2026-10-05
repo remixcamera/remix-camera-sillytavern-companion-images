@@ -8,14 +8,14 @@ Keep your character card, personality, lore, memory, and chat model. Remix.Camer
 
 **[Connect SillyTavern](https://remix.camera/account/sillytavern?utm_source=github&utm_medium=repository&utm_campaign=sillytavern&utm_content=hero_install)** · **[Watch the demo](https://remix.camera/integrations/sillytavern?utm_source=github&utm_medium=repository&utm_campaign=sillytavern&utm_content=hero_demo)**
 
-## One character. Our best portrait packs.
+## One character. Three moments.
 
-Lily, styled with three of our best portrait packs.
+Lily, from a night out to a Paris café date. Recreate each look with your character.
 
-| Nightlife look | Navy lace portrait | Playful studio portrait |
+| Nightlife look | Champagne date night | Paris café date |
 | --- | --- | --- |
-| ![Lily in a red nightlife look](demos/sillytavern/lily-best-packs-2026-10-04/lily-nightlife.jpg) | ![Lily in a navy lace studio portrait](demos/sillytavern/lily-best-packs-2026-10-04/lily-navy-lace.jpg) | ![Lily in a playful studio portrait](demos/sillytavern/lily-best-packs-2026-10-04/lily-playful-studio.jpg) |
-| [Try this pack](https://remix.camera/explore/packs/sexy?utm_source=github&utm_medium=repository&utm_campaign=sillytavern&utm_content=showcase_nightlife) | [Try this pack](https://remix.camera/explore/packs/lace-lingerie-ponytail-studio-portrait?utm_source=github&utm_medium=repository&utm_campaign=sillytavern&utm_content=showcase_navy_lace) | [Try this pack](https://remix.camera/explore/packs/style-ultra-realistic-studio-portrait-subject-gender-female-2?utm_source=github&utm_medium=repository&utm_campaign=sillytavern&utm_content=showcase_playful_studio) |
+| ![Lily in a red nightlife look](demos/sillytavern/lily-best-packs-2026-10-04/lily-nightlife.jpg) | ![Lily in a champagne satin dress at the bar](demos/sillytavern/lily-best-packs-2026-10-04/lily-champagne-date.jpg) | ![Lily on a Paris café date](demos/sillytavern/lily-best-packs-2026-10-04/lily-paris-cafe.jpg) |
+| [Try this pack](https://remix.camera/explore/packs/sexy?utm_source=github&utm_medium=repository&utm_campaign=sillytavern&utm_content=showcase_nightlife) | [Try this pack](https://remix.camera/explore/packs/champagne-satin-slip-dress-low-back-bar?utm_source=github&utm_medium=repository&utm_campaign=sillytavern&utm_content=showcase_champagne_date) | [Try this pack](https://remix.camera/explore/packs/realistic-paris-cafe-woman-white-dress?utm_source=github&utm_medium=repository&utm_campaign=sillytavern&utm_content=showcase_paris_cafe) |
 
 ## Better inspiration. Your character. The right moment.
 

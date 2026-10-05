@@ -14,31 +14,25 @@
     "selection": "Existing canonical Lily pack example, visually reviewed"
   },
   {
-    "file": "lily-navy-lace.jpg",
-    "key": "camera:Gd1WVTqRj60mUKHo7TI3",
+    "file": "lily-champagne-date.jpg",
+    "key": "camera:xNjvqV9U3KbWyfj8sCWy",
     "persona": "Lily",
-    "pack_id": "Jw1KcFMLJD9liMbV0pEU",
-    "source_url": "https://r2-images.remix.camera/outputs/public_posts/Jw1KcFMLJD9liMbV0pEU/examples/output-Gd1WVTqRj60mUKHo7TI3-20260712221125.jpg",
-    "sha256": "4b3cb9ca20a79dfdbdce89d9a9f0483e6ae955795b9132a47f67eff5431b928b",
-    "model": "seedream-v5-lite-edit",
-    "photo_id": "Gd1WVTqRj60mUKHo7TI3",
-    "pack_url": "https://remix.camera/explore/packs/lace-lingerie-ponytail-studio-portrait",
-    "pack_priority": "best",
-    "pack_priority_verified_on": "2026-10-04",
-    "selection": "Existing canonical Lily pack example, visually reviewed"
+    "pack_id": "Z4HXlEcC3UN4hxNhWyck",
+    "pack_url": "https://remix.camera/explore/packs/champagne-satin-slip-dress-low-back-bar",
+    "source_url": "https://remix.camera/api/s3-file?key=camera%2Fphotos%2FGLUCbfOgIzOLe37Ft4G7S97B0fu2%2FxNjvqV9U3KbWyfj8sCWy%2Fcamera-xNjvqV9U3KbWyfj8sCWy.jpg",
+    "sha256": "e949f97d6fffa4297dd02f84f8a2b7dbedd09c2be07168bc015c30a4a8a1752f",
+    "blog_url": "https://remix.camera/blog/ai-girlfriend-date-night-prompts",
+    "selection": "Existing canonical Lily image from AI girlfriend date-night blog; visually reviewed"
   },
   {
-    "file": "lily-playful-studio.jpg",
-    "key": "camera:4VrUyly2qsRy8XgFI02M",
+    "file": "lily-paris-cafe.jpg",
+    "key": "camera:XU99L3v6AgCU3FUMBaaN",
     "persona": "Lily",
-    "pack_id": "zGXxUFVm6LO8dnXOZ2Mq",
-    "source_url": "https://r2-images.remix.camera/outputs/public_posts/zGXxUFVm6LO8dnXOZ2Mq/examples/output-4VrUyly2qsRy8XgFI02M-20260712221122.jpg",
-    "sha256": "bec12922fbb425443f73b28c5d2a7a866c3c0303162c3b4a669dc51edc87452a",
-    "model": "seedream-v5-lite-edit",
-    "photo_id": "4VrUyly2qsRy8XgFI02M",
-    "pack_url": "https://remix.camera/explore/packs/style-ultra-realistic-studio-portrait-subject-gender-female-2",
-    "pack_priority": "best",
-    "pack_priority_verified_on": "2026-10-04",
-    "selection": "Existing canonical Lily pack example, visually reviewed"
+    "pack_id": "kzfnaEMv035AOjX6Wa6s",
+    "pack_url": "https://remix.camera/explore/packs/realistic-paris-cafe-woman-white-dress",
+    "source_url": "https://remix.camera/api/s3-file?key=camera%2Fphotos%2FGLUCbfOgIzOLe37Ft4G7S97B0fu2%2FXU99L3v6AgCU3FUMBaaN%2Fcamera-XU99L3v6AgCU3FUMBaaN.jpg",
+    "sha256": "3f442bf343bc425bb464cddcea29917eb3c999d3c28ca2a4748406f36915c1f7",
+    "blog_url": "https://remix.camera/blog/ai-girlfriend-date-night-prompts",
+    "selection": "Existing canonical Lily image from AI girlfriend date-night blog; visually reviewed"
   }
 ]
