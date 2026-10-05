@@ -15,7 +15,7 @@ import {
 } from "../lib/companion-tools.mjs";
 
 const SERVICE = "remix-camera-sillytavern-bridge";
-const VERSION = "0.4.0-alpha.4";
+const VERSION = "0.4.0-alpha.5";
 const COMMANDS = new Set([
   "send-selfie",
   "generate-selfie",

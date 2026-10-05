@@ -172,7 +172,7 @@ await waitFor(async () => {
 }, 5_000, () => setupOutput);
 const health = await (await fetch(`${bridgeUrl}/health`)).json();
 assert.equal(health.ok, true);
-assert.equal(health.version, "0.4.0-alpha.4");
+assert.equal(health.version, "0.4.0-alpha.5");
 assert.equal(health.defaultProfileId, "profile_e2e");
 
 const generatedResponse = await fetch(`${bridgeUrl}/v1/commands/generate`, {
@@ -215,7 +215,7 @@ for (const event of telemetryEvents) {
     "packageVersion",
     "target",
   ]);
-  assert.equal(event.packageVersion, "0.4.0-alpha.4");
+  assert.equal(event.packageVersion, "0.4.0-alpha.5");
 }
 
 const bridgeProcessId = Number((await import("node:child_process")).execFileSync("lsof", ["-ti", `tcp:${bridgePort}`], { encoding: "utf8" }).trim());

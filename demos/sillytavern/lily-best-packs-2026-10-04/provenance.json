@@ -1,0 +1,44 @@
+[
+  {
+    "file": "lily-nightlife.jpg",
+    "key": "camera:m7OzN3ewrN0VLihoP4uD",
+    "persona": "Lily",
+    "pack_id": "pYT8d3bIL6OPOb8f27ij",
+    "source_url": "https://r2-images.remix.camera/outputs/public_posts/pYT8d3bIL6OPOb8f27ij/examples/output-m7OzN3ewrN0VLihoP4uD-20260704222032.jpg",
+    "sha256": "21dde72075833ad33e3ddabcc848c30c94dd7f6091082bbb93cfe3bf37427543",
+    "model": "nano-banana-2",
+    "photo_id": "m7OzN3ewrN0VLihoP4uD",
+    "pack_url": "https://remix.camera/explore/packs/sexy",
+    "pack_priority": "best",
+    "pack_priority_verified_on": "2026-10-04",
+    "selection": "Existing canonical Lily pack example, visually reviewed"
+  },
+  {
+    "file": "lily-navy-lace.jpg",
+    "key": "camera:Gd1WVTqRj60mUKHo7TI3",
+    "persona": "Lily",
+    "pack_id": "Jw1KcFMLJD9liMbV0pEU",
+    "source_url": "https://r2-images.remix.camera/outputs/public_posts/Jw1KcFMLJD9liMbV0pEU/examples/output-Gd1WVTqRj60mUKHo7TI3-20260712221125.jpg",
+    "sha256": "4b3cb9ca20a79dfdbdce89d9a9f0483e6ae955795b9132a47f67eff5431b928b",
+    "model": "seedream-v5-lite-edit",
+    "photo_id": "Gd1WVTqRj60mUKHo7TI3",
+    "pack_url": "https://remix.camera/explore/packs/lace-lingerie-ponytail-studio-portrait",
+    "pack_priority": "best",
+    "pack_priority_verified_on": "2026-10-04",
+    "selection": "Existing canonical Lily pack example, visually reviewed"
+  },
+  {
+    "file": "lily-playful-studio.jpg",
+    "key": "camera:4VrUyly2qsRy8XgFI02M",
+    "persona": "Lily",
+    "pack_id": "zGXxUFVm6LO8dnXOZ2Mq",
+    "source_url": "https://r2-images.remix.camera/outputs/public_posts/zGXxUFVm6LO8dnXOZ2Mq/examples/output-4VrUyly2qsRy8XgFI02M-20260712221122.jpg",
+    "sha256": "bec12922fbb425443f73b28c5d2a7a866c3c0303162c3b4a669dc51edc87452a",
+    "model": "seedream-v5-lite-edit",
+    "photo_id": "4VrUyly2qsRy8XgFI02M",
+    "pack_url": "https://remix.camera/explore/packs/style-ultra-realistic-studio-portrait-subject-gender-female-2",
+    "pack_priority": "best",
+    "pack_priority_verified_on": "2026-10-04",
+    "selection": "Existing canonical Lily pack example, visually reviewed"
+  }
+]

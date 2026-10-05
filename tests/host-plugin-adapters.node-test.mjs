@@ -172,7 +172,7 @@ test("RisuAI API v3 plugin registers MCP tools and preserves the spend guard", a
     "utf8",
   );
   assert.match(source, /\/\/@api 3\.0/);
-  assert.match(source, /\/\/@version 0\.4\.0-alpha\.4/);
+  assert.match(source, /\/\/@version 0\.4\.0-alpha\.5/);
   assert.match(source, /\/\/@update-url https:\/\/raw\.githubusercontent\.com\//);
 
   const calls = [];
@@ -206,7 +206,7 @@ test("RisuAI API v3 plugin registers MCP tools and preserves the spend guard", a
   });
 
   assert.equal(state.registration.metadata.identifier, "plugin:remix-camera-companion-images");
-  assert.equal(state.registration.metadata.version, "0.4.0-alpha.4");
+  assert.equal(state.registration.metadata.version, "0.4.0-alpha.5");
   assert.equal((await state.registration.listTools()).length, 8);
 
   const preview = await state.registration.callTool("remix_send_selfie", { mood: "cozy couch" });

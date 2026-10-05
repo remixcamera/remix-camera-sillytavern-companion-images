@@ -8,7 +8,14 @@ Keep your character card, personality, lore, memory, and chat model. Remix.Camer
 
 **[Connect SillyTavern](https://remix.camera/account/sillytavern?utm_source=github&utm_medium=repository&utm_campaign=sillytavern&utm_content=hero_install)** · **[Watch the demo](https://remix.camera/integrations/sillytavern?utm_source=github&utm_medium=repository&utm_campaign=sillytavern&utm_content=hero_demo)**
 
-[![See Remix.Camera image replies in SillyTavern](demos/sillytavern/sophie-setup-2026-07-21/sophie-setup-hero.png)](https://remix.camera/integrations/sillytavern?utm_source=github&utm_medium=repository&utm_campaign=sillytavern&utm_content=demo_poster)
+## One character. Our best portrait packs.
+
+Lily, styled with three of our best portrait packs.
+
+| Nightlife look | Navy lace portrait | Playful studio portrait |
+| --- | --- | --- |
+| ![Lily in a red nightlife look](demos/sillytavern/lily-best-packs-2026-10-04/lily-nightlife.jpg) | ![Lily in a navy lace studio portrait](demos/sillytavern/lily-best-packs-2026-10-04/lily-navy-lace.jpg) | ![Lily in a playful studio portrait](demos/sillytavern/lily-best-packs-2026-10-04/lily-playful-studio.jpg) |
+| [Try this pack](https://remix.camera/explore/packs/sexy?utm_source=github&utm_medium=repository&utm_campaign=sillytavern&utm_content=showcase_nightlife) | [Try this pack](https://remix.camera/explore/packs/lace-lingerie-ponytail-studio-portrait?utm_source=github&utm_medium=repository&utm_campaign=sillytavern&utm_content=showcase_navy_lace) | [Try this pack](https://remix.camera/explore/packs/style-ultra-realistic-studio-portrait-subject-gender-female-2?utm_source=github&utm_medium=repository&utm_campaign=sillytavern&utm_content=showcase_playful_studio) |
 
 ## Better inspiration. Your character. The right moment.
 
@@ -32,7 +39,7 @@ Use Remix.Camera to develop your character's visual look and discover new scenes
 2. Run the setup command and approve the pairing code:
 
 ```bash
-npx --yes github:remixcamera/remix-camera-sillytavern-companion-images#v0.4.0-alpha.4 --source=github_readme
+npx --yes github:remixcamera/remix-camera-sillytavern-companion-images#v0.4.0-alpha.5 --source=github_readme
 ```
 
 3. Return to SillyTavern, open **Remix.Camera Companion Images**, and ask your character for a photo.

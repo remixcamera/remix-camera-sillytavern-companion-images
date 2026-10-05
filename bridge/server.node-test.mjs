@@ -876,7 +876,7 @@ test("bridge allows the default local SillyTavern browser origin", async () => {
 
     assert.equal(response.status, 200);
     assert.equal(payload.ok, true);
-    assert.equal(payload.version, "0.4.0-alpha.4");
+    assert.equal(payload.version, "0.4.0-alpha.5");
     assert.equal(response.headers.get("access-control-allow-origin"), "http://127.0.0.1:8000");
     assert.equal(response.headers.get("access-control-allow-private-network"), "true");
     assert.deepEqual(payload.allowedOrigins.slice(0, 2), ["http://127.0.0.1:8000", "http://localhost:8000"]);
