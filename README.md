@@ -12,10 +12,10 @@ Keep your character card, personality, lore, memory, and chat model. Remix.Camer
 
 Lily, from a night out to a Paris café date. Recreate each look with your character.
 
-| Nightlife look | Champagne date night | Paris café date |
+| Nightlife look | Casual selfie | Paris café date |
 | --- | --- | --- |
-| <img src="demos/sillytavern/lily-best-packs-2026-10-04/lily-nightlife.jpg" alt="Lily in a red nightlife look" width="260" /> | <img src="demos/sillytavern/lily-best-packs-2026-10-04/lily-champagne-date.jpg" alt="Lily in a champagne satin dress at the bar" width="260" /> | <img src="demos/sillytavern/lily-best-packs-2026-10-04/lily-paris-cafe.jpg" alt="Lily on a Paris café date" width="260" /> |
-| [Try this pack](https://remix.camera/explore/packs/sexy?utm_source=github&utm_medium=repository&utm_campaign=sillytavern&utm_content=showcase_nightlife) | [Try this pack](https://remix.camera/explore/packs/champagne-satin-slip-dress-low-back-bar?utm_source=github&utm_medium=repository&utm_campaign=sillytavern&utm_content=showcase_champagne_date) | [Try this pack](https://remix.camera/explore/packs/realistic-paris-cafe-woman-white-dress?utm_source=github&utm_medium=repository&utm_campaign=sillytavern&utm_content=showcase_paris_cafe) |
+| <img src="demos/sillytavern/lily-best-packs-2026-10-04/lily-nightlife.jpg" alt="Lily in a red nightlife look" width="260" /> | <img src="demos/sillytavern/lily-best-packs-2026-10-04/lily-casual-selfie.jpg" alt="Lily taking a casual kitchen mirror selfie in satin lounge shorts" width="260" /> | <img src="demos/sillytavern/lily-best-packs-2026-10-04/lily-paris-cafe.jpg" alt="Lily on a Paris café date" width="260" /> |
+| [Try this pack](https://remix.camera/explore/packs/sexy?utm_source=github&utm_medium=repository&utm_campaign=sillytavern&utm_content=showcase_nightlife) | [Try this pack](https://remix.camera/explore/packs/silky-nightwear-kitchen-mirror-selfie-soft-lighting?utm_source=github&utm_medium=repository&utm_campaign=sillytavern&utm_content=showcase_casual_selfie) | [Try this pack](https://remix.camera/explore/packs/realistic-paris-cafe-woman-white-dress?utm_source=github&utm_medium=repository&utm_campaign=sillytavern&utm_content=showcase_paris_cafe) |
 
 ## Better inspiration. Your character. The right moment.
 

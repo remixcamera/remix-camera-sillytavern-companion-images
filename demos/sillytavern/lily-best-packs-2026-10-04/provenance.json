@@ -14,15 +14,15 @@
     "selection": "Existing canonical Lily pack example, visually reviewed"
   },
   {
-    "file": "lily-champagne-date.jpg",
-    "key": "camera:xNjvqV9U3KbWyfj8sCWy",
+    "file": "lily-casual-selfie.jpg",
+    "key": "camera:MWOzGLRt7a50RPHx8YVn",
     "persona": "Lily",
-    "pack_id": "Z4HXlEcC3UN4hxNhWyck",
-    "pack_url": "https://remix.camera/explore/packs/champagne-satin-slip-dress-low-back-bar",
-    "source_url": "https://remix.camera/api/s3-file?key=camera%2Fphotos%2FGLUCbfOgIzOLe37Ft4G7S97B0fu2%2FxNjvqV9U3KbWyfj8sCWy%2Fcamera-xNjvqV9U3KbWyfj8sCWy.jpg",
-    "sha256": "e949f97d6fffa4297dd02f84f8a2b7dbedd09c2be07168bc015c30a4a8a1752f",
-    "blog_url": "https://remix.camera/blog/ai-girlfriend-date-night-prompts",
-    "selection": "Existing canonical Lily image from AI girlfriend date-night blog; visually reviewed"
+    "pack_id": "O4eshM0hZduIvRxZxarg",
+    "pack_url": "https://remix.camera/explore/packs/silky-nightwear-kitchen-mirror-selfie-soft-lighting",
+    "source_url": "https://remix.camera/api/s3-file?key=camera%2Fphotos%2FGLUCbfOgIzOLe37Ft4G7S97B0fu2%2FMWOzGLRt7a50RPHx8YVn%2Fcamera-MWOzGLRt7a50RPHx8YVn.jpg",
+    "sha256": "3f2829630a13d6e03f2c7657c48d1d31e6c9cd4ab35a816e6a9883805036a141",
+    "blog_url": "https://remix.camera/blog/ai-girlfriend-mirror-selfie-prompts",
+    "selection": "Existing canonical Lily casual kitchen mirror selfie, visually reviewed"
   },
   {
     "file": "lily-paris-cafe.jpg",
