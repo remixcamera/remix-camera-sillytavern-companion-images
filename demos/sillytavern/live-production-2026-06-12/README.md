@@ -21,7 +21,7 @@ This folder contains a real production screen recording captured from the local 
 ## Command
 
 ```bash
-SILLYTAVERN_ROOT=/path/to/workspace/SillyTavern-Launcher/SillyTavern \
+SILLYTAVERN_ROOT=/path/to/SillyTavern \
 REMIX_SILLYTAVERN_E2E_CHARACTER_CARD=lily-remix-visual \
 npm run test:browser:live -- --yes --commands=send-selfie --max-generations=1
 ```

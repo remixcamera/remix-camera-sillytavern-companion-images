@@ -31,8 +31,8 @@
   "fullPromptIncluded": false,
   "imageUrls": [],
   "outputs": {
-    "jsonPath": "/path/to/workspace/remix-camera-sillytavern-companion-images/demos/telegram/evidence-production-2026-06-12/result.json",
-    "markdownPath": "/path/to/workspace/remix-camera-sillytavern-companion-images/demos/telegram/evidence-production-2026-06-12/transcript.md",
-    "htmlPath": "/path/to/workspace/remix-camera-sillytavern-companion-images/demos/telegram/evidence-production-2026-06-12/transcript.html"
+    "jsonPath": "demos/telegram/evidence-production-2026-06-12/result.json",
+    "markdownPath": "demos/telegram/evidence-production-2026-06-12/transcript.md",
+    "htmlPath": "demos/telegram/evidence-production-2026-06-12/transcript.html"
   }
 }
