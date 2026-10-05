@@ -14,7 +14,7 @@ Lily, from a night out to a Paris café date. Recreate each look with your chara
 
 | Nightlife look | Champagne date night | Paris café date |
 | --- | --- | --- |
-| ![Lily in a red nightlife look](demos/sillytavern/lily-best-packs-2026-10-04/lily-nightlife.jpg) | ![Lily in a champagne satin dress at the bar](demos/sillytavern/lily-best-packs-2026-10-04/lily-champagne-date.jpg) | ![Lily on a Paris café date](demos/sillytavern/lily-best-packs-2026-10-04/lily-paris-cafe.jpg) |
+| <img src="demos/sillytavern/lily-best-packs-2026-10-04/lily-nightlife.jpg" alt="Lily in a red nightlife look" width="260" /> | <img src="demos/sillytavern/lily-best-packs-2026-10-04/lily-champagne-date.jpg" alt="Lily in a champagne satin dress at the bar" width="260" /> | <img src="demos/sillytavern/lily-best-packs-2026-10-04/lily-paris-cafe.jpg" alt="Lily on a Paris café date" width="260" /> |
 | [Try this pack](https://remix.camera/explore/packs/sexy?utm_source=github&utm_medium=repository&utm_campaign=sillytavern&utm_content=showcase_nightlife) | [Try this pack](https://remix.camera/explore/packs/champagne-satin-slip-dress-low-back-bar?utm_source=github&utm_medium=repository&utm_campaign=sillytavern&utm_content=showcase_champagne_date) | [Try this pack](https://remix.camera/explore/packs/realistic-paris-cafe-woman-white-dress?utm_source=github&utm_medium=repository&utm_campaign=sillytavern&utm_content=showcase_paris_cafe) |
 
 ## Better inspiration. Your character. The right moment.
