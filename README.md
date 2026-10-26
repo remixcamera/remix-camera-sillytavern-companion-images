@@ -1,5 +1,30 @@
 # Remix.Camera for SillyTavern
 
+### Bridge authentication (upgrade required)
+
+All generation, preview, feedback, and diagnostics routes require a dedicated
+bridge API key, including requests from localhost or an allowed browser origin.
+Rerun setup to create `bridgeApiKey` in the private
+`~/.remix-camera/sillytavern-bridge.json` file, then copy that value into
+**Bridge API key** in the SillyTavern extension settings. Setup rotates this key;
+update every client after rerunning it. Never put it in a character card.
+The bridge URL is configured in your saved settings, never imported from a card.
+
+For manual installation, generate a random key with
+`node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"`
+and set `REMIX_BRIDGE_API_KEY` on the bridge and Node adapters using the shared
+client. Other integrations must explicitly send `Authorization: Bearer <key>`;
+older clients without this header now fail closed. ChatGPT Actions retains its
+separate `REMIX_ACTION_API_KEY`. Do not use a Remix account/session token as a
+bridge key. Use HTTPS for remote clients and keep the default localhost binding
+unless remote access is deliberately configured.
+
+Health and public schema discovery remain unauthenticated. Generated image URLs
+remain random, one-hour bearer capabilities so chat image elements can display
+them: anyone possessing an image URL can view it during that period. Keep those
+URLs private. Diagnostics require an authenticated HTTP client.
+
+
 ## Give your character a camera
 
 Realistic selfies, outfits, dates, and everyday moments—generated with your character's visual profile and delivered inside your existing chat.

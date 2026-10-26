@@ -4,6 +4,12 @@ import { spawn } from "node:child_process";
 import http from "node:http";
 import { test } from "node:test";
 
+const TEST_BRIDGE_KEY = "test-only-bridge-key";
+const fetch = (url, options = {}) => globalThis.fetch(url, {
+  ...options,
+  headers: { Authorization: `Bearer ${TEST_BRIDGE_KEY}`, ...options.headers },
+});
+
 const bridgePath = new URL("./server.mjs", import.meta.url);
 
 async function getFreePort() {
@@ -401,6 +407,7 @@ async function startBridge(env) {
       ...process.env,
       REMIX_CONFIG_FILE: "__remix_camera_sillytavern_test_missing_config__.json",
       REMIX_SESSION_TOKEN: "",
+      REMIX_BRIDGE_API_KEY: TEST_BRIDGE_KEY,
       REMIX_PROFILE_ID: "",
       ...env,
       REMIX_BRIDGE_HOST: "127.0.0.1",
@@ -879,7 +886,7 @@ test("bridge allows the default local SillyTavern browser origin", async () => {
     assert.equal(payload.version, "0.4.0-alpha.5");
     assert.equal(response.headers.get("access-control-allow-origin"), "http://127.0.0.1:8000");
     assert.equal(response.headers.get("access-control-allow-private-network"), "true");
-    assert.deepEqual(payload.allowedOrigins.slice(0, 2), ["http://127.0.0.1:8000", "http://localhost:8000"]);
+    assert.equal(payload.requiresBridgeAuth, true);
   } finally {
     await bridge.close();
     await mockApi.close();
@@ -1651,4 +1658,37 @@ test("private-snap routes to Seedream without expiring snap metadata", async () 
     await bridge.close();
     await mockApi.close();
   }
+});
+
+
+test("sensitive routes reject absent and wrong bridge keys before upstream work", async () => {
+  const mockApi = await startMockRemixApi();
+  const bridge = await startBridge({ REMIX_API_BASE_URL: mockApi.baseUrl });
+  try {
+    for (const [method, route] of [
+      ["GET", "/qa"], ["GET", "/v1/qa"], ["GET", "/v1/qa/recent"],
+      ["POST", "/v1/feedback"], ["POST", "/v1/commands/dry-run"],
+      ["POST", "/v1/commands/generate"], ["POST", "/v1/tools/send-selfie/generate"],
+      ["POST", "/lobe/gateway"],
+    ]) {
+      for (const headers of [{}, { Origin: "http://localhost:8000" }, { Authorization: "Bearer wrong" }]) {
+        const response = await globalThis.fetch(`${bridge.url}${route}`, { method, headers });
+        assert.equal(response.status, 401, `${method} ${route}`);
+      }
+    }
+    assert.equal(mockApi.calls.length, 0, "unauthorized requests must not reach Remix");
+    assert.equal((await fetch(`${bridge.url}/v1/qa/recent`)).status, 200);
+    const health = await (await globalThis.fetch(`${bridge.url}/health`)).json();
+    assert.equal(health.requiresBridgeAuth, true);
+    assert.equal(health.configPath, undefined);
+    assert.equal(health.defaultProfileId, undefined);
+  } finally { await bridge.close(); await mockApi.close(); }
+});
+
+test("missing bridge key fails closed while health remains available", async () => {
+  const bridge = await startBridge({ REMIX_BRIDGE_API_KEY: "" });
+  try {
+    assert.equal((await globalThis.fetch(`${bridge.url}/v1/qa/recent`)).status, 428);
+    assert.equal((await globalThis.fetch(`${bridge.url}/health`)).status, 200);
+  } finally { await bridge.close(); }
 });

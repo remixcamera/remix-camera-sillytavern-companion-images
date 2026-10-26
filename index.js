@@ -257,7 +257,8 @@ import {
     const scoped = characterOverrides(saved, card);
     const cardHasSettings = hasCardSettings(card);
     return {
-      bridgeUrl: cleanString(scoped.bridgeUrl) || cleanString(saved.bridgeUrl) || cleanString(card.bridgeUrl) || DEFAULT_SETTINGS.bridgeUrl,
+      bridgeUrl: cleanString(saved.bridgeUrl) || DEFAULT_SETTINGS.bridgeUrl,
+      bridgeApiKey: cleanString(saved.bridgeApiKey),
       profileId: stringSetting(saved, card, "profileId", scoped, cardHasSettings),
       referenceImageKey: stringSetting(saved, card, "referenceImageKey", scoped, cardHasSettings),
       characterName: stringSetting(saved, card, "characterName", scoped, cardHasSettings),
@@ -552,7 +553,7 @@ import {
     try {
       const response = await fetch(`${current.bridgeUrl.replace(/\/+$/, "")}${pathname}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${current.bridgeApiKey}` },
         body: JSON.stringify(body),
         signal: controller?.signal,
       });
@@ -1199,6 +1200,7 @@ import {
 
   function saveFromUi() {
     updateSettings({
+      bridgeApiKey: inputValue("remix-camera-bridge-api-key"),
       bridgeUrl: inputValue("remix-camera-bridge-url") || DEFAULT_SETTINGS.bridgeUrl,
       profileId: cleanProfileId(inputValue("remix-camera-profile-id")),
       referenceImageKey: inputValue("remix-camera-reference-image-key"),
@@ -1233,6 +1235,7 @@ import {
   function refreshUiFromSettings() {
     const current = settings();
     setInputValue("remix-camera-bridge-url", current.bridgeUrl);
+    setInputValue("remix-camera-bridge-api-key", current.bridgeApiKey);
     setInputValue("remix-camera-character-name", current.characterName);
     setInputValue("remix-camera-gender", current.gender);
     setInputValue("remix-camera-bio", current.bio);
@@ -1315,6 +1318,7 @@ import {
         <details class="remix-camera-advanced">
           <summary>Advanced</summary>
           <div class="remix-camera-grid">
+            <label>Bridge API key<input id="remix-camera-bridge-api-key" type="password" autocomplete="off" value="${escapeHtml(current.bridgeApiKey)}"></label>
             <label>Bridge URL<input id="remix-camera-bridge-url" type="text" value="${escapeHtml(current.bridgeUrl)}"></label>
             <label>Remix profile ID<input id="remix-camera-profile-id" type="text" value="${escapeHtml(current.profileId)}" placeholder="profile_..."></label>
             <label>Reference key<input id="remix-camera-reference-image-key" type="text" value="${escapeHtml(current.referenceImageKey)}"></label>
