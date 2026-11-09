@@ -245,6 +245,7 @@ const config = {
   apiKey: process.env.REMIX_API_KEY || "",
   sessionToken: process.env.REMIX_SESSION_TOKEN || persistedConfig.sessionToken || "",
   actionApiKey: process.env.REMIX_ACTION_API_KEY || "",
+  bridgeApiKey: process.env.REMIX_BRIDGE_API_KEY || persistedConfig.bridgeApiKey || "",
   actionBaseUrl: trimTrailingSlash(process.env.REMIX_ACTION_BASE_URL || ""),
   defaultProfileId: process.env.REMIX_PROFILE_ID || persistedConfig.profileId || persistedConfig.defaultProfileId || "",
   defaultModelId: process.env.REMIX_DEFAULT_MODEL_ID || "",
@@ -381,6 +382,17 @@ function requestBaseUrl(req) {
 
 function actionBaseUrl(req) {
   return config.actionBaseUrl || requestBaseUrl(req);
+}
+
+function requireBridgeApiKey(req) {
+  if (!config.bridgeApiKey) {
+    throw httpError(428, "Configure REMIX_BRIDGE_API_KEY or rerun setup before using this bridge.");
+  }
+  const expected = Buffer.from(`Bearer ${config.bridgeApiKey}`);
+  const actual = Buffer.from(cleanString(req.headers.authorization));
+  if (actual.length !== expected.length || !crypto.timingSafeEqual(actual, expected)) {
+    throw httpError(401, "Bridge authentication failed.");
+  }
 }
 
 function requireActionApiKey(req) {
@@ -2112,6 +2124,18 @@ async function route(req, res) {
     return;
   }
 
+  // Image URLs are random, short-lived capabilities for HTML image elements.
+  // Discovery documents contain no user data. Every other route requires a key.
+  const publicGet = req.method === "GET" && (
+    ["/health", "/schema", "/openapi.json", "/openwebui/openapi.json",
+      "/librechat/openapi.json", "/lobe/manifest.json", "/chatgpt-actions/openapi.json"].includes(url.pathname)
+    || /^\/v1\/images\/[0-9a-f-]{36}$/.test(url.pathname)
+  );
+  if (!publicGet) {
+    if (url.pathname.startsWith("/chatgpt-actions/")) requireActionApiKey(req);
+    else requireBridgeApiKey(req);
+  }
+
   if (req.method === "GET" && url.pathname === "/health") {
     sendJson(req, res, 200, {
       ok: true,
@@ -2122,9 +2146,7 @@ async function route(req, res) {
       hasActionApiKey: Boolean(config.actionApiKey),
       authMode: config.sessionToken ? "design_api_session" : config.apiKey ? "api_key" : "missing",
       apiBaseUrl: config.apiBaseUrl,
-      configPath: config.configPath,
-      defaultProfileId: config.defaultProfileId || null,
-      allowedOrigins: config.allowedOrigins,
+      requiresBridgeAuth: true,
     });
     return;
   }

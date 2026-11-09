@@ -15,6 +15,7 @@ export function assertKnownCommand(command) {
 
 export async function callBridgeCommand({
   bridgeUrl = DEFAULT_BRIDGE_URL,
+  bridgeApiKey = globalThis.process?.env?.REMIX_BRIDGE_API_KEY || "",
   command,
   action = "dry-run",
   input = {},
@@ -32,6 +33,7 @@ export async function callBridgeCommand({
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      ...(bridgeApiKey ? { Authorization: `Bearer ${bridgeApiKey}` } : {}),
     },
     body: JSON.stringify(input || {}),
   });

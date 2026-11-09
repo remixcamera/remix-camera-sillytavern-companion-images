@@ -4,6 +4,7 @@ import { spawn } from "node:child_process";
 import { constants as fsConstants } from "node:fs";
 import { access, chmod, cp, mkdir, readFile, writeFile } from "node:fs/promises";
 import os from "node:os";
+import { randomBytes } from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -351,18 +352,20 @@ async function pairDevice(apiBaseUrl, target, telemetry) {
 
 async function writeBridgeConfig(config) {
   const configPath = bridgeConfigPath();
+  config.bridgeApiKey = randomBytes(32).toString("hex");
   await mkdir(path.dirname(configPath), { recursive: true });
   try {
     await chmod(path.dirname(configPath), 0o700);
   } catch {
     // Best effort on platforms that support POSIX modes.
   }
-  await writeFile(configPath, `${JSON.stringify(config, null, 2)}\n`, "utf8");
+  await writeFile(configPath, `${JSON.stringify(config, null, 2)}\n`, { encoding: "utf8", mode: 0o600 });
   try {
     await chmod(configPath, 0o600);
   } catch {
     // Best effort on platforms that support POSIX modes.
   }
+  console.log(`Bridge authentication: copy bridgeApiKey from ${configPath} into the extension Bridge API key setting or your adapter REMIX_BRIDGE_API_KEY. Keep it private.`);
   return configPath;
 }
 
